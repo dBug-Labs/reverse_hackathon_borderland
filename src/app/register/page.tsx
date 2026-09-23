@@ -307,18 +307,18 @@ export default function RegisterPage() {
 
       <div className="max-w-4xl mx-auto relative z-10">
         {/* Navigation Breadcrumb / Top Bar */}
-        <div className="flex items-center justify-between mb-8 pb-4 border-b border-neutral-800">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-8 pb-4 border-b border-neutral-800">
           <Link
             href="/"
             onClick={() => playHudClick()}
-            className="flex items-center gap-2 text-sm font-mono text-neutral-400 hover:text-white transition-colors"
+            className="inline-flex items-center gap-2 text-xs sm:text-sm font-mono text-neutral-400 hover:text-white transition-colors whitespace-nowrap self-start"
           >
-            <ArrowLeft className="w-4 h-4 text-red-500" />
+            <ArrowLeft className="w-4 h-4 text-red-500 shrink-0" />
             <span>RETURN TO BASE</span>
           </Link>
-          <div className="flex items-center gap-2 text-xs font-mono tracking-widest text-red-500 bg-red-950/40 border border-red-800/60 px-3 py-1 rounded">
-            <span className="inline-block w-2 h-2 rounded-full bg-red-500 animate-pulse" />
-            BORDERLAND PROTOCOL REGISTRATION
+          <div className="inline-flex items-center gap-2 text-[10px] sm:text-xs font-mono tracking-wider sm:tracking-widest text-red-400 bg-red-950/40 border border-red-800/60 px-2.5 sm:px-3 py-1 rounded self-start sm:self-auto whitespace-nowrap">
+            <span className="inline-block w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse shrink-0" />
+            <span>BORDERLAND REGISTRATION</span>
           </div>
         </div>
 

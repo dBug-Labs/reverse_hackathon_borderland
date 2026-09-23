@@ -99,16 +99,16 @@ export default function ResumePaymentPage() {
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,rgba(220,38,38,0.12)_0%,transparent_65%)] pointer-events-none" />
 
       <div className="max-w-4xl mx-auto relative z-10">
-        <div className="flex items-center justify-between mb-8 pb-4 border-b border-neutral-800">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-8 pb-4 border-b border-neutral-800">
           <Link
             href="/register"
             onClick={() => playHudClick()}
-            className="flex items-center gap-2 text-sm font-mono text-neutral-400 hover:text-white transition-colors"
+            className="inline-flex items-center gap-2 text-xs sm:text-sm font-mono text-neutral-400 hover:text-white transition-colors whitespace-nowrap self-start"
           >
-            <ArrowLeft className="w-4 h-4 text-red-500" />
+            <ArrowLeft className="w-4 h-4 text-red-500 shrink-0" />
             <span>BACK TO REGISTRATION</span>
           </Link>
-          <div className="flex items-center gap-2 text-xs font-mono tracking-widest text-red-500 bg-red-950/40 border border-red-800/60 px-3 py-1 rounded">
+          <div className="inline-flex items-center gap-2 text-[10px] sm:text-xs font-mono tracking-wider sm:tracking-widest text-red-400 bg-red-950/40 border border-red-800/60 px-2.5 sm:px-3 py-1 rounded self-start sm:self-auto whitespace-nowrap">
             UPI PROTOCOL VERIFICATION
           </div>
         </div>
