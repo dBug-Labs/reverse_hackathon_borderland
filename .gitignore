@@ -11,3 +11,6 @@ next-env.d.ts
 .vercel
 .env*
 !.env.example
+
+# Downloaded env files (may contain secrets)
+*.download

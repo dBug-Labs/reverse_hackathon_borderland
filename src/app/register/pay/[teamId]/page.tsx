@@ -1,9 +1,11 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { useParams, useRouter } from 'next/navigation';
+import { useParams, useSearchParams } from 'next/navigation';
+import QRCode from 'qrcode';
+import { Turnstile, type TurnstileInstance } from '@marsidev/react-turnstile';
 import {
   ArrowLeft,
   Copy,
@@ -17,9 +19,13 @@ import {
 } from 'lucide-react';
 import { playHudClick, playAccessGranted } from '@/utils/sound';
 
+const TURNSTILE_SITE_KEY = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY ?? '';
+
 export default function ResumePaymentPage() {
   const params = useParams();
   const teamId = (params?.teamId as string) || '';
+  // Signed pay token from the email link (/register/pay/DBG-472?t=...)
+  const payToken = useSearchParams().get('t') ?? '';
 
   const [fee, setFee] = useState(300);
   const [upiId, setUpiId] = useState('dbuglabs@upi');
@@ -31,7 +37,30 @@ export default function ResumePaymentPage() {
   const [copiedTeamId, setCopiedTeamId] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isCompleted, setIsCompleted] = useState(false);
-  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [errorMsg, setErrorMsg] = useState<string | null>(
+    payToken ? null : 'This payment link is incomplete. Open the link from your registration email.'
+  );
+  const [qrDataUrl, setQrDataUrl] = useState('');
+  const [turnstileToken, setTurnstileToken] = useState('');
+  const turnstileRef = useRef<TurnstileInstance | undefined>(undefined);
+
+  // Fee + UPI details come from the public event endpoint; the QR is built from them
+  useEffect(() => {
+    fetch('/api/event')
+      .then((res) => res.json())
+      .then((json) => {
+        if (!json.ok) return;
+        const event = json.data;
+        setFee(event.fee);
+        setUpiId(event.upiId);
+        setPayeeName(event.payeeName);
+        const upiString = `upi://pay?pa=${encodeURIComponent(event.upiId)}&pn=${encodeURIComponent(event.payeeName)}&am=${event.fee}&cu=INR&tn=${encodeURIComponent(teamId)}`;
+        return QRCode.toDataURL(upiString, { width: 480, margin: 1 }).then(setQrDataUrl);
+      })
+      .catch(() => {
+        // Keep the defaults; the UPI ID + note are still shown as text
+      });
+  }, [teamId]);
 
   const copyToClipboard = (text: string, type: 'upi' | 'teamId') => {
     playHudClick();
@@ -66,21 +95,27 @@ export default function ResumePaymentPage() {
     setIsSubmitting(true);
 
     try {
-      const res = await fetch(`/api/registrations/${teamId}/payment`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          teamId,
-          utr: cleanUtr,
-          confirmUtr: cleanConfirm,
-          amount: fee,
-          payerName: payerName.trim(),
-        }),
-      });
+      const res = await fetch(
+        `/api/registrations/${encodeURIComponent(teamId)}/payment?t=${encodeURIComponent(payToken)}`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            utr: cleanUtr,
+            confirmUtr: cleanConfirm,
+            amount: fee,
+            payerUpi: payerName.trim() || undefined,
+            turnstileToken,
+          }),
+        }
+      );
 
       const data = await res.json();
       if (!res.ok || !data.ok) {
         setErrorMsg(data.message || 'Payment submission failed.');
+        // Turnstile tokens are single-use — get a fresh one for the retry
+        setTurnstileToken('');
+        turnstileRef.current?.reset();
         setIsSubmitting(false);
         return;
       }
@@ -161,17 +196,25 @@ export default function ResumePaymentPage() {
                 </div>
 
                 <div className="w-64 h-64 p-2 bg-[#09090c] rounded-xl border border-red-900/60 shadow-[0_0_25px_rgba(220,38,38,0.2)] flex items-center justify-center relative mb-4">
-                  <Image
-                    src="/qr-placeholder.svg"
-                    alt="UPI Payment QR Code Placeholder"
-                    width={240}
-                    height={240}
-                    className="w-full h-full object-contain"
-                    priority
-                  />
-                  <div className="absolute top-2 right-2 px-1.5 py-0.5 rounded bg-neutral-900/90 border border-neutral-700 text-[9px] font-mono text-neutral-400">
-                    SAMPLE QR
-                  </div>
+                  {qrDataUrl ? (
+                    // data: URL generated in the browser, so next/image adds nothing here
+                    <img
+                      src={qrDataUrl}
+                      alt={`UPI payment QR for ${teamId}`}
+                      width={240}
+                      height={240}
+                      className="w-full h-full object-contain rounded-lg"
+                    />
+                  ) : (
+                    <Image
+                      src="/qr-placeholder.svg"
+                      alt="UPI Payment QR Code Placeholder"
+                      width={240}
+                      height={240}
+                      className="w-full h-full object-contain"
+                      priority
+                    />
+                  )}
                 </div>
 
                 <div className="text-[11px] font-mono text-neutral-400">
@@ -284,9 +327,18 @@ export default function ResumePaymentPage() {
                 </div>
               </div>
 
+              <Turnstile
+                ref={turnstileRef}
+                siteKey={TURNSTILE_SITE_KEY}
+                options={{ action: 'payment', theme: 'dark' }}
+                onSuccess={setTurnstileToken}
+                onExpire={() => setTurnstileToken('')}
+                onError={() => setTurnstileToken('')}
+              />
+
               <button
                 type="submit"
-                disabled={isSubmitting}
+                disabled={isSubmitting || !payToken || !turnstileToken}
                 className="w-full py-3.5 bg-red-600 hover:bg-red-500 disabled:bg-neutral-800 disabled:text-neutral-500 text-white font-mono font-bold tracking-wider text-sm rounded border border-red-500 flex items-center justify-center gap-3 transition-all shadow-[0_0_20px_rgba(220,38,38,0.4)]"
               >
                 {isSubmitting ? (

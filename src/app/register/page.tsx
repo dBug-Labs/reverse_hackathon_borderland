@@ -1,8 +1,10 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
+import QRCode from 'qrcode';
+import { Turnstile, type TurnstileInstance } from '@marsidev/react-turnstile';
 import {
   Shield,
   ArrowRight,
@@ -20,6 +22,17 @@ import {
 } from 'lucide-react';
 import { playHudClick, playAccessGranted } from '@/utils/sound';
 
+const TURNSTILE_SITE_KEY = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY ?? '';
+
+// The API names the player field `fullName`; this form calls it `name`.
+function toFormErrors(fields: Record<string, string>): Record<string, string> {
+  const mapped: Record<string, string> = {};
+  for (const [key, msg] of Object.entries(fields)) {
+    mapped[key.replace(/\.fullName$/, '.name')] = msg;
+  }
+  return mapped;
+}
+
 interface PlayerFormState {
   name: string;
   email: string;
@@ -27,7 +40,6 @@ interface PlayerFormState {
   phone: string;
   year: string;
   department: string;
-  college: string;
 }
 
 export default function RegisterPage() {
@@ -52,7 +64,6 @@ export default function RegisterPage() {
       phone: '',
       year: '2',
       department: 'CSE',
-      college: 'SRM Institute of Science and Technology',
     },
     {
       name: '',
@@ -61,7 +72,6 @@ export default function RegisterPage() {
       phone: '',
       year: '2',
       department: 'CSE',
-      college: 'SRM Institute of Science and Technology',
     },
     {
       name: '',
@@ -70,7 +80,6 @@ export default function RegisterPage() {
       phone: '',
       year: '2',
       department: 'CSE',
-      college: 'SRM Institute of Science and Technology',
     },
   ]);
 
@@ -82,7 +91,25 @@ export default function RegisterPage() {
   const [utr, setUtr] = useState<string>('');
   const [confirmUtr, setConfirmUtr] = useState<string>('');
   const [payerName, setPayerName] = useState<string>('');
-  const [paymentSuccessStatus, setPaymentSuccessStatus] = useState<string>('PAYMENT_SUBMITTED');
+  const [paymentSuccessStatus, setPaymentSuccessStatus] = useState<string>('UNDER_REVIEW');
+
+  // API plumbing: idempotency key + time-trap for Step 1, pay token for Step 2
+  const [idempotencyKey] = useState(() => crypto.randomUUID());
+  const formOpenedAt = useRef(Date.now());
+  const [resumeToken, setResumeToken] = useState('');
+  const [upiQrString, setUpiQrString] = useState('');
+  const [qrDataUrl, setQrDataUrl] = useState('');
+  const [registerToken, setRegisterToken] = useState('');
+  const [paymentToken, setPaymentToken] = useState('');
+  const registerTurnstile = useRef<TurnstileInstance | undefined>(undefined);
+  const paymentTurnstile = useRef<TurnstileInstance | undefined>(undefined);
+
+  useEffect(() => {
+    if (!upiQrString) return;
+    QRCode.toDataURL(upiQrString, { width: 480, margin: 1 })
+      .then(setQrDataUrl)
+      .catch(() => setQrDataUrl(''));
+  }, [upiQrString]);
 
   // Handle Team Size change
   const handleTeamSizeChange = (newSize: number) => {
@@ -98,8 +125,7 @@ export default function RegisterPage() {
           phone: '',
           year: '2',
           department: 'CSE',
-          college: 'SRM Institute of Science and Technology',
-        });
+            });
       }
       setPlayers([...players, ...added]);
     } else if (newSize < players.length) {
@@ -198,10 +224,21 @@ export default function RegisterPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           teamName: teamName.trim(),
-          teamSize,
-          players: players.slice(0, teamSize),
+          players: players.slice(0, teamSize).map((p, idx) => ({
+            slot: idx + 1,
+            isLeader: idx === 0,
+            fullName: p.name.trim(),
+            email: p.email.trim().toLowerCase(),
+            regNo: p.regNo.trim().toUpperCase(),
+            phone: p.phone.trim() || undefined,
+            year: p.year || undefined,
+            department: p.department.trim() || undefined,
+          })),
           consent,
           website: honeypot, // Honeypot
+          _formOpenedAt: formOpenedAt.current,
+          turnstileToken: registerToken,
+          idempotencyKey,
         }),
       });
 
@@ -209,19 +246,25 @@ export default function RegisterPage() {
 
       if (!response.ok || !data.ok) {
         if (data.fields) {
-          setErrors(data.fields);
+          setErrors(toFormErrors(data.fields));
         }
         setGlobalError(data.message || 'Registration failed. Please review your entries.');
+        // Turnstile tokens are single-use — get a fresh one for the retry
+        setRegisterToken('');
+        registerTurnstile.current?.reset();
         setIsSubmitting(false);
         return;
       }
 
       // Success Step 1
+      const result = data.data;
       playAccessGranted();
-      setTeamId(data.registrationId);
-      setFee(data.fee || 300);
-      setUpiId(data.upiId || 'dbuglabs@upi');
-      setPayeeName(data.payeeName || 'SRM DBUG Labs');
+      setTeamId(result.teamId);
+      setResumeToken(result.resumeToken);
+      setFee(result.upi.amount);
+      setUpiId(result.upi.id);
+      setPayeeName(result.upi.payeeName);
+      setUpiQrString(result.upi.qrString);
       setCurrentStep(2);
       window.scrollTo({ top: 0, behavior: 'smooth' });
     } catch {
@@ -253,17 +296,20 @@ export default function RegisterPage() {
     setIsSubmitting(true);
 
     try {
-      const response = await fetch(`/api/registrations/${teamId}/payment`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          teamId,
-          utr: cleanUtr,
-          confirmUtr: cleanConfirm,
-          amount: fee,
-          payerName: payerName.trim(),
-        }),
-      });
+      const response = await fetch(
+        `/api/registrations/${encodeURIComponent(teamId)}/payment?t=${encodeURIComponent(resumeToken)}`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            utr: cleanUtr,
+            confirmUtr: cleanConfirm,
+            amount: fee,
+            payerUpi: payerName.trim() || undefined,
+            turnstileToken: paymentToken,
+          }),
+        }
+      );
 
       const data = await response.json();
 
@@ -272,12 +318,14 @@ export default function RegisterPage() {
           setErrors(data.fields);
         }
         setGlobalError(data.message || 'Payment submission failed.');
+        setPaymentToken('');
+        paymentTurnstile.current?.reset();
         setIsSubmitting(false);
         return;
       }
 
       playAccessGranted();
-      setPaymentSuccessStatus(data.status || 'PAYMENT_SUBMITTED');
+      setPaymentSuccessStatus(data.data?.status || 'UNDER_REVIEW');
       setCurrentStep(3);
       window.scrollTo({ top: 0, behavior: 'smooth' });
     } catch {
@@ -654,11 +702,21 @@ export default function RegisterPage() {
               )}
             </div>
 
+            {/* Human verification (Cloudflare Turnstile) */}
+            <Turnstile
+              ref={registerTurnstile}
+              siteKey={TURNSTILE_SITE_KEY}
+              options={{ action: 'register', theme: 'dark' }}
+              onSuccess={setRegisterToken}
+              onExpire={() => setRegisterToken('')}
+              onError={() => setRegisterToken('')}
+            />
+
             {/* Submit Step 1 Button */}
             <div className="flex justify-end">
               <button
                 type="submit"
-                disabled={isSubmitting}
+                disabled={isSubmitting || !registerToken}
                 className="w-full sm:w-auto px-8 py-3.5 bg-red-600 hover:bg-red-500 disabled:bg-neutral-800 disabled:text-neutral-500 text-white font-mono font-bold tracking-wider text-xs sm:text-sm rounded border border-red-500 flex items-center justify-center gap-3 transition-all shadow-[0_0_20px_rgba(220,38,38,0.4)]"
               >
                 {isSubmitting ? (
@@ -723,17 +781,25 @@ export default function RegisterPage() {
 
                 {/* QR Code Container */}
                 <div className="w-64 h-64 p-2 bg-[#09090c] rounded-xl border border-red-900/60 shadow-[0_0_25px_rgba(220,38,38,0.2)] flex items-center justify-center relative mb-4">
-                  <Image
-                    src="/qr-placeholder.svg"
-                    alt="UPI Payment QR Code Placeholder"
-                    width={240}
-                    height={240}
-                    className="w-full h-full object-contain"
-                    priority
-                  />
-                  <div className="absolute top-2 right-2 px-1.5 py-0.5 rounded bg-neutral-900/90 border border-neutral-700 text-[9px] font-mono text-neutral-400">
-                    SAMPLE QR
-                  </div>
+                  {qrDataUrl ? (
+                    // data: URL generated in the browser, so next/image adds nothing here
+                    <img
+                      src={qrDataUrl}
+                      alt={`UPI payment QR for ${teamId}`}
+                      width={240}
+                      height={240}
+                      className="w-full h-full object-contain rounded-lg"
+                    />
+                  ) : (
+                    <Image
+                      src="/qr-placeholder.svg"
+                      alt="UPI Payment QR Code Placeholder"
+                      width={240}
+                      height={240}
+                      className="w-full h-full object-contain"
+                      priority
+                    />
+                  )}
                 </div>
 
                 <div className="text-[11px] font-mono text-neutral-400">
@@ -885,22 +951,20 @@ export default function RegisterPage() {
                 </div>
               </div>
 
-              {/* Submit Proof Button */}
-              <div className="flex items-center justify-between pt-2">
-                <button
-                  type="button"
-                  onClick={() => {
-                    playHudClick();
-                    setCurrentStep(1);
-                  }}
-                  className="px-4 py-2.5 text-xs font-mono text-neutral-400 hover:text-white transition-colors"
-                >
-                  ← EDIT INTEL
-                </button>
+              <Turnstile
+                ref={paymentTurnstile}
+                siteKey={TURNSTILE_SITE_KEY}
+                options={{ action: 'payment', theme: 'dark' }}
+                onSuccess={setPaymentToken}
+                onExpire={() => setPaymentToken('')}
+                onError={() => setPaymentToken('')}
+              />
 
+              {/* Submit Proof Button */}
+              <div className="flex items-center justify-end pt-2">
                 <button
                   type="submit"
-                  disabled={isSubmitting}
+                  disabled={isSubmitting || !paymentToken}
                   className="px-8 py-3 bg-red-600 hover:bg-red-500 disabled:bg-neutral-800 disabled:text-neutral-500 text-white font-mono font-bold tracking-wider text-xs sm:text-sm rounded border border-red-500 flex items-center gap-3 transition-all shadow-[0_0_20px_rgba(220,38,38,0.4)]"
                 >
                   {isSubmitting ? (

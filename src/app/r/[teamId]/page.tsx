@@ -2,45 +2,62 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { useParams } from 'next/navigation';
-import { ArrowLeft, Clock, CheckCircle2, XCircle, AlertTriangle, ShieldCheck } from 'lucide-react';
+import { useParams, useSearchParams } from 'next/navigation';
+import { ArrowLeft, Clock, CheckCircle2, XCircle, AlertTriangle } from 'lucide-react';
 import { playHudClick } from '@/utils/sound';
+
+interface StatusData {
+  teamId: string;
+  teamName: string;
+  status: string;
+  players: { fullName: string; regNo: string; isLeader: boolean }[];
+  rejectReason?: string;
+  rejectCount: number;
+  canResubmit: boolean;
+  hasVisa: boolean;
+  createdAt?: string;
+}
 
 export default function RegistrationStatusPage() {
   const params = useParams();
-  const registrationId = (params?.registrationId as string) || '';
+  const teamId = (params?.teamId as string) || '';
+  // Signed status token from the email link (/r/DBG-472?t=...)
+  const token = useSearchParams().get('t') ?? '';
 
   const [loading, setLoading] = useState(true);
-  const [data, setData] = useState<any>(null);
+  const [data, setData] = useState<StatusData | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!registrationId) return;
+    if (!teamId) return;
+    if (!token) {
+      setError('This status link is incomplete. Open the link from your registration email.');
+      setLoading(false);
+      return;
+    }
 
-    fetch(`/api/registrations?id=${encodeURIComponent(registrationId)}`)
+    fetch(`/api/registrations/${encodeURIComponent(teamId)}/status?t=${encodeURIComponent(token)}`)
       .then((res) => res.json())
       .then((json) => {
         if (json.ok) {
-          setData(json.registration);
+          setData(json.data);
         } else {
           setError(json.message || 'Registration not found');
         }
       })
       .catch(() => setError('Failed to retrieve registration status'))
       .finally(() => setLoading(false));
-  }, [registrationId]);
+  }, [teamId, token]);
 
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'CONFIRMED':
-      case 'PAYMENT_APPROVED':
         return (
           <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded bg-emerald-950/80 border border-emerald-500 text-emerald-300 font-mono text-xs">
             <CheckCircle2 className="w-4 h-4 text-emerald-400" />
             <span>CONFIRMED & CLEARED</span>
           </div>
         );
-      case 'PAYMENT_SUBMITTED':
       case 'UNDER_REVIEW':
         return (
           <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded bg-amber-950/80 border border-amber-500 text-amber-300 font-mono text-xs">
@@ -48,11 +65,19 @@ export default function RegistrationStatusPage() {
             <span>PAYMENT SUBMITTED · PENDING VERIFICATION</span>
           </div>
         );
-      case 'PAYMENT_REJECTED':
+      case 'REJECTED':
         return (
           <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded bg-red-950/80 border border-red-500 text-red-300 font-mono text-xs">
             <XCircle className="w-4 h-4 text-red-400" />
             <span>PAYMENT REJECTED</span>
+          </div>
+        );
+      case 'CANCELLED':
+      case 'EXPIRED':
+        return (
+          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded bg-neutral-900 border border-neutral-700 text-neutral-300 font-mono text-xs">
+            <XCircle className="w-4 h-4 text-neutral-400" />
+            <span>{status}</span>
           </div>
         );
       default:
@@ -64,6 +89,8 @@ export default function RegistrationStatusPage() {
         );
     }
   };
+
+  const leader = data?.players.find((p) => p.isLeader);
 
   return (
     <div className="min-h-screen bg-[#08080a] text-[#ededed] font-sans py-12 px-4 sm:px-6 lg:px-8 relative">
@@ -85,7 +112,7 @@ export default function RegistrationStatusPage() {
           </div>
 
           <div className="text-2xl font-mono font-bold text-white tracking-wider">
-            {registrationId}
+            {teamId}
           </div>
 
           {loading ? (
@@ -108,11 +135,11 @@ export default function RegistrationStatusPage() {
                 </div>
                 <div className="flex justify-between border-b border-neutral-800 pb-1.5">
                   <span className="text-neutral-500">Leader:</span>
-                  <span className="text-neutral-200">{data.fullName}</span>
+                  <span className="text-neutral-200">{leader?.fullName ?? '—'}</span>
                 </div>
                 <div className="flex justify-between border-b border-neutral-800 pb-1.5">
                   <span className="text-neutral-500">Team Size:</span>
-                  <span className="text-neutral-200">{data.teamSize} Players</span>
+                  <span className="text-neutral-200">{data.players.length} Players</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-neutral-500">Registered:</span>
@@ -122,13 +149,16 @@ export default function RegistrationStatusPage() {
                 </div>
               </div>
 
-              {data.status === 'PAYMENT_PENDING' && (
-                <Link
-                  href={`/register/pay/${registrationId}`}
-                  className="block w-full py-3 bg-red-600 hover:bg-red-500 text-white font-mono text-xs font-bold rounded border border-red-500"
-                >
-                  COMPLETE PAYMENT NOW
-                </Link>
+              {data.status === 'REJECTED' && data.rejectReason && (
+                <div className="text-left p-4 rounded bg-red-950/40 border border-red-800 text-xs font-mono text-red-300">
+                  Reason: {data.rejectReason}
+                </div>
+              )}
+
+              {(data.status === 'PAYMENT_PENDING' || data.canResubmit) && (
+                <p className="text-xs font-mono text-neutral-400">
+                  Use the payment link in your registration email to submit your UTR.
+                </p>
               )}
             </div>
           ) : null}
