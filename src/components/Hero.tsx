@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import Link from 'next/link';
 import { Shield, Sparkles, ChevronDown, Terminal, Clock, MapPin, Users } from 'lucide-react';
 import { playHudClick, playHudHover } from '../utils/sound';
 
@@ -78,16 +79,16 @@ export const Hero: React.FC<HeroProps> = ({
 
         {/* Primary and Secondary Action CTAs */}
         <div className="flex flex-col sm:flex-row items-center gap-4 mb-12 w-full sm:w-auto">
-          <button
+          <Link
+            href="/register"
             onClick={() => {
               playHudClick();
-              onOpenRegister();
             }}
             className="w-full sm:w-auto px-8 py-3.5 bg-red-600 hover:bg-red-500 text-white font-mono text-sm font-bold tracking-widest uppercase rounded border border-red-400/80 shadow-[0_0_25px_rgba(220,38,38,0.5)] transition-all hover:scale-[1.02] active:scale-95 group flex items-center justify-center gap-2"
           >
             <span>ENTER THE BORDERLAND</span>
             <span className="group-hover:translate-x-1 transition-transform">→</span>
-          </button>
+          </Link>
 
           <button
             onClick={() => {
