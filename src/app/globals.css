@@ -72,6 +72,64 @@
     0 18px 40px -18px rgba(0, 0, 0, 0.8);
 }
 
+/* Neon billboard card (hero floating cards) */
+.neon-card {
+  background: radial-gradient(ellipse at 50% 45%, rgba(120, 10, 16, 0.55), rgba(12, 4, 6, 0.92) 70%);
+  border: 1.5px solid #ff3b3b;
+  box-shadow:
+    0 0 18px rgba(255, 45, 45, 0.55),
+    0 0 48px rgba(255, 30, 30, 0.25),
+    inset 0 0 22px rgba(255, 40, 40, 0.25);
+  backdrop-filter: blur(2px);
+}
+.neon-glyph {
+  text-shadow: 0 0 12px rgba(255, 60, 60, 0.9), 0 0 32px rgba(255, 40, 40, 0.6);
+}
+.neon-text {
+  text-shadow: 0 0 8px rgba(255, 70, 70, 0.8);
+}
+
+@keyframes float-card {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-14px);
+  }
+}
+.float-card {
+  animation: float-card 6s ease-in-out infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .float-card {
+    animation: none;
+  }
+}
+
+/* Spade cursor (mouse/trackpad only) */
+@media (pointer: fine) {
+  html,
+  body {
+    cursor: url('/cursors/spade.svg') 12 2, auto;
+  }
+  a,
+  button,
+  [role='button'],
+  summary,
+  select,
+  label[for] {
+    cursor: url('/cursors/spade-red.svg') 12 2, pointer;
+  }
+  input:not([type='checkbox']):not([type='radio']),
+  textarea {
+    cursor: text;
+  }
+  button:disabled {
+    cursor: not-allowed;
+  }
+}
+
 /* Custom typography classes */
 .font-display {
   font-family: var(--font-cinzel), serif;

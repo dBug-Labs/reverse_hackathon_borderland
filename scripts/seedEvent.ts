@@ -64,14 +64,14 @@ async function seedEvent() {
     payeeName: 'DBUG Labs',
     teamIdPrefix: 'DBG',
     faq: [
-      { q: 'What is a Reverse Hackathon?', a: 'Instead of building, you break and debug intentionally broken codebases.' },
+      { q: 'What is a Reverse Hackathon?', a: 'Each team gets a finished product without being told what problem it solves, and works out what it does, who it is for, what is missing, and how to make it better.' },
       { q: 'How many players per team?', a: '2 to 4 players. One is the leader.' },
       { q: 'What should I bring?', a: 'Your laptop, SRM ID card, and a charger.' },
       { q: 'Is the fee refundable?', a: 'No refunds once payment is confirmed.' },
     ],
     contact: {
-      email: 'dbuglabs@srmist.edu.in',
-      phone: '+91 98765 43210',
+      email: 'dbuglabsevents@gmail.com',
+      phone: '+91 94312 97519',
       instagram: '@dbuglabs',
     },
     rulesUrl: '/rules',

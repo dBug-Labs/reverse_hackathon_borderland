@@ -1,61 +1,63 @@
 import React, { useState } from 'react';
-import { ChevronDown, HelpCircle } from 'lucide-react';
+import { ChevronDown } from 'lucide-react';
 import { playHudClick } from '../utils/sound';
+import { CONTACTS, CONTACT_EMAIL } from './contacts';
 
 interface FaqItem {
   q: string;
   a: string;
 }
 
+// Answers follow the official "Borderland Protocol" event brief.
+const FAQS: FaqItem[] = [
+  {
+    q: 'What is a Reverse Hackathon?',
+    a: 'Most hackathons give you a problem and ask you to build a solution. Here it works the other way around: each team gets a finished product, but no one tells you what problem it was built to solve. You study it and work out what it does, who it’s for, what’s missing or broken, and how it could be better. It rewards whoever understands the deepest, not whoever builds the fastest.',
+  },
+  {
+    q: 'Do we have to build something from scratch?',
+    a: 'No. You investigate an existing product — thinking like both a product manager and an engineer. That means real research: reading code you’ve never seen, tracing how the parts connect, and working out why it was built.',
+  },
+  {
+    q: 'What happens on Day 1?',
+    a: 'Day 1 is training, with no competition. Two sessions — “What Is Reverse Engineering?” and “Thinking Like a Product Manager” — then a hands-on practice round on a sample product, and a preview of Day 2’s rules, scoring and Games.',
+  },
+  {
+    q: 'What do we get on Day 2?',
+    a: 'At check-in (9:00 AM) every team receives a Player Visa — the scorecard used all day — with 3 Visa Points. At the Mission Briefing (9:30 AM) each team gets its mystery product. What problem it solves is not revealed.',
+  },
+  {
+    q: 'What are Visa Points?',
+    a: 'Every team starts Day 2 with 3 Visa Points. They go up when your team does well in a Game and down when it doesn’t. A live leaderboard tracks every team’s Visa Points all day.',
+  },
+  {
+    q: 'How does scoring and the leaderboard work?',
+    a: 'Each of the four Games is scored separately — ♠ Spades (speed and action), ♦ Diamonds (intelligence and logic), ♣ Clubs (teamwork) and ♥ Hearts (psychology and trust). The live leaderboard shows Rank, Team, each suit’s score, Visa Points and Total, and updates after every Game.',
+  },
+  {
+    q: 'What is the High Risk Difficulty Card?',
+    a: 'After Game 1 each team picks a card for Game 2. Standard is a more guided version worth normal points. High Risk is tougher and less guided, worth 1.5× the points — but if your final answer is wrong, you lose points instead.',
+  },
+  {
+    q: 'What is the Twist Card?',
+    a: 'Just before lunch ends on Day 2, the Game Masters reveal one new rule or piece of information that changes how teams should approach the rest of the day. It rewards teams who adapt quickly.',
+  },
+  {
+    q: 'What happens in The Trial and the Final Duel?',
+    a: 'In The Trial (♥ Hearts) each team presents the problem, the user and its proposed improvement to the Game Masters, then defends it under direct questioning. The other Players watch and react live, which adds a small bonus. After that, the two teams with the most Visa Points face off in the Final Duel — a rapid-fire round of questions about their product.',
+  },
+  {
+    q: 'Who are the Game Masters?',
+    a: 'The Game Masters are the judges. They run and score the Games and question teams during The Trial. All decisions by the organising team and Game Masters are final.',
+  },
+  {
+    q: 'Who can register, and how big is a team?',
+    a: 'Teams have 2 to 4 members, and every member must be a current SRM student with an SRM email (@srmist.edu.in) and register number. Any department or year can join. Entry is ₹199 per team, paid by UPI when you register.',
+  },
+];
+
 export const FaqSection: React.FC = () => {
   const [openIndex, setOpenIndex] = useState<number | null>(0);
-
-  const faqs: FaqItem[] = [
-    {
-      q: 'What is a Reverse Hackathon?',
-      a: 'Conventional hackathons give you a problem prompt and ask you to write code as fast as possible. A Reverse Hackathon flips the paradigm: every team is given an already built, finished mystery product without any documentation or prompt. Your mission is to reverse-engineer it, deduce what problem it actually solves, identify its intended users, uncover its flaws, and propose a strategic overhaul.',
-    },
-    {
-      q: 'Do we build a new product or write code from scratch?',
-      a: 'No. You are not building an app from zero. You are investigating and diagnosing an existing product. However, you will inspect its code, dissect its API responses, analyze client-side state, and craft forensic reports and improvement proofs.',
-    },
-    {
-      q: 'What do we receive on Day 2?',
-      a: 'At 09:30 AM during Mission Briefing, every Player Group receives their official Player Visa scorecard (with 3 initial Visa Points) and an encrypted mystery product access kit. What problem the product solves is deliberately withheld.',
-    },
-    {
-      q: 'What is a "mystery product"?',
-      a: 'It could be a full-stack web application, an internal enterprise tool, a specialized algorithmic service, or a consumer mobile app bundle created by the organizers. It functions, but its purpose and audience must be deduced through investigative inquiry.',
-    },
-    {
-      q: 'How does scoring and the Leaderboard work?',
-      a: 'Every suit game tests a different dimension (♠ Spades: Speed & Action, ♦ Diamonds: Intelligence & Logic, ♣ Clubs: Teamwork & Trading, ♥ Hearts: Psychology & Defense). Scores are fed into the live arena display after each game, and cumulative Visa Points determine survival and final rankings.',
-    },
-    {
-      q: 'What are Visa Points?',
-      a: 'In homage to Alice in Borderland, every team begins Day 2 with 3 Visa Points. High performance in games or strategic risks grant additional Visa Points. Severe rule violations, caught trading lies, or failed high-risk bets deduct Visa. If your Visa reaches zero, you risk elimination from the arena.',
-    },
-    {
-      q: 'What is the High Risk difficulty card?',
-      a: 'At 11:15 AM before Game 2, your team chooses either Standard or High Risk. Standard provides guided hints and awards normal points (up to 100). High Risk gives zero hints and awards 1.5× points (up to 150), but if your final forensic deduction is fundamentally wrong, you lose points and Visa balance!',
-    },
-    {
-      q: 'What happens during The Trading Floor (♣ Clubs)?',
-      a: 'During Game 3, teams are permitted to leave their workstations and interact with rival Player Groups. Each team is given one proprietary piece of insight the others lack. You can negotiate trades, form temporary pacts, or hoard information. But beware: trading fraudulent intel carries severe Visa penalties.',
-    },
-    {
-      q: 'What happens during The Trial (♥ Hearts) and Final Duel?',
-      a: 'In Game 4 (The Trial), your team presents its definitive product diagnosis and improvement proposal directly to the Game Masters tribunal, who cross-examine you under intense scrutiny while the spectator crowd reacts. The top two teams with the highest cumulative Visa Points then face off in The Final Duel—a rapid-fire sudden death round.',
-    },
-    {
-      q: 'Who are the Game Masters?',
-      a: 'The Game Masters are experienced industry product leads, software architects, security engineers, and organizers from dBug Labs and SRM IST who evaluate your investigative depth, technical veracity, and poise under interrogation.',
-    },
-    {
-      q: 'What is the team size and who is eligible to register?',
-      a: 'Teams have 2 to 4 members, and every member must be a current SRM student with an SRM email (@srmist.edu.in) and register number. Any department or year can join. Entry is ₹199 per team, paid by UPI when you register.',
-    },
-  ];
 
   const toggle = (idx: number) => {
     playHudClick();
@@ -70,20 +72,34 @@ export const FaqSection: React.FC = () => {
           <h2 className="font-poster uppercase text-5xl sm:text-6xl text-[#f5eee1] leading-none mt-3">
             Before you play
           </h2>
-          <p className="mt-4 text-neutral-400 leading-relaxed">
-            Still unsure? Mail{' '}
-            <a href="mailto:borderland@dbuglabs.org" className="text-neutral-200 underline underline-offset-4">
-              borderland@dbuglabs.org
-            </a>
-            .
-          </p>
+          <p className="mt-4 text-neutral-400 leading-relaxed">Still unsure? Talk to us.</p>
+
+          <ul className="mt-5 space-y-4">
+            {CONTACTS.map((c) => (
+              <li key={c.phone}>
+                <div className="font-heading font-bold text-neutral-100">{c.name}</div>
+                <div className="text-sm text-neutral-500">{c.role}</div>
+                <a href={`tel:+91${c.phone}`} className="text-neutral-300 hover:text-white tabular-nums">
+                  +91 {c.phone.slice(0, 5)} {c.phone.slice(5)}
+                </a>
+              </li>
+            ))}
+            <li>
+              <a
+                href={`mailto:${CONTACT_EMAIL}`}
+                className="text-neutral-300 underline underline-offset-4 hover:text-white"
+              >
+                {CONTACT_EMAIL}
+              </a>
+            </li>
+          </ul>
         </div>
 
         <div className="lg:col-span-8 border-t border-neutral-800">
-          {faqs.map((faq, idx) => {
+          {FAQS.map((faq, idx) => {
             const isOpen = openIndex === idx;
             return (
-              <div key={idx} className="border-b border-neutral-800">
+              <div key={faq.q} className="border-b border-neutral-800">
                 <button
                   onClick={() => toggle(idx)}
                   aria-expanded={isOpen}

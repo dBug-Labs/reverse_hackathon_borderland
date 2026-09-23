@@ -56,7 +56,8 @@ export const Navbar: React.FC<NavbarProps> = ({
           href="#"
           className="font-poster text-2xl uppercase tracking-wide text-[#f5eee1] flex items-center gap-2 whitespace-nowrap shrink-0"
         >
-          <span className="text-[var(--card-red)] select-none text-xl">♠</span>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/brand/dbuglabs-logo.png" alt="dBug Labs" className="w-7 h-7" />
           <span>Hackback</span>
         </a>
 

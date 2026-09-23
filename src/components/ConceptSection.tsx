@@ -6,7 +6,7 @@ const QUESTIONS = [
     a: 'Look past the UI and find the real value the product was built to deliver.',
   },
   {
-    q: 'Who is it built for?',
+    q: 'Who is it made for?',
     a: 'Work out the target user, their workflow, and the domain it lives in.',
   },
   {
@@ -31,9 +31,9 @@ export const ConceptSection: React.FC = () => {
             Not a normal hackathon.
           </h2>
           <p className="mt-5 text-neutral-400 text-base sm:text-lg leading-relaxed">
-            Most hackathons hand you a problem and ask for a prototype. Here you get a finished,
-            working product — with no brief, no docs, and no idea why it exists. Your job is to
-            reverse it.
+            Most hackathons give you a problem and ask you to build a solution. Here each team gets a
+            finished product — and no one tells you what problem it was built to solve. It doesn&apos;t
+            reward whoever builds the fastest. It rewards whoever understands the deepest.
           </p>
         </div>
 

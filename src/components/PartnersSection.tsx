@@ -1,4 +1,5 @@
 import React from 'react';
+import { CONTACT_EMAIL } from './contacts';
 
 export const PartnersSection: React.FC = () => {
   return (
@@ -10,11 +11,11 @@ export const PartnersSection: React.FC = () => {
 
         <div className="mt-6 grid sm:grid-cols-2 gap-4">
           <div className="flex items-center gap-4 rounded-2xl border border-neutral-800 bg-[#0e0e11] p-5 sm:p-6">
-            <div className="w-12 h-12 rounded-xl bg-[var(--card-red)] text-white flex items-center justify-center font-poster text-xl shrink-0">
-              dB
-            </div>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/brand/dbuglabs-logo.png" alt="" className="w-12 h-12 shrink-0" />
             <div>
-              <div className="font-heading font-bold text-neutral-100 text-lg">dBug Labs</div>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src="/brand/dbuglabs-wordmark.png" alt="dBug Labs" className="h-7 w-auto" />
               <div className="text-sm text-neutral-400">Organising team and Game Masters</div>
             </div>
           </div>
@@ -32,8 +33,8 @@ export const PartnersSection: React.FC = () => {
 
         <p className="mt-6 text-sm text-neutral-500">
           Want to partner with us or join as a Game Master? Write to{' '}
-          <a href="mailto:partners@dbuglabs.org" className="text-neutral-300 underline underline-offset-4 hover:text-white">
-            partners@dbuglabs.org
+          <a href={`mailto:${CONTACT_EMAIL}`} className="text-neutral-300 underline underline-offset-4 hover:text-white">
+            {CONTACT_EMAIL}
           </a>
           .
         </p>

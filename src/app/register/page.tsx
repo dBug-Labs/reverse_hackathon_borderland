@@ -4,21 +4,19 @@ import React, { useRef, useState } from 'react';
 import Link from 'next/link';
 import { Turnstile, type TurnstileInstance } from '@marsidev/react-turnstile';
 import {
-  Shield,
   ArrowRight,
   ArrowLeft,
   Check,
   AlertCircle,
   Copy,
-  CheckCircle2,
   Users,
   QrCode,
   Lock,
-  ExternalLink,
   Info,
   Clock,
 } from 'lucide-react';
 import { playHudClick, playAccessGranted } from '@/utils/sound';
+import { RegisterShell } from '@/components/RegisterShell';
 import { UpiQr } from '@/components/UpiQr';
 
 const TURNSTILE_SITE_KEY = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY ?? '';
@@ -339,82 +337,52 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#08080a] text-[#ededed] font-sans selection:bg-red-600/30 selection:text-red-200 py-10 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
-      {/* Background Cyber Grid */}
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,rgba(220,38,38,0.12)_0%,transparent_65%)] pointer-events-none" />
-      <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:48px_48px] pointer-events-none" />
-
-      <div className="max-w-4xl mx-auto relative z-10">
-        {/* Navigation Breadcrumb / Top Bar */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-8 pb-4 border-b border-neutral-800">
-          <Link
-            href="/"
-            onClick={() => playHudClick()}
-            className="inline-flex items-center gap-2 text-xs sm:text-sm font-mono text-neutral-400 hover:text-white transition-colors whitespace-nowrap self-start"
-          >
-            <ArrowLeft className="w-4 h-4 text-red-500 shrink-0" />
-            <span>RETURN TO BASE</span>
-          </Link>
-          <div className="inline-flex items-center gap-2 text-[10px] sm:text-xs font-mono tracking-wider sm:tracking-widest text-red-400 bg-red-950/40 border border-red-800/60 px-2.5 sm:px-3 py-1 rounded self-start sm:self-auto whitespace-nowrap">
-            <span className="inline-block w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse shrink-0" />
-            <span>BORDERLAND REGISTRATION</span>
-          </div>
-        </div>
-
-        {/* Stepper Header */}
-        <div className="mb-10">
-          <div className="grid grid-cols-3 gap-2 sm:gap-4 text-center">
-            {/* Step 1 */}
-            <div
-              className={`p-3 rounded border transition-all ${
-                currentStep === 1
-                  ? 'bg-neutral-900 border-red-600 text-white shadow-[0_0_15px_rgba(220,38,38,0.25)]'
-                  : currentStep > 1
-                  ? 'bg-neutral-950/60 border-emerald-800/80 text-emerald-400'
-                  : 'bg-neutral-950/40 border-neutral-800 text-neutral-500'
-              }`}
-            >
-              <div className="text-[10px] font-mono tracking-wider uppercase mb-1">
-                Phase 01 {currentStep > 1 && '✓'}
-              </div>
-              <div className="text-xs sm:text-sm font-bold truncate">Team Intel</div>
-            </div>
-
-            {/* Step 2 */}
-            <div
-              className={`p-3 rounded border transition-all ${
-                currentStep === 2
-                  ? 'bg-neutral-900 border-red-600 text-white shadow-[0_0_15px_rgba(220,38,38,0.25)]'
-                  : currentStep > 2
-                  ? 'bg-neutral-950/60 border-emerald-800/80 text-emerald-400'
-                  : 'bg-neutral-950/40 border-neutral-800 text-neutral-500'
-              }`}
-            >
-              <div className="text-[10px] font-mono tracking-wider uppercase mb-1">
-                Phase 02 {currentStep > 2 && '✓'}
-              </div>
-              <div className="text-xs sm:text-sm font-bold truncate">UPI Protocol</div>
-            </div>
-
-            {/* Step 3 */}
-            <div
-              className={`p-3 rounded border transition-all ${
-                currentStep === 3
-                  ? 'bg-neutral-900 border-emerald-600 text-emerald-300 shadow-[0_0_15px_rgba(16,185,129,0.25)]'
-                  : 'bg-neutral-950/40 border-neutral-800 text-neutral-500'
-              }`}
-            >
-              <div className="text-[10px] font-mono tracking-wider uppercase mb-1">Phase 03</div>
-              <div className="text-xs sm:text-sm font-bold truncate">Clearance Pass</div>
-            </div>
-          </div>
-        </div>
+    <RegisterShell
+      eyebrow="Registration · ₹199 per team"
+      title={currentStep === 3 ? 'You’re in the queue' : 'Register your team'}
+      subtitle={
+        currentStep === 1
+          ? 'Teams of 2–4 SRM students. Add your team, then pay ₹199 by UPI to lock your spot.'
+          : undefined
+      }
+    >
+        {/* Steps */}
+        <ol className="mb-10 grid grid-cols-3 gap-2 sm:gap-3">
+          {['Team details', 'Pay ₹199', 'Done'].map((label, i) => {
+            const n = i + 1;
+            const state = currentStep > n ? 'done' : currentStep === n ? 'active' : 'todo';
+            return (
+              <li
+                key={label}
+                className={`rounded-xl px-3 py-3 sm:px-4 ${
+                  state === 'active'
+                    ? 'paper-card'
+                    : state === 'done'
+                    ? 'border border-neutral-700 bg-[#0e0e11] text-neutral-300'
+                    : 'border border-neutral-800 text-neutral-500'
+                }`}
+              >
+                <div
+                  className={`font-label text-[11px] font-bold uppercase tracking-[0.16em] ${
+                    state === 'active' ? 'text-[var(--card-red)]' : ''
+                  }`}
+                >
+                  Step {n}
+                  {state === 'done' && ' ✓'}
+                </div>
+                <div className={`font-heading font-bold text-sm sm:text-base ${state === 'active' ? 'text-[var(--ink)]' : ''}`}>
+                  {label}
+                </div>
+              </li>
+            );
+          })}
+        </ol>
 
         {/* Global Error Banner */}
         {globalError && (
           <div className="mb-6 p-4 rounded bg-red-950/60 border border-red-600 text-red-200 flex items-start gap-3 animate-shake">
             <AlertCircle className="w-5 h-5 text-red-400 shrink-0 mt-0.5" />
-            <div className="text-sm font-mono">{globalError}</div>
+            <div className="text-sm font-label">{globalError}</div>
           </div>
         )}
 
@@ -438,22 +406,22 @@ export default function RegisterPage() {
             </div>
 
             {/* Team Configuration Box */}
-            <div className="p-6 rounded-lg bg-[#0e0e13] border border-neutral-800 relative">
-              <div className="text-xs font-mono tracking-widest text-red-500 uppercase mb-4 flex items-center gap-2">
+            <div className="p-6 rounded-2xl bg-[#0e0e11] border border-neutral-800 relative">
+              <div className="text-xs font-label font-bold tracking-[0.16em] text-[var(--card-red)] uppercase mb-4 flex items-center gap-2">
                 <Users className="w-4 h-4" />
-                <span>TEAM SPECIFICATIONS</span>
+                <span>Your team</span>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                 {/* Team Name */}
                 <div>
-                  <label className="block text-xs font-mono text-neutral-300 mb-2">
-                    TEAM CALLSIGN / NAME <span className="text-red-500">*</span>
+                  <label className="block text-sm font-label font-semibold text-neutral-200 mb-2">
+                    Team name <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="text"
                     required
-                    placeholder="e.g. CYBER_SHADOWS"
+                    placeholder="e.g. Null Pointers"
                     value={teamName}
                     onChange={(e) => {
                       setTeamName(e.target.value);
@@ -465,19 +433,19 @@ export default function RegisterPage() {
                         });
                       }
                     }}
-                    className={`w-full px-4 py-2.5 bg-neutral-900 border rounded font-mono text-sm text-white placeholder-neutral-600 focus:outline-none focus:border-red-500 transition-colors ${
+                    className={`w-full px-4 py-2.5 bg-neutral-900 border rounded font-label text-sm text-white placeholder-neutral-600 focus:outline-none focus:border-[var(--paper)] transition-colors ${
                       errors.teamName ? 'border-red-500' : 'border-neutral-700'
                     }`}
                   />
                   {errors.teamName && (
-                    <p className="mt-1 text-xs text-red-400 font-mono">{errors.teamName}</p>
+                    <p className="mt-1 text-xs text-red-400 font-label">{errors.teamName}</p>
                   )}
                 </div>
 
                 {/* Team Size Segmented Control */}
                 <div>
-                  <label className="block text-xs font-mono text-neutral-300 mb-2">
-                    OPERATIVE CAPACITY (PLAYERS) <span className="text-red-500">*</span>
+                  <label className="block text-sm font-label font-semibold text-neutral-200 mb-2">
+                    Team size <span className="text-red-500">*</span>
                   </label>
                   <div className="grid grid-cols-3 gap-2">
                     {[2, 3, 4].map((size) => (
@@ -485,13 +453,13 @@ export default function RegisterPage() {
                         key={size}
                         type="button"
                         onClick={() => handleTeamSizeChange(size)}
-                        className={`py-2.5 rounded font-mono text-sm font-bold border transition-all ${
+                        className={`py-2.5 rounded font-label text-sm font-bold border transition-all ${
                           teamSize === size
-                            ? 'bg-red-600 border-red-500 text-white shadow-[0_0_10px_rgba(220,38,38,0.4)]'
+                            ? 'bg-[var(--paper)] border-transparent text-[var(--ink)]'
                             : 'bg-neutral-900 border-neutral-700 text-neutral-400 hover:text-white hover:border-neutral-500'
                         }`}
                       >
-                        {size} Players
+                        {size} players
                       </button>
                     ))}
                   </div>
@@ -506,33 +474,33 @@ export default function RegisterPage() {
                 return (
                   <div
                     key={idx}
-                    className="p-6 rounded-lg bg-[#0e0e13] border border-neutral-800 relative transition-all hover:border-neutral-700"
+                    className="p-6 rounded-2xl bg-[#0e0e11] border border-neutral-800 relative transition-all hover:border-neutral-700"
                   >
                     <div className="flex items-center justify-between mb-4 border-b border-neutral-800 pb-3">
                       <div className="flex items-center gap-3">
                         <span
-                          className={`w-6 h-6 rounded flex items-center justify-center font-mono text-xs font-bold ${
+                          className={`w-6 h-6 rounded flex items-center justify-center font-label text-xs font-bold ${
                             isLeader
-                              ? 'bg-red-600 text-white'
+                              ? 'bg-[var(--card-red)] text-white'
                               : 'bg-neutral-800 text-neutral-300'
                           }`}
                         >
                           P{idx + 1}
                         </span>
                         <span className="font-heading font-bold text-sm tracking-wide text-white">
-                          {isLeader ? 'CAPTAIN / LEADER (PRIMARY COMM)' : `OPERATIVE 0${idx + 1}`}
+                          {`Player ${idx + 1}`}
                         </span>
                       </div>
-                      <span className="text-[10px] font-mono text-neutral-400 uppercase">
-                        {isLeader ? 'Lead Coordinator' : 'Team Member'}
+                      <span className="text-xs font-label font-semibold text-neutral-400">
+                        {isLeader ? 'Team leader' : 'Member'}
                       </span>
                     </div>
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                       {/* Name */}
                       <div>
-                        <label className="block text-[11px] font-mono text-neutral-400 mb-1">
-                          FULL NAME <span className="text-red-500">*</span>
+                        <label className="block text-sm font-label font-semibold text-neutral-300 mb-1">
+                          Full name <span className="text-red-500">*</span>
                         </label>
                         <input
                           type="text"
@@ -540,14 +508,14 @@ export default function RegisterPage() {
                           placeholder="e.g. Aarav Sharma"
                           value={player.name}
                           onChange={(e) => updatePlayer(idx, 'name', e.target.value)}
-                          className={`w-full px-3 py-2 bg-neutral-900 border rounded font-mono text-xs text-white placeholder-neutral-600 focus:outline-none focus:border-red-500 ${
+                          className={`w-full px-3 py-2 bg-neutral-900 border rounded font-label text-xs text-white placeholder-neutral-600 focus:outline-none focus:border-[var(--paper)] ${
                             errors[`players.${idx}.name`]
                               ? 'border-red-500'
                               : 'border-neutral-700'
                           }`}
                         />
                         {errors[`players.${idx}.name`] && (
-                          <p className="mt-1 text-[10px] text-red-400 font-mono">
+                          <p className="mt-1 text-[10px] text-red-400 font-label">
                             {errors[`players.${idx}.name`]}
                           </p>
                         )}
@@ -555,8 +523,8 @@ export default function RegisterPage() {
 
                       {/* SRM Email */}
                       <div>
-                        <label className="block text-[11px] font-mono text-neutral-400 mb-1">
-                          SRM EMAIL (@srmist.edu.in) <span className="text-red-500">*</span>
+                        <label className="block text-sm font-label font-semibold text-neutral-300 mb-1">
+                          SRM email <span className="text-red-500">*</span>
                         </label>
                         <input
                           type="email"
@@ -564,14 +532,14 @@ export default function RegisterPage() {
                           placeholder="as1234@srmist.edu.in"
                           value={player.email}
                           onChange={(e) => updatePlayer(idx, 'email', e.target.value)}
-                          className={`w-full px-3 py-2 bg-neutral-900 border rounded font-mono text-xs text-white placeholder-neutral-600 focus:outline-none focus:border-red-500 ${
+                          className={`w-full px-3 py-2 bg-neutral-900 border rounded font-label text-xs text-white placeholder-neutral-600 focus:outline-none focus:border-[var(--paper)] ${
                             errors[`players.${idx}.email`]
                               ? 'border-red-500'
                               : 'border-neutral-700'
                           }`}
                         />
                         {errors[`players.${idx}.email`] && (
-                          <p className="mt-1 text-[10px] text-red-400 font-mono">
+                          <p className="mt-1 text-[10px] text-red-400 font-label">
                             {errors[`players.${idx}.email`]}
                           </p>
                         )}
@@ -579,8 +547,8 @@ export default function RegisterPage() {
 
                       {/* Register Number */}
                       <div>
-                        <label className="block text-[11px] font-mono text-neutral-400 mb-1">
-                          SRM REGISTER NO. <span className="text-red-500">*</span>
+                        <label className="block text-sm font-label font-semibold text-neutral-300 mb-1">
+                          SRM register number <span className="text-red-500">*</span>
                         </label>
                         <input
                           type="text"
@@ -588,14 +556,14 @@ export default function RegisterPage() {
                           placeholder="RA2311003010123"
                           value={player.regNo}
                           onChange={(e) => updatePlayer(idx, 'regNo', e.target.value.toUpperCase())}
-                          className={`w-full px-3 py-2 bg-neutral-900 border rounded font-mono text-xs text-white placeholder-neutral-600 focus:outline-none focus:border-red-500 ${
+                          className={`w-full px-3 py-2 bg-neutral-900 border rounded font-label text-xs text-white placeholder-neutral-600 focus:outline-none focus:border-[var(--paper)] ${
                             errors[`players.${idx}.regNo`]
                               ? 'border-red-500'
                               : 'border-neutral-700'
                           }`}
                         />
                         {errors[`players.${idx}.regNo`] && (
-                          <p className="mt-1 text-[10px] text-red-400 font-mono">
+                          <p className="mt-1 text-[10px] text-red-400 font-label">
                             {errors[`players.${idx}.regNo`]}
                           </p>
                         )}
@@ -603,8 +571,8 @@ export default function RegisterPage() {
 
                       {/* Phone */}
                       <div>
-                        <label className="block text-[11px] font-mono text-neutral-400 mb-1">
-                          WHATSAPP PHONE {isLeader && <span className="text-red-500">*</span>}
+                        <label className="block text-sm font-label font-semibold text-neutral-300 mb-1">
+                          WhatsApp number {isLeader && <span className="text-red-500">*</span>}
                         </label>
                         <input
                           type="tel"
@@ -612,14 +580,14 @@ export default function RegisterPage() {
                           placeholder={isLeader ? '9876543210 (Required)' : 'Optional'}
                           value={player.phone}
                           onChange={(e) => updatePlayer(idx, 'phone', e.target.value)}
-                          className={`w-full px-3 py-2 bg-neutral-900 border rounded font-mono text-xs text-white placeholder-neutral-600 focus:outline-none focus:border-red-500 ${
+                          className={`w-full px-3 py-2 bg-neutral-900 border rounded font-label text-xs text-white placeholder-neutral-600 focus:outline-none focus:border-[var(--paper)] ${
                             errors[`players.${idx}.phone`]
                               ? 'border-red-500'
                               : 'border-neutral-700'
                           }`}
                         />
                         {errors[`players.${idx}.phone`] && (
-                          <p className="mt-1 text-[10px] text-red-400 font-mono">
+                          <p className="mt-1 text-[10px] text-red-400 font-label">
                             {errors[`players.${idx}.phone`]}
                           </p>
                         )}
@@ -627,13 +595,13 @@ export default function RegisterPage() {
 
                       {/* Year */}
                       <div>
-                        <label className="block text-[11px] font-mono text-neutral-400 mb-1">
-                          ACADEMIC YEAR
+                        <label className="block text-sm font-label font-semibold text-neutral-300 mb-1">
+                          Year
                         </label>
                         <select
                           value={player.year}
                           onChange={(e) => updatePlayer(idx, 'year', e.target.value)}
-                          className="w-full px-3 py-2 bg-neutral-900 border border-neutral-700 rounded font-mono text-xs text-white focus:outline-none focus:border-red-500"
+                          className="w-full px-3 py-2 bg-neutral-900 border border-neutral-700 rounded font-label text-xs text-white focus:outline-none focus:border-[var(--paper)]"
                         >
                           <option value="1">1st Year</option>
                           <option value="2">2nd Year</option>
@@ -645,15 +613,15 @@ export default function RegisterPage() {
 
                       {/* Department */}
                       <div>
-                        <label className="block text-[11px] font-mono text-neutral-400 mb-1">
-                          DEPARTMENT
+                        <label className="block text-sm font-label font-semibold text-neutral-300 mb-1">
+                          Department
                         </label>
                         <input
                           type="text"
                           placeholder="e.g. CSE / IT / ECE"
                           value={player.department}
                           onChange={(e) => updatePlayer(idx, 'department', e.target.value)}
-                          className="w-full px-3 py-2 bg-neutral-900 border border-neutral-700 rounded font-mono text-xs text-white placeholder-neutral-600 focus:outline-none focus:border-red-500"
+                          className="w-full px-3 py-2 bg-neutral-900 border border-neutral-700 rounded font-label text-xs text-white placeholder-neutral-600 focus:outline-none focus:border-[var(--paper)]"
                         />
                       </div>
                     </div>
@@ -689,7 +657,7 @@ export default function RegisterPage() {
                 </span>
               </label>
               {errors.consent && (
-                <p className="mt-2 text-xs text-red-400 font-mono">{errors.consent}</p>
+                <p className="mt-2 text-xs text-red-400 font-label">{errors.consent}</p>
               )}
             </div>
 
@@ -708,16 +676,16 @@ export default function RegisterPage() {
               <button
                 type="submit"
                 disabled={isSubmitting || !registerToken}
-                className="w-full sm:w-auto px-8 py-3.5 bg-red-600 hover:bg-red-500 disabled:bg-neutral-800 disabled:text-neutral-500 text-white font-mono font-bold tracking-wider text-xs sm:text-sm rounded border border-red-500 flex items-center justify-center gap-3 transition-all shadow-[0_0_20px_rgba(220,38,38,0.4)]"
+                className="w-full sm:w-auto px-8 py-3.5 bg-[var(--card-red)] hover:brightness-110 disabled:bg-neutral-800 disabled:text-neutral-500 text-white font-label font-bold tracking-wider text-xs sm:text-sm rounded border border-red-500 flex items-center justify-center gap-3 transition-all"
               >
                 {isSubmitting ? (
                   <>
                     <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                    <span>TRANSMITTING INTEL...</span>
+                    <span>Saving your team…</span>
                   </>
                 ) : (
                   <>
-                    <span>CONTINUE TO PAYMENT PROTOCOL</span>
+                    <span>Continue to payment</span>
                     <ArrowRight className="w-4 h-4" />
                   </>
                 )}
@@ -731,51 +699,44 @@ export default function RegisterPage() {
         {/* ========================================================================= */}
         {currentStep === 2 && (
           <div className="space-y-8 animate-fadeIn">
-            {/* Team ID Issued Header */}
-            <div className="p-6 rounded-lg bg-gradient-to-r from-red-950/40 via-neutral-900 to-neutral-900 border border-red-800/80 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-              <div>
-                <div className="text-[10px] font-mono tracking-widest text-red-400 uppercase">
-                  REGISTRATION ALLOCATED
+            {/* Team ID, on a paper card */}
+            <div className="paper-card rounded-2xl p-2.5">
+              <div className="rounded-xl border border-[var(--card-red)]/45 px-6 py-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                <div>
+                  <div className="font-label text-[11px] font-bold uppercase tracking-[0.16em] text-[var(--card-red)]">
+                    Your Team ID
+                  </div>
+                  <div className="font-poster text-5xl uppercase leading-none text-[var(--ink)] mt-1">{teamId}</div>
+                  <p className="mt-2 text-sm font-label text-[var(--ink)]/70">
+                    Put this in the UPI payment note. We&apos;ve also emailed it to the team leader.
+                  </p>
                 </div>
-                <div className="text-xl sm:text-2xl font-display font-bold text-white flex items-center gap-3">
-                  <span>TEAM ID:</span>
-                  <span className="text-red-500 font-mono tracking-wider">{teamId}</span>
-                </div>
+                <button
+                  type="button"
+                  onClick={() => copyToClipboard(teamId, 'teamId')}
+                  className="px-4 py-2 rounded-md bg-[var(--ink)] hover:bg-black text-[var(--paper)] font-label text-sm font-semibold flex items-center gap-2"
+                >
+                  {copiedTeamId ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+                  <span>{copiedTeamId ? 'Copied' : 'Copy'}</span>
+                </button>
               </div>
-              <button
-                type="button"
-                onClick={() => copyToClipboard(teamId, 'teamId')}
-                className="px-3 py-1.5 rounded bg-neutral-800 hover:bg-neutral-700 text-neutral-300 font-mono text-xs flex items-center gap-2 border border-neutral-700"
-              >
-                {copiedTeamId ? (
-                  <>
-                    <Check className="w-3.5 h-3.5 text-emerald-400" />
-                    <span className="text-emerald-400">COPIED</span>
-                  </>
-                ) : (
-                  <>
-                    <Copy className="w-3.5 h-3.5" />
-                    <span>COPY ID</span>
-                  </>
-                )}
-              </button>
             </div>
 
             {/* Payment Protocol & QR Placeholder Box */}
             <div className="grid grid-cols-1 md:grid-cols-12 gap-8 items-start">
               {/* Left Column: QR Code Display Card */}
-              <div className="md:col-span-5 p-6 rounded-lg bg-[#0e0e13] border border-neutral-800 text-center flex flex-col items-center">
-                <div className="text-xs font-mono text-neutral-400 mb-3 tracking-widest uppercase flex items-center gap-2">
+              <div className="md:col-span-5 p-6 rounded-2xl bg-[#0e0e11] border border-neutral-800 text-center flex flex-col items-center">
+                <div className="text-xs font-label text-neutral-400 mb-3 tracking-widest uppercase flex items-center gap-2">
                   <QrCode className="w-4 h-4 text-red-500" />
-                  <span>OFFICIAL UPI QR</span>
+                  <span>Scan to pay</span>
                 </div>
 
                 {/* QR Code Container */}
-                <div className="w-64 h-64 p-2 bg-[#09090c] rounded-xl border border-red-900/60 shadow-[0_0_25px_rgba(220,38,38,0.2)] flex items-center justify-center relative mb-4">
+                <div className="w-64 h-64 p-2 bg-[#09090c] rounded-xl border border-red-900/60 flex items-center justify-center relative mb-4">
                   <UpiQr value={upiQrString} teamId={teamId} />
                 </div>
 
-                <div className="text-[11px] font-mono text-neutral-400">
+                <div className="text-[11px] font-label text-neutral-400">
                   Scan using GPay, PhonePe, Paytm, or BHIM
                 </div>
               </div>
@@ -783,38 +744,38 @@ export default function RegisterPage() {
               {/* Right Column: Payment Details & Critical Instructions */}
               <div className="md:col-span-7 space-y-4">
                 {/* Fee & UPI Card */}
-                <div className="p-5 rounded-lg bg-[#0e0e13] border border-neutral-800 space-y-4">
+                <div className="p-5 rounded-2xl bg-[#0e0e11] border border-neutral-800 space-y-4">
                   <div className="flex justify-between items-center pb-3 border-b border-neutral-800">
-                    <span className="text-xs font-mono text-neutral-400 uppercase">
-                      ENTRY PROTOCOL FEE
+                    <span className="text-xs font-label text-neutral-400 uppercase">
+                      Entry fee
                     </span>
-                    <span className="text-2xl font-bold font-mono text-white">₹{fee}</span>
+                    <span className="text-2xl font-bold font-label text-white">₹{fee}</span>
                   </div>
 
                   <div>
-                    <label className="block text-[11px] font-mono text-neutral-400 mb-1">
-                      UPI RECIPIENT ID
+                    <label className="block text-sm font-label font-semibold text-neutral-300 mb-1">
+                      UPI ID
                     </label>
                     <div className="flex items-center gap-2">
-                      <div className="flex-1 px-3 py-2 bg-neutral-900 border border-neutral-700 rounded font-mono text-sm text-red-400 select-all">
+                      <div className="flex-1 px-3 py-2 bg-neutral-900 border border-neutral-700 rounded font-label text-sm text-red-400 select-all">
                         {upiId}
                       </div>
                       <button
                         type="button"
                         onClick={() => copyToClipboard(upiId, 'upi')}
-                        className="px-3 py-2 bg-neutral-800 hover:bg-neutral-700 rounded text-neutral-200 font-mono text-xs border border-neutral-700 flex items-center gap-1.5"
+                        className="px-3 py-2 bg-neutral-800 hover:bg-neutral-700 rounded text-neutral-200 font-label text-xs border border-neutral-700 flex items-center gap-1.5"
                       >
                         {copiedUpi ? (
                           <Check className="w-4 h-4 text-emerald-400" />
                         ) : (
                           <Copy className="w-4 h-4" />
                         )}
-                        <span>{copiedUpi ? 'COPIED' : 'COPY'}</span>
+                        <span>{copiedUpi ? 'Copied' : 'Copy'}</span>
                       </button>
                     </div>
                   </div>
 
-                  <div className="text-xs font-mono text-neutral-400">
+                  <div className="text-xs font-label text-neutral-400">
                     Payee Account: <span className="text-neutral-200">{payeeName}</span>
                   </div>
                 </div>
@@ -822,9 +783,9 @@ export default function RegisterPage() {
                 {/* CRITICAL NOTE ALERT */}
                 <div className="p-4 rounded-lg bg-amber-950/40 border border-amber-600/70 text-amber-200 flex items-start gap-3">
                   <Info className="w-5 h-5 text-amber-400 shrink-0 mt-0.5" />
-                  <div className="text-xs font-mono leading-relaxed">
+                  <div className="text-xs font-label leading-relaxed">
                     <strong className="text-amber-300 block mb-1">
-                      CRITICAL REQUIREMENT — ADD NOTE:
+                      Add your Team ID to the payment note
                     </strong>
                     When completing payment in your UPI app, type{' '}
                     <strong className="text-white underline">{teamId}</strong> in the payment
@@ -837,18 +798,18 @@ export default function RegisterPage() {
             {/* UTR Submission Form */}
             <form
               onSubmit={handleStep2Submit}
-              className="p-6 rounded-lg bg-[#0e0e13] border border-neutral-800 space-y-6"
+              className="p-6 rounded-2xl bg-[#0e0e11] border border-neutral-800 space-y-6"
             >
-              <div className="text-xs font-mono tracking-widest text-red-500 uppercase flex items-center gap-2">
+              <div className="text-xs font-label font-bold tracking-[0.16em] text-[var(--card-red)] uppercase flex items-center gap-2">
                 <Lock className="w-4 h-4" />
-                <span>SUBMIT PAYMENT VERIFICATION PROOF</span>
+                <span>Submit your payment</span>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {/* UTR Input */}
                 <div>
-                  <label className="block text-xs font-mono text-neutral-300 mb-1">
-                    12-DIGIT UPI TRANSACTION ID / UTR <span className="text-red-500">*</span>
+                  <label className="block text-sm font-label font-semibold text-neutral-200 mb-1">
+                    12-digit UPI transaction ID (UTR) <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="text"
@@ -866,14 +827,14 @@ export default function RegisterPage() {
                         });
                       }
                     }}
-                    className={`w-full px-4 py-2.5 bg-neutral-900 border rounded font-mono text-sm text-white placeholder-neutral-600 tracking-wider focus:outline-none focus:border-red-500 ${
+                    className={`w-full px-4 py-2.5 bg-neutral-900 border rounded font-label text-sm text-white placeholder-neutral-600 tracking-wider focus:outline-none focus:border-[var(--paper)] ${
                       errors.utr ? 'border-red-500' : 'border-neutral-700'
                     }`}
                   />
                   {errors.utr ? (
-                    <p className="mt-1 text-xs text-red-400 font-mono">{errors.utr}</p>
+                    <p className="mt-1 text-xs text-red-400 font-label">{errors.utr}</p>
                   ) : (
-                    <p className="mt-1 text-[10px] text-neutral-500 font-mono">
+                    <p className="mt-1 text-[10px] text-neutral-500 font-label">
                       GPay: UPI Txn ID · PhonePe: UTR · Paytm: UPI Ref No.
                     </p>
                   )}
@@ -881,8 +842,8 @@ export default function RegisterPage() {
 
                 {/* Confirm UTR */}
                 <div>
-                  <label className="block text-xs font-mono text-neutral-300 mb-1">
-                    CONFIRM 12-DIGIT UTR <span className="text-red-500">*</span>
+                  <label className="block text-sm font-label font-semibold text-neutral-200 mb-1">
+                    Confirm UTR <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="text"
@@ -900,26 +861,26 @@ export default function RegisterPage() {
                         });
                       }
                     }}
-                    className={`w-full px-4 py-2.5 bg-neutral-900 border rounded font-mono text-sm text-white placeholder-neutral-600 tracking-wider focus:outline-none focus:border-red-500 ${
+                    className={`w-full px-4 py-2.5 bg-neutral-900 border rounded font-label text-sm text-white placeholder-neutral-600 tracking-wider focus:outline-none focus:border-[var(--paper)] ${
                       errors.confirmUtr ? 'border-red-500' : 'border-neutral-700'
                     }`}
                   />
                   {errors.confirmUtr && (
-                    <p className="mt-1 text-xs text-red-400 font-mono">{errors.confirmUtr}</p>
+                    <p className="mt-1 text-xs text-red-400 font-label">{errors.confirmUtr}</p>
                   )}
                 </div>
 
                 {/* Payer Name / Account */}
                 <div className="sm:col-span-2">
-                  <label className="block text-xs font-mono text-neutral-400 mb-1">
-                    PAYER NAME / UPI ID (OPTIONAL — ACCELERATES VERIFICATION)
+                  <label className="block text-sm font-label font-semibold text-neutral-300 mb-1">
+                    Paid from (name or UPI ID) — optional, helps us verify faster
                   </label>
                   <input
                     type="text"
                     placeholder="e.g. Aarav Sharma / aarav@oksbi"
                     value={payerName}
                     onChange={(e) => setPayerName(e.target.value)}
-                    className="w-full px-4 py-2 bg-neutral-900 border border-neutral-700 rounded font-mono text-xs text-white placeholder-neutral-600 focus:outline-none focus:border-red-500"
+                    className="w-full px-4 py-2 bg-neutral-900 border border-neutral-700 rounded font-label text-xs text-white placeholder-neutral-600 focus:outline-none focus:border-[var(--paper)]"
                   />
                 </div>
               </div>
@@ -938,16 +899,16 @@ export default function RegisterPage() {
                 <button
                   type="submit"
                   disabled={isSubmitting || !paymentToken}
-                  className="px-8 py-3 bg-red-600 hover:bg-red-500 disabled:bg-neutral-800 disabled:text-neutral-500 text-white font-mono font-bold tracking-wider text-xs sm:text-sm rounded border border-red-500 flex items-center gap-3 transition-all shadow-[0_0_20px_rgba(220,38,38,0.4)]"
+                  className="px-8 py-3 bg-[var(--card-red)] hover:brightness-110 disabled:bg-neutral-800 disabled:text-neutral-500 text-white font-label font-bold tracking-wider text-xs sm:text-sm rounded border border-red-500 flex items-center gap-3 transition-all"
                 >
                   {isSubmitting ? (
                     <>
                       <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                      <span>VALIDATING UTR...</span>
+                      <span>Submitting…</span>
                     </>
                   ) : (
                     <>
-                      <span>SUBMIT PROOF & COMPLETE</span>
+                      <span>Submit UTR</span>
                       <Check className="w-4 h-4" />
                     </>
                   )}
@@ -961,75 +922,53 @@ export default function RegisterPage() {
         {/* STEP 3: CLEARANCE STATUS & CONFIRMATION */}
         {/* ========================================================================= */}
         {currentStep === 3 && (
-          <div className="p-8 rounded-xl bg-[#0e0e13] border border-neutral-800 text-center space-y-6 animate-fadeIn">
-            {/* Success Shield Icon */}
-            <div className="w-16 h-16 mx-auto rounded-full bg-emerald-950/60 border border-emerald-500 flex items-center justify-center text-emerald-400 shadow-[0_0_25px_rgba(16,185,129,0.3)]">
-              <CheckCircle2 className="w-8 h-8" />
-            </div>
-
+          <div className="paper-card rounded-2xl p-2.5 text-[var(--ink)]">
+            <div className="rounded-xl border border-[var(--card-red)]/45 p-6 sm:p-10 text-center space-y-6">
             <div>
-              <div className="text-xs font-mono tracking-widest text-emerald-400 uppercase mb-2">
-                ENTRY SUBMISSION RECORDED
+              <div className="font-label text-[11px] font-bold uppercase tracking-[0.16em] text-[var(--card-red)]">
+                UTR received
               </div>
-              <h2 className="text-2xl sm:text-3xl font-display font-bold text-white mb-2">
-                WELCOME TO THE BORDERLAND
-              </h2>
-              <p className="text-sm font-sans text-neutral-400 max-w-lg mx-auto">
-                Your payment proof has been queued for organizer verification. Save your Team ID
-                below for entry and verification status.
+              <h2 className="font-poster text-4xl sm:text-5xl uppercase leading-none mt-2">Welcome, Player</h2>
+              <p className="mt-3 text-base font-label text-[var(--ink)]/75 max-w-lg mx-auto leading-relaxed">
+                We&apos;ll check your payment against our bank statement and email the team leader as soon as
+                it&apos;s verified. Your Entry Visa comes with that email.
               </p>
             </div>
 
-            {/* Team ID Card */}
-            <div className="max-w-md mx-auto p-5 rounded-lg bg-neutral-900/80 border border-neutral-700/80">
-              <div className="text-[11px] font-mono text-neutral-400 uppercase mb-1">
-                TEAM REGISTRATION ID
-              </div>
-              <div className="text-3xl font-mono font-bold text-red-500 tracking-widest mb-3">
-                {teamId}
-              </div>
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-950/50 border border-amber-600/70 text-amber-300 text-xs font-mono">
-                <Clock className="w-3.5 h-3.5 animate-spin" />
-                <span>STATUS: {paymentSuccessStatus.replace('_', ' ')}</span>
+            <div className="max-w-md mx-auto">
+              <div className="font-label text-[11px] font-bold uppercase tracking-[0.16em] text-[var(--ink)]/55">Team ID</div>
+              <div className="font-poster text-6xl uppercase leading-none mt-1">{teamId}</div>
+              <div className="mt-3 inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[var(--ink)] text-[var(--paper)] text-xs font-label font-semibold">
+                <Clock className="w-3.5 h-3.5" />
+                <span>{paymentSuccessStatus === 'UNDER_REVIEW' ? 'Payment under review' : paymentSuccessStatus}</span>
               </div>
             </div>
 
-            {/* Team Summary Info */}
-            <div className="max-w-md mx-auto text-left p-4 rounded bg-neutral-950 border border-neutral-800 text-xs font-mono space-y-2">
-              <div className="flex justify-between border-b border-neutral-800/80 pb-1.5">
-                <span className="text-neutral-500">Callsign:</span>
-                <span className="text-white font-bold">{teamName}</span>
-              </div>
-              <div className="flex justify-between border-b border-neutral-800/80 pb-1.5">
-                <span className="text-neutral-500">Operatives:</span>
-                <span className="text-neutral-300">{teamSize} Members</span>
-              </div>
-              <div className="flex justify-between border-b border-neutral-800/80 pb-1.5">
-                <span className="text-neutral-500">Submitted UTR:</span>
-                <span className="text-neutral-300 tracking-wider">{utr}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-neutral-500">Review Window:</span>
-                <span className="text-emerald-400">Within 2–4 Hours</span>
-              </div>
-            </div>
+            <dl className="max-w-md mx-auto text-left grid grid-cols-2 gap-x-6 gap-y-3 text-sm font-label border-t border-[var(--ink)]/15 pt-5">
+              <dt className="text-[var(--ink)]/55">Team</dt>
+              <dd className="font-semibold text-right">{teamName}</dd>
+              <dt className="text-[var(--ink)]/55">Players</dt>
+              <dd className="font-semibold text-right">{teamSize}</dd>
+              <dt className="text-[var(--ink)]/55">UTR</dt>
+              <dd className="font-semibold text-right tabular-nums">{utr}</dd>
+            </dl>
 
             {/* Action Buttons */}
             <div className="pt-4 flex flex-col sm:flex-row items-center justify-center gap-4">
               <button
                 type="button"
                 onClick={() => copyToClipboard(teamId, 'teamId')}
-                className="w-full sm:w-auto px-6 py-3 bg-neutral-800 hover:bg-neutral-700 text-white font-mono text-xs font-bold rounded border border-neutral-700 flex items-center justify-center gap-2 transition-colors"
+                className="w-full sm:w-auto px-6 py-3 bg-[var(--ink)] hover:bg-black text-[var(--paper)] font-label text-sm font-bold rounded-md flex items-center justify-center gap-2 transition-colors"
               >
                 {copiedTeamId ? (
                   <>
                     <Check className="w-4 h-4 text-emerald-400" />
-                    <span className="text-emerald-400">COPIED TEAM ID</span>
+                    <span className="text-emerald-400">Copied</span>
                   </>
                 ) : (
                   <>
                     <Copy className="w-4 h-4" />
-                    <span>COPY TEAM ID</span>
+                    <span>Copy Team ID</span>
                   </>
                 )}
               </button>
@@ -1037,15 +976,15 @@ export default function RegisterPage() {
               <Link
                 href="/"
                 onClick={() => playHudClick()}
-                className="w-full sm:w-auto px-6 py-3 bg-red-600 hover:bg-red-500 text-white font-mono text-xs font-bold rounded border border-red-500 flex items-center justify-center gap-2 transition-colors shadow-[0_0_15px_rgba(220,38,38,0.35)]"
+                className="w-full sm:w-auto px-6 py-3 bg-[var(--card-red)] hover:brightness-110 text-white font-label text-sm font-bold rounded-md flex items-center justify-center gap-2 transition-colors"
               >
-                <span>RETURN TO PROTOCOL HQ</span>
+                <span>Back to the site</span>
                 <ArrowRight className="w-4 h-4" />
               </Link>
             </div>
+            </div>
           </div>
         )}
-      </div>
-    </div>
+    </RegisterShell>
   );
 }

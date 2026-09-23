@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { X, ArrowRight, ArrowDown, Clock } from 'lucide-react';
 import { playHudClick, playHudHover } from '../utils/sound';
+import { FloatingCards } from './FloatingCards';
 
 interface HeroProps {
   onOpenRegister: () => void;
@@ -21,10 +22,13 @@ interface SuitGame {
   timeSlot: string;
   duration: string;
   objective: string;
-  whyItExists: string;
   scoring: string[];
+  scoringNote?: string;
+  // Extra titled section (e.g. "Why this round exists")
+  extra?: { title: string; text: string };
 }
 
+// Game details follow the official "Borderland Protocol" event brief.
 const GAMES: Record<SuitKey, SuitGame> = {
   spades: {
     symbol: '♠',
@@ -32,19 +36,20 @@ const GAMES: Record<SuitKey, SuitGame> = {
     cardRank: 'K',
     rankName: 'King',
     red: false,
-    role: 'Speed + action',
+    role: 'Speed and action',
     gameName: 'The Sprint',
-    timeSlot: 'Day 2 · 10:00 – 11:15',
+    timeSlot: 'Day 2 · 10:00 – 11:15 AM',
     duration: '75 min',
     objective:
-      'A race against the clock. Teams receive their mystery product for the first time and must explore it as fast as possible—clicking through every screen, testing every button, logging console errors, and cataloging anomalies. There is no time to overthink here, only to observe.',
-    whyItExists:
-      'It forces every team to get hands-on with the product quickly, before they have time to form an ungrounded theory. First impressions under extreme time pressure often reveal the most obvious clues.',
+      'A race against the clock. Teams get their mystery product for the first time and have to explore it as fast as they can — clicking through every screen, testing every button, and writing down everything they notice. There is no time to overthink here, only to observe.',
     scoring: [
-      'Points for every genuine, verifiable technical observation logged',
-      'Speed bonus for the first team to submit an exhaustive exploration checklist',
-      'Penalties for fabricating nonexistent bugs or hallucinating features',
+      'Points for every genuine observation a team writes down and can prove',
+      'Bonus points for the first team to finish their exploration checklist',
     ],
+    extra: {
+      title: 'Why this round exists',
+      text: 'It forces every team to get hands-on with the product quickly, before they have time to form a theory. First impressions often reveal the most obvious clues.',
+    },
   },
   diamonds: {
     symbol: '♦',
@@ -52,20 +57,22 @@ const GAMES: Record<SuitKey, SuitGame> = {
     cardRank: 'A',
     rankName: 'Ace',
     red: true,
-    role: 'Intelligence + logic',
+    role: 'Intelligence and logic',
     gameName: 'The Deduction',
-    timeSlot: 'Day 2 · 11:30 – 13:00',
+    timeSlot: 'Day 2 · 11:30 AM – 1:00 PM',
     duration: '90 min',
     objective:
-      'This is the intellectual core of the event. Using what they discovered in Game 1, teams dig deep into the product architecture—its design patterns, bundle files, network payloads, API routes, and user flow—to deduce what problem it was built to solve. Each team submits a structured forensic dossier.',
-    whyItExists:
-      'Anyone can play with a user interface. This round separates surface-level users from true engineers who can deduce system architecture and business motives from raw artifacts.',
+      'The heart of the event. Using what they found in Game 1, teams dig deep into the product — its design, its code, its flow — to work out the real problem it was built to solve. Each team submits a short written report: what problem it solves, who it is built for, and what is missing, broken or could be better.',
     scoring: [
-      'Core accuracy (what problem does it solve?): 40 points',
-      'Technical depth & code analysis: 30 points',
-      'Target user & persona identification: 30 points',
-      'High Risk card: 1.5× points if correct, a deduction if wrong',
+      'How accurate the answer is — 40 points',
+      'How deep and well-reasoned the technical analysis is — 30 points',
+      'How correctly the target user is identified — 30 points',
     ],
+    scoringNote: '100 points in total. High Risk teams earn 1.5× if their report is strong — or lose points if it is way off.',
+    extra: {
+      title: 'Difficulty Card',
+      text: 'Before this Game, each team picks Standard (more guided, normal points) or High Risk (tougher, less guided, 1.5× points — but a wrong final answer loses points).',
+    },
   },
   clubs: {
     symbol: '♣',
@@ -73,19 +80,20 @@ const GAMES: Record<SuitKey, SuitGame> = {
     cardRank: 'J',
     rankName: 'Jack',
     red: false,
-    role: 'Teamwork + alliance',
+    role: 'Teamwork',
     gameName: 'The Trading Floor',
-    timeSlot: 'Day 2 · 14:00 – 15:15',
+    timeSlot: 'Day 2 · 2:00 – 3:15 PM',
     duration: '75 min',
     objective:
-      'Teams are permitted to leave their stations and converse with rival groups. Every team holds one proprietary piece of insight the others lack. You may trade intelligence, broker temporary pacts, or guard your findings. It is a live trading floor—and every transaction is a gamble.',
-    whyItExists:
-      'Real product teams do not operate in silos—they share telemetry, navigate organizational politics, and decide whom to trust. Game 3 injects social tension and counter-espionage into the competition.',
+      'Teams are allowed to leave their tables and talk to other teams. Every team is holding one piece of insight the others don’t have. Trade information, form short alliances, or keep your findings to yourself. It’s a live trading floor — and every trade is a gamble.',
     scoring: [
-      'Bonus points for trades that demonstrably improve your final thesis in Game 4',
-      'Severe Visa Point deductions if caught spreading fabricated or sabotage data',
-      'Reputation rating tracked by the Game Masters',
+      'Points for trades that genuinely improve a team’s final accuracy in Game 4',
+      'Points deducted if a team is caught trading false or misleading information',
     ],
+    extra: {
+      title: 'Why this round exists',
+      text: 'Real product teams don’t work alone — they share information across teams, and they have to decide who to trust. This Game brings that pressure into the event.',
+    },
   },
   hearts: {
     symbol: '♥',
@@ -93,27 +101,28 @@ const GAMES: Record<SuitKey, SuitGame> = {
     cardRank: 'Q',
     rankName: 'Queen',
     red: true,
-    role: 'Psychology + trust',
+    role: 'Psychology and trust',
     gameName: 'The Trial',
-    timeSlot: 'Day 2 · 15:30 – 16:30',
+    timeSlot: 'Day 2 · 3:30 – 4:30 PM',
     duration: '60 min',
     objective:
-      'The final ordeal. Each team stands before a tribunal of Game Masters to present their verdict—the problem, the user, the flaws, and their proposed product roadmap. The Game Masters cross-examine without mercy, testing if you can hold your ground under hostile questioning.',
-    whyItExists:
-      'Anyone can put together a pitch deck. This round rewards the teams who truly understand what they uncovered, because superficial understanding shatters immediately under questioning.',
+      'The final test. Each team stands in front of a panel of Game Masters and presents what they discovered — the problem, the user, and their proposed improvement. The Game Masters then question the team directly. The rest of the Players watch and can react live, which adds a small bonus — in the Borderland, the crowd’s trust matters too.',
     scoring: [
-      'Clarity and conviction of your argument',
-      'Resilience and accuracy under cross-examination',
-      'Ingenuity and feasibility of the proposed product changes',
-      'Crowd reaction trust bonus',
+      'How clear and well-structured the presentation is',
+      'How well the team defends its answer when questioned',
+      'How creative and realistic the proposed improvement is',
     ],
+    extra: {
+      title: 'Why this round exists',
+      text: 'Anyone can guess an answer. This round rewards the teams who actually understand what they found, because it’s very hard to fake that under direct questioning.',
+    },
   },
 };
 
 const ORDER: SuitKey[] = ['spades', 'diamonds', 'clubs', 'hearts'];
 
 const EVENT_FACTS = [
-  { label: 'Date', value: '5 & 6 Oct', sub: '9 AM onwards' },
+  { label: 'Date', value: '5 & 6 Oct', sub: '9 AM – 5 PM' },
   { label: 'Venue', value: 'TP2 712', sub: 'SRM IST' },
   { label: 'Team size', value: '2–4', sub: 'members' },
   { label: 'Entry fee', value: '₹199', sub: 'per team' },
@@ -225,10 +234,6 @@ const GameDossier: React.FC<{ game: SuitGame; onClose: () => void; onOpenRegiste
               <p className="mt-1.5 text-[var(--ink)]/85">{game.objective}</p>
             </section>
             <section>
-              <h3 className="text-[11px] font-bold uppercase tracking-[0.16em] text-[var(--card-red)]">Why it exists</h3>
-              <p className="mt-1.5 text-[var(--ink)]/85">{game.whyItExists}</p>
-            </section>
-            <section>
               <h3 className="text-[11px] font-bold uppercase tracking-[0.16em] text-[var(--card-red)]">Scoring</h3>
               <ul className="mt-2 space-y-1.5">
                 {game.scoring.map((item) => (
@@ -238,7 +243,16 @@ const GameDossier: React.FC<{ game: SuitGame; onClose: () => void; onOpenRegiste
                   </li>
                 ))}
               </ul>
+              {game.scoringNote && <p className="mt-2 text-[var(--ink)]/70">{game.scoringNote}</p>}
             </section>
+            {game.extra && (
+              <section>
+                <h3 className="text-[11px] font-bold uppercase tracking-[0.16em] text-[var(--card-red)]">
+                  {game.extra.title}
+                </h3>
+                <p className="mt-1.5 text-[var(--ink)]/85">{game.extra.text}</p>
+              </section>
+            )}
           </div>
 
           <div className="mt-6 pt-4 border-t border-[var(--ink)]/15 flex items-center justify-between gap-3">
@@ -288,16 +302,26 @@ export const Hero: React.FC<HeroProps> = ({ onOpenRegister }) => {
           }}
         />
 
-        <div className="relative max-w-6xl mx-auto px-4 sm:px-6 pt-28 sm:pt-36 pb-12 sm:pb-14 text-center">
-          <p className="font-caps text-xs sm:text-sm uppercase tracking-[0.35em] text-[var(--paper)]/85">
-            dBug Labs presents
-          </p>
-          <h1 className="font-poster uppercase text-[#f5eee1] leading-[0.85] text-[clamp(4.5rem,17vw,12rem)] mt-3 drop-shadow-[0_8px_30px_rgba(0,0,0,0.6)]">
-            Hackback
+        <FloatingCards />
+
+        <div className="relative z-[2] max-w-6xl mx-auto px-4 sm:px-6 pt-28 sm:pt-36 pb-12 sm:pb-14 text-center">
+          <div className="flex items-center justify-center gap-3">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/brand/dbuglabs-wordmark.png" alt="dBug Labs" className="h-6 sm:h-8 w-auto" />
+            <span className="font-caps text-xs sm:text-sm uppercase tracking-[0.35em] text-[var(--paper)]/85">
+              presents
+            </span>
+          </div>
+          <h1 className="mt-5 sm:mt-6">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="/brand/hackback-wordmark.png"
+              alt="HACKBACK — Play the reverse. Find the answer."
+              width={845}
+              height={269}
+              className="mx-auto w-full max-w-[min(92vw,720px)] h-auto drop-shadow-[0_8px_30px_rgba(0,0,0,0.65)]"
+            />
           </h1>
-          <p className="font-caps uppercase tracking-[0.18em] text-sm sm:text-lg text-neutral-100 mt-4">
-            Play the reverse. Find the answer.
-          </p>
           <p className="max-w-xl mx-auto mt-5 text-neutral-300 text-base sm:text-lg leading-relaxed">
             A two-day reverse hackathon. You get a finished product with no brief — work out what it
             does, who it&apos;s for, and what&apos;s broken.

@@ -1,33 +1,30 @@
 import React from 'react';
 
+// The four "Important Rules" from the official event brief.
 const RULES = [
   {
     suit: '♠',
     red: false,
-    title: 'Official tools only',
-    desc: 'Work only with the event setup and the product package you are given. Pre-built external analysers or remote proxies mean disqualification.',
-    note: 'Standard browser tools and offline reverse-engineering software are allowed.',
+    title: 'Official platform only',
+    desc: 'Teams must only use the official event platform and the product kits provided to them.',
   },
   {
     suit: '♥',
     red: true,
-    title: 'No outside help',
-    desc: 'Work only with your registered teammates — except during Game 3 (♣ The Trading Floor). No outside mentors or non-players.',
-    note: 'Copying code or findings from another team outside the Trading Floor scores zero.',
+    title: 'Your own work',
+    desc: 'Copying another team’s work or getting outside help is not allowed. (Talking to other teams is only part of the game during ♣ The Trading Floor.)',
   },
   {
     suit: '♦',
     red: true,
     title: 'Time means time',
-    desc: 'When the clock hits zero, submissions close. No extensions, no grace period.',
-    note: 'Anything not submitted by the cutoff scores zero for that game.',
+    desc: 'When a round’s timer ends, submissions close automatically — no exceptions.',
   },
   {
     suit: '♣',
     red: false,
-    title: 'The Game Masters decide',
-    desc: 'All scores, Visa Point changes and rulings by the Game Masters and the dBug Labs team are final.',
-    note: 'Argue your case with evidence, not by arguing with the judges.',
+    title: 'Decisions are final',
+    desc: 'All decisions made by the organising team or the Game Masters are final.',
   },
 ];
 
@@ -54,10 +51,13 @@ export const RulesSection: React.FC = () => {
                 <h3 className="font-heading text-xl font-bold text-neutral-100">{rule.title}</h3>
               </div>
               <p className="mt-3 text-neutral-300 leading-relaxed">{rule.desc}</p>
-              <p className="mt-3 text-sm text-neutral-500 leading-relaxed">{rule.note}</p>
             </div>
           ))}
         </div>
+
+        <p className="mt-10 font-caps uppercase tracking-[0.18em] text-sm text-neutral-400 text-center">
+          Good luck, Players. The Borderland awaits your move.
+        </p>
       </div>
     </section>
   );

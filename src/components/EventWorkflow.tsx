@@ -1,24 +1,24 @@
 import React from 'react';
 
 const DAY_1 = [
-  { title: 'Welcome', desc: 'Opening ceremony and how the two days work' },
-  { title: 'Reverse engineering', desc: 'Inspection techniques and a DevTools demo' },
-  { title: 'Product thinking', desc: 'Thinking like a founder, not just a coder' },
-  { title: 'Practice round', desc: 'A no-stakes trial on a sample product' },
-  { title: 'Day 2 briefing', desc: 'Visa rules and the game reveal' },
+  { title: 'Welcome & opening ceremony', desc: 'The story of the Borderland and the two-day plan' },
+  { title: 'What is reverse engineering?', desc: 'Talk + live demo on studying an unknown product' },
+  { title: 'Thinking like a product manager', desc: 'From what the code does to why it was built' },
+  { title: 'Hands-on practice round', desc: 'A safe trial run on a sample product' },
+  { title: 'Wrap-up & Day 2 preview', desc: 'Rules, scoring, and a first look at the Games' },
 ];
 
 const DAY_2 = [
-  { title: 'Check-in', desc: 'Each team starts with 3 Visa Points' },
-  { title: 'Mystery product', desc: 'The sealed product is unveiled, no brief' },
-  { title: '♠ The Sprint', desc: '75 min rapid observation race' },
-  { title: 'Difficulty choice', desc: 'Standard or High Risk (1.5× points)' },
-  { title: '♦ The Deduction', desc: '90 min deep dive into the architecture' },
-  { title: 'Twist card', desc: 'A mid-game curveball, revealed at lunch' },
-  { title: '♣ The Trading Floor', desc: '75 min of alliances and trading intel' },
-  { title: '♥ The Trial', desc: '60 min defence before the Game Masters' },
-  { title: 'The final duel', desc: 'Top 2 teams, head-to-head rapid fire' },
-  { title: 'Survivors', desc: 'Winners crowned and prizes awarded' },
+  { title: 'Check-in & Visa issuance', desc: 'Each team starts with 3 Visa Points' },
+  { title: 'Mission briefing', desc: 'Your mystery product, with no brief' },
+  { title: '♠ The Sprint', desc: '75 min · speed and action' },
+  { title: 'Difficulty Card', desc: 'Standard, or High Risk for 1.5× points' },
+  { title: '♦ The Deduction', desc: '90 min · intelligence and logic' },
+  { title: 'Twist Card', desc: 'A new rule revealed at lunch' },
+  { title: '♣ The Trading Floor', desc: '75 min · teamwork' },
+  { title: '♥ The Trial', desc: '60 min · psychology and trust' },
+  { title: 'The Final Duel', desc: 'Top 2 teams, rapid-fire questions' },
+  { title: 'Closing ceremony', desc: 'Winners crowned, prizes given out' },
 ];
 
 const suitRed = (title: string) => title.startsWith('♦') || title.startsWith('♥');
@@ -35,8 +35,8 @@ export const EventWorkflow: React.FC = () => {
             How the two days work
           </h2>
           <p className="mt-4 text-neutral-400 text-base sm:text-lg leading-relaxed">
-            Day 1 is training with nothing at stake. Day 2 is the game: four rounds, one mystery
-            product, and every decision moves your Visa Points.
+            Two back-to-back days, 9 AM to 5 PM. Day 1 teaches you how to take a product apart. Day 2
+            puts it to the test in four Games.
           </p>
         </div>
 
@@ -70,8 +70,8 @@ export const EventWorkflow: React.FC = () => {
               </p>
               <h3 className="font-poster uppercase text-3xl mt-1">Game day</h3>
               <p className="mt-3 text-[var(--ink)]/75 leading-relaxed">
-                The four suit games run back to back. Your score decides your Visa Points — hit zero
-                and you&apos;re out.
+                Four Games, one for each suit. Every result moves your Visa Points and the live
+                leaderboard.
               </p>
               <ol className="mt-6 grid sm:grid-cols-2 gap-x-8 gap-y-4">
                 {DAY_2.map((item, i) => (
