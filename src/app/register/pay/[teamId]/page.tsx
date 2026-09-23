@@ -182,9 +182,18 @@ export default function ResumePaymentPage() {
                   <UpiQr value={upiQrString} teamId={teamId} />
                 </div>
 
-                <div className="text-[11px] font-label text-neutral-400">
+                <div className="text-sm font-label text-neutral-400">
                   Scan using GPay, PhonePe, Paytm, or BHIM
                 </div>
+                {upiQrString && (
+                  // On a phone you can't scan your own screen — hand off to the UPI app instead
+                  <a
+                    href={upiQrString}
+                    className="sm:hidden mt-4 w-full inline-flex items-center justify-center rounded-lg bg-[var(--paper)] px-5 py-3 font-label text-sm font-bold text-[var(--ink)]"
+                  >
+                    Open UPI app →
+                  </a>
+                )}
               </div>
 
               <div className="md:col-span-7 space-y-4">

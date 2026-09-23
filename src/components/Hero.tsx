@@ -315,10 +315,11 @@ export const Hero: React.FC<HeroProps> = ({ onOpenRegister }) => {
           <h1 className="mt-5 sm:mt-6">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
-              src="/brand/hackback-wordmark.png"
+              src="/brand/hackback-wordmark-hero.webp"
               alt="HACKBACK — Play the reverse. Find the answer."
-              width={845}
-              height={269}
+              width={1500}
+              height={414}
+              fetchPriority="high"
               className="mx-auto w-full max-w-[min(92vw,720px)] h-auto drop-shadow-[0_8px_30px_rgba(0,0,0,0.65)]"
             />
           </h1>

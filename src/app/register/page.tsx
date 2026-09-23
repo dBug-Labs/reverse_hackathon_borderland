@@ -3,18 +3,7 @@
 import React, { useRef, useState } from 'react';
 import Link from 'next/link';
 import { Turnstile, type TurnstileInstance } from '@marsidev/react-turnstile';
-import {
-  ArrowRight,
-  ArrowLeft,
-  Check,
-  AlertCircle,
-  Copy,
-  Users,
-  QrCode,
-  Lock,
-  Info,
-  Clock,
-} from 'lucide-react';
+import { ArrowRight, Check, AlertCircle, Copy, Clock } from 'lucide-react';
 import { playHudClick, playAccessGranted } from '@/utils/sound';
 import { RegisterShell } from '@/components/RegisterShell';
 import { UpiQr } from '@/components/UpiQr';
@@ -336,553 +325,364 @@ export default function RegisterPage() {
     }
   };
 
+  const activePlayers = players.slice(0, teamSize);
+
   return (
     <RegisterShell
       eyebrow="Registration · ₹199 per team"
-      title={currentStep === 3 ? 'You’re in the queue' : 'Register your team'}
+      title={currentStep === 3 ? 'You’re in the queue' : currentStep === 2 ? 'Pay to lock your spot' : 'Register your team'}
       subtitle={
         currentStep === 1
-          ? 'Teams of 2–4 SRM students. Add your team, then pay ₹199 by UPI to lock your spot.'
+          ? 'Teams of 2–4 SRM students. Build your hand, then pay ₹199 by UPI.'
+          : currentStep === 2
+          ? 'Pay by UPI with your Team ID in the note, then send us the 12-digit UTR.'
           : undefined
       }
+      width="xl"
     >
-        {/* Steps */}
-        <ol className="mb-10 grid grid-cols-3 gap-2 sm:gap-3">
-          {['Team details', 'Pay ₹199', 'Done'].map((label, i) => {
-            const n = i + 1;
-            const state = currentStep > n ? 'done' : currentStep === n ? 'active' : 'todo';
-            return (
-              <li
-                key={label}
-                className={`rounded-xl px-3 py-3 sm:px-4 ${
+      {/* Steps */}
+      <ol className="mb-10 flex items-center gap-2 sm:gap-3 font-label text-sm">
+        {['Your team', 'Payment', 'Done'].map((label, i) => {
+          const n = i + 1;
+          const state = currentStep > n ? 'done' : currentStep === n ? 'active' : 'todo';
+          return (
+            <li key={label} className="flex items-center gap-2 sm:gap-3">
+              <span
+                className={`flex items-center gap-2 rounded-full pl-1.5 pr-3.5 py-1.5 ${
                   state === 'active'
-                    ? 'paper-card'
+                    ? 'bg-[var(--paper)] text-[var(--ink)]'
                     : state === 'done'
-                    ? 'border border-neutral-700 bg-[#0e0e11] text-neutral-300'
+                    ? 'bg-neutral-800 text-neutral-200'
                     : 'border border-neutral-800 text-neutral-500'
                 }`}
               >
-                <div
-                  className={`font-label text-[11px] font-bold uppercase tracking-[0.16em] ${
-                    state === 'active' ? 'text-[var(--card-red)]' : ''
+                <span
+                  className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${
+                    state === 'active' ? 'bg-[var(--card-red)] text-white' : state === 'done' ? 'bg-emerald-600 text-white' : 'bg-neutral-900'
                   }`}
                 >
-                  Step {n}
-                  {state === 'done' && ' ✓'}
-                </div>
-                <div className={`font-heading font-bold text-sm sm:text-base ${state === 'active' ? 'text-[var(--ink)]' : ''}`}>
-                  {label}
-                </div>
-              </li>
-            );
-          })}
-        </ol>
+                  {state === 'done' ? <Check className="w-3.5 h-3.5" /> : n}
+                </span>
+                <span className="font-semibold">{label}</span>
+              </span>
+              {n < 3 && <span className="hidden sm:block w-8 h-px bg-neutral-800" aria-hidden="true" />}
+            </li>
+          );
+        })}
+      </ol>
 
-        {/* Global Error Banner */}
-        {globalError && (
-          <div className="mb-6 p-4 rounded bg-red-950/60 border border-red-600 text-red-200 flex items-start gap-3 animate-shake">
-            <AlertCircle className="w-5 h-5 text-red-400 shrink-0 mt-0.5" />
-            <div className="text-sm font-label">{globalError}</div>
-          </div>
-        )}
+      {globalError && (
+        <div role="alert" className="mb-8 flex items-start gap-3 rounded-xl border border-[var(--card-red)]/60 bg-[var(--card-red)]/10 px-4 py-3.5 text-[15px] font-label text-red-200">
+          <AlertCircle className="w-5 h-5 text-[#ff6b6b] shrink-0 mt-0.5" />
+          <span>{globalError}</span>
+        </div>
+      )}
 
-        {/* ========================================================================= */}
-        {/* STEP 1: TEAM INTEL FORM */}
-        {/* ========================================================================= */}
-        {currentStep === 1 && (
-          <form onSubmit={handleStep1Submit} className="space-y-8">
-            {/* Honeypot field (hidden for spam bots) */}
+      {/* ─────────────────────────── STEP 1 ─────────────────────────── */}
+      {currentStep === 1 && (
+        <div className="grid lg:grid-cols-12 gap-10 lg:gap-12 items-start">
+          <form onSubmit={handleStep1Submit} className="lg:col-span-7 space-y-14" noValidate>
+            {/* Honeypot (hidden from people) */}
             <div className="hidden" aria-hidden="true">
               <label htmlFor="website">Website</label>
-              <input
-                id="website"
-                type="text"
-                name="website"
-                value={honeypot}
-                onChange={(e) => setHoneypot(e.target.value)}
-                tabIndex={-1}
-                autoComplete="off"
-              />
+              <input id="website" type="text" name="website" value={honeypot} onChange={(e) => setHoneypot(e.target.value)} tabIndex={-1} autoComplete="off" />
             </div>
 
-            {/* Team Configuration Box */}
-            <div className="p-6 rounded-2xl bg-[#0e0e11] border border-neutral-800 relative">
-              <div className="text-xs font-label font-bold tracking-[0.16em] text-[var(--card-red)] uppercase mb-4 flex items-center gap-2">
-                <Users className="w-4 h-4" />
-                <span>Your team</span>
-              </div>
+            {/* 01 · Team */}
+            <section>
+              <SectionTitle n="01" title="Your team" />
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                {/* Team Name */}
-                <div>
-                  <label className="block text-sm font-label font-semibold text-neutral-200 mb-2">
-                    Team name <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    placeholder="e.g. Null Pointers"
-                    value={teamName}
-                    onChange={(e) => {
-                      setTeamName(e.target.value);
-                      if (errors.teamName) {
-                        setErrors((prev) => {
-                          const n = { ...prev };
-                          delete n.teamName;
-                          return n;
-                        });
-                      }
-                    }}
-                    className={`w-full px-4 py-2.5 bg-neutral-900 border rounded font-label text-sm text-white placeholder-neutral-600 focus:outline-none focus:border-[var(--paper)] transition-colors ${
-                      errors.teamName ? 'border-red-500' : 'border-neutral-700'
-                    }`}
-                  />
-                  {errors.teamName && (
-                    <p className="mt-1 text-xs text-red-400 font-label">{errors.teamName}</p>
-                  )}
-                </div>
+              <label htmlFor="teamName" className="mt-6 block text-sm font-label font-semibold text-neutral-300">
+                Team name
+              </label>
+              <input
+                id="teamName"
+                type="text"
+                required
+                maxLength={30}
+                placeholder="Your team name"
+                value={teamName}
+                onChange={(e) => {
+                  setTeamName(e.target.value);
+                  if (errors.teamName) setErrors((prev) => { const n = { ...prev }; delete n.teamName; return n; });
+                }}
+                className={`mt-1 w-full bg-transparent border-0 border-b-2 px-0 py-2 font-poster uppercase text-4xl sm:text-5xl text-[#f5eee1] placeholder:text-neutral-700 outline-none transition-colors focus:border-[var(--paper)] ${
+                  errors.teamName ? 'border-[var(--card-red)]' : 'border-neutral-700'
+                }`}
+              />
+              <FieldError msg={errors.teamName} />
 
-                {/* Team Size Segmented Control */}
-                <div>
-                  <label className="block text-sm font-label font-semibold text-neutral-200 mb-2">
-                    Team size <span className="text-red-500">*</span>
-                  </label>
-                  <div className="grid grid-cols-3 gap-2">
-                    {[2, 3, 4].map((size) => (
-                      <button
-                        key={size}
-                        type="button"
-                        onClick={() => handleTeamSizeChange(size)}
-                        className={`py-2.5 rounded font-label text-sm font-bold border transition-all ${
-                          teamSize === size
-                            ? 'bg-[var(--paper)] border-transparent text-[var(--ink)]'
-                            : 'bg-neutral-900 border-neutral-700 text-neutral-400 hover:text-white hover:border-neutral-500'
+              <p className="mt-8 text-sm font-label font-semibold text-neutral-300">How many players?</p>
+              <div className="mt-3 grid grid-cols-3 gap-3 max-w-md">
+                {[2, 3, 4].map((size) => {
+                  const selected = teamSize === size;
+                  return (
+                    <button
+                      key={size}
+                      type="button"
+                      onClick={() => handleTeamSizeChange(size)}
+                      aria-pressed={selected}
+                      className={`relative aspect-[5/6] rounded-xl p-1.5 transition-transform duration-200 ${
+                        selected ? 'paper-card -translate-y-1' : 'border border-neutral-800 bg-[#0e0e11] hover:border-neutral-600 hover:-translate-y-0.5'
+                      }`}
+                    >
+                      <span
+                        className={`h-full rounded-lg flex flex-col items-center justify-center border ${
+                          selected ? 'border-[var(--card-red)]/45 text-[var(--ink)]' : 'border-transparent text-neutral-300'
                         }`}
                       >
-                        {size} players
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Players Blocks */}
-            <div className="space-y-6">
-              {players.slice(0, teamSize).map((player, idx) => {
-                const isLeader = idx === 0;
-                return (
-                  <div
-                    key={idx}
-                    className="p-6 rounded-2xl bg-[#0e0e11] border border-neutral-800 relative transition-all hover:border-neutral-700"
-                  >
-                    <div className="flex items-center justify-between mb-4 border-b border-neutral-800 pb-3">
-                      <div className="flex items-center gap-3">
-                        <span
-                          className={`w-6 h-6 rounded flex items-center justify-center font-label text-xs font-bold ${
-                            isLeader
-                              ? 'bg-[var(--card-red)] text-white'
-                              : 'bg-neutral-800 text-neutral-300'
-                          }`}
-                        >
-                          P{idx + 1}
+                        <span className="font-poster text-5xl leading-none">{size}</span>
+                        <span className="mt-1.5 text-xs font-label font-semibold tracking-widest">
+                          {SUITS.slice(0, size).map((s) => s.symbol).join(' ')}
                         </span>
-                        <span className="font-heading font-bold text-sm tracking-wide text-white">
-                          {`Player ${idx + 1}`}
-                        </span>
-                      </div>
-                      <span className="text-xs font-label font-semibold text-neutral-400">
-                        {isLeader ? 'Team leader' : 'Member'}
                       </span>
-                    </div>
+                    </button>
+                  );
+                })}
+              </div>
+            </section>
 
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                      {/* Name */}
-                      <div>
-                        <label className="block text-sm font-label font-semibold text-neutral-300 mb-1">
-                          Full name <span className="text-red-500">*</span>
-                        </label>
-                        <input
-                          type="text"
-                          required
-                          placeholder="e.g. Aarav Sharma"
-                          value={player.name}
-                          onChange={(e) => updatePlayer(idx, 'name', e.target.value)}
-                          className={`w-full px-3 py-2 bg-neutral-900 border rounded font-label text-xs text-white placeholder-neutral-600 focus:outline-none focus:border-[var(--paper)] ${
-                            errors[`players.${idx}.name`]
-                              ? 'border-red-500'
-                              : 'border-neutral-700'
-                          }`}
-                        />
-                        {errors[`players.${idx}.name`] && (
-                          <p className="mt-1 text-[10px] text-red-400 font-label">
-                            {errors[`players.${idx}.name`]}
-                          </p>
+            {/* 02 · Players */}
+            <section>
+              <SectionTitle n="02" title="The players" note="Every player needs an SRM email and register number." />
+
+              <div className="mt-6 space-y-5">
+                {activePlayers.map((player, idx) => {
+                  const suit = SUITS[idx];
+                  const isLeader = idx === 0;
+                  const err = (f: keyof PlayerFormState) => errors[`players.${idx}.${f}`];
+                  return (
+                    <div key={idx} className="relative rounded-2xl border border-neutral-800 bg-[#0d0d10] p-5 sm:p-6 overflow-hidden">
+                      <span
+                        aria-hidden="true"
+                        className={`pointer-events-none absolute -right-3 -top-6 text-[110px] leading-none opacity-[0.07] ${suit.red ? 'text-[var(--card-red)]' : 'text-white'}`}
+                      >
+                        {suit.symbol}
+                      </span>
+
+                      <div className="relative flex items-center gap-3">
+                        <span className={`text-2xl leading-none ${suit.red ? 'text-[var(--card-red)]' : 'text-[#f5eee1]'}`}>{suit.symbol}</span>
+                        <h3 className="font-heading text-lg font-bold text-neutral-100">Player {idx + 1}</h3>
+                        {isLeader && (
+                          <span className="rounded-full bg-[var(--paper)] text-[var(--ink)] px-2.5 py-0.5 text-xs font-label font-bold">
+                            Team leader
+                          </span>
                         )}
                       </div>
 
-                      {/* SRM Email */}
-                      <div>
-                        <label className="block text-sm font-label font-semibold text-neutral-300 mb-1">
-                          SRM email <span className="text-red-500">*</span>
-                        </label>
-                        <input
-                          type="email"
-                          required
-                          placeholder="as1234@srmist.edu.in"
-                          value={player.email}
-                          onChange={(e) => updatePlayer(idx, 'email', e.target.value)}
-                          className={`w-full px-3 py-2 bg-neutral-900 border rounded font-label text-xs text-white placeholder-neutral-600 focus:outline-none focus:border-[var(--paper)] ${
-                            errors[`players.${idx}.email`]
-                              ? 'border-red-500'
-                              : 'border-neutral-700'
-                          }`}
-                        />
-                        {errors[`players.${idx}.email`] && (
-                          <p className="mt-1 text-[10px] text-red-400 font-label">
-                            {errors[`players.${idx}.email`]}
-                          </p>
-                        )}
-                      </div>
-
-                      {/* Register Number */}
-                      <div>
-                        <label className="block text-sm font-label font-semibold text-neutral-300 mb-1">
-                          SRM register number <span className="text-red-500">*</span>
-                        </label>
-                        <input
-                          type="text"
-                          required
-                          placeholder="RA2311003010123"
-                          value={player.regNo}
-                          onChange={(e) => updatePlayer(idx, 'regNo', e.target.value.toUpperCase())}
-                          className={`w-full px-3 py-2 bg-neutral-900 border rounded font-label text-xs text-white placeholder-neutral-600 focus:outline-none focus:border-[var(--paper)] ${
-                            errors[`players.${idx}.regNo`]
-                              ? 'border-red-500'
-                              : 'border-neutral-700'
-                          }`}
-                        />
-                        {errors[`players.${idx}.regNo`] && (
-                          <p className="mt-1 text-[10px] text-red-400 font-label">
-                            {errors[`players.${idx}.regNo`]}
-                          </p>
-                        )}
-                      </div>
-
-                      {/* Phone */}
-                      <div>
-                        <label className="block text-sm font-label font-semibold text-neutral-300 mb-1">
-                          WhatsApp number {isLeader && <span className="text-red-500">*</span>}
-                        </label>
-                        <input
-                          type="tel"
-                          required={isLeader}
-                          placeholder={isLeader ? '9876543210 (Required)' : 'Optional'}
-                          value={player.phone}
-                          onChange={(e) => updatePlayer(idx, 'phone', e.target.value)}
-                          className={`w-full px-3 py-2 bg-neutral-900 border rounded font-label text-xs text-white placeholder-neutral-600 focus:outline-none focus:border-[var(--paper)] ${
-                            errors[`players.${idx}.phone`]
-                              ? 'border-red-500'
-                              : 'border-neutral-700'
-                          }`}
-                        />
-                        {errors[`players.${idx}.phone`] && (
-                          <p className="mt-1 text-[10px] text-red-400 font-label">
-                            {errors[`players.${idx}.phone`]}
-                          </p>
-                        )}
-                      </div>
-
-                      {/* Year */}
-                      <div>
-                        <label className="block text-sm font-label font-semibold text-neutral-300 mb-1">
-                          Year
-                        </label>
-                        <select
-                          value={player.year}
-                          onChange={(e) => updatePlayer(idx, 'year', e.target.value)}
-                          className="w-full px-3 py-2 bg-neutral-900 border border-neutral-700 rounded font-label text-xs text-white focus:outline-none focus:border-[var(--paper)]"
-                        >
-                          <option value="1">1st Year</option>
-                          <option value="2">2nd Year</option>
-                          <option value="3">3rd Year</option>
-                          <option value="4">4th Year</option>
-                          <option value="PG">Postgraduate</option>
-                        </select>
-                      </div>
-
-                      {/* Department */}
-                      <div>
-                        <label className="block text-sm font-label font-semibold text-neutral-300 mb-1">
-                          Department
-                        </label>
-                        <input
-                          type="text"
-                          placeholder="e.g. CSE / IT / ECE"
-                          value={player.department}
-                          onChange={(e) => updatePlayer(idx, 'department', e.target.value)}
-                          className="w-full px-3 py-2 bg-neutral-900 border border-neutral-700 rounded font-label text-xs text-white placeholder-neutral-600 focus:outline-none focus:border-[var(--paper)]"
-                        />
+                      <div className="relative mt-5 grid sm:grid-cols-2 gap-4">
+                        <Field label="Full name" error={err('name')} className="sm:col-span-2">
+                          <input type="text" required placeholder="Aarav Sharma" value={player.name} onChange={(e) => updatePlayer(idx, 'name', e.target.value)} className={inputClass(err('name'))} />
+                        </Field>
+                        <Field label="SRM email" error={err('email')}>
+                          <input type="email" required placeholder="as1234@srmist.edu.in" value={player.email} onChange={(e) => updatePlayer(idx, 'email', e.target.value)} className={inputClass(err('email'))} />
+                        </Field>
+                        <Field label="Register number" error={err('regNo')}>
+                          <input type="text" required placeholder="RA2311003010123" value={player.regNo} onChange={(e) => updatePlayer(idx, 'regNo', e.target.value.toUpperCase())} className={`${inputClass(err('regNo'))} tracking-wider`} />
+                        </Field>
+                        <Field label={isLeader ? 'WhatsApp number' : 'WhatsApp number (optional)'} error={err('phone')}>
+                          <input type="tel" inputMode="numeric" required={isLeader} placeholder="98765 43210" value={player.phone} onChange={(e) => updatePlayer(idx, 'phone', e.target.value)} className={inputClass(err('phone'))} />
+                        </Field>
+                        <div className="grid grid-cols-2 gap-3">
+                          <Field label="Year">
+                            <select value={player.year} onChange={(e) => updatePlayer(idx, 'year', e.target.value)} className={inputClass()}>
+                              <option value="1">1st</option>
+                              <option value="2">2nd</option>
+                              <option value="3">3rd</option>
+                              <option value="4">4th</option>
+                              <option value="PG">PG</option>
+                            </select>
+                          </Field>
+                          <Field label="Dept.">
+                            <input type="text" placeholder="CSE" value={player.department} onChange={(e) => updatePlayer(idx, 'department', e.target.value)} className={inputClass()} />
+                          </Field>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                );
-              })}
-            </div>
+                  );
+                })}
+              </div>
+            </section>
 
-            {/* Consent Checkbox */}
-            <div className="p-4 rounded-lg bg-neutral-900/60 border border-neutral-800">
-              <label className="flex items-start gap-3 cursor-pointer">
+            {/* 03 · Confirm */}
+            <section>
+              <SectionTitle n="03" title="Confirm" />
+              <label className="mt-6 flex items-start gap-3 rounded-xl border border-neutral-800 bg-[#0d0d10] p-4 sm:p-5">
                 <input
                   type="checkbox"
                   checked={consent}
                   onChange={(e) => {
                     setConsent(e.target.checked);
-                    if (errors.consent) {
-                      setErrors((prev) => {
-                        const n = { ...prev };
-                        delete n.consent;
-                        return n;
-                      });
-                    }
+                    if (errors.consent) setErrors((prev) => { const n = { ...prev }; delete n.consent; return n; });
                   }}
-                  className="mt-1 w-4 h-4 rounded border-neutral-700 text-red-600 focus:ring-0 focus:ring-offset-0 bg-neutral-950 cursor-pointer accent-red-600"
+                  className="mt-0.5 w-5 h-5 shrink-0 accent-[var(--card-red)]"
                 />
-                <span className="text-xs text-neutral-300 font-sans leading-relaxed">
-                  I accept the{' '}
-                  <span className="text-red-400 font-bold">Borderland Protocol Rules</span> and
-                  confirm all operatives are current SRM students with legitimate SRM register
-                  numbers. I understand that registration entry is secured upon manual UPI payment
-                  verification.
+                <span className="text-[15px] font-label text-neutral-300 leading-relaxed">
+                  Every player is a current SRM student, and we accept the{' '}
+                  <Link href="/#protocol" className="text-[#f5eee1] underline underline-offset-4">
+                    rules
+                  </Link>
+                  . Our spot is confirmed only after the ₹199 UPI payment is verified.
                 </span>
               </label>
-              {errors.consent && (
-                <p className="mt-2 text-xs text-red-400 font-label">{errors.consent}</p>
-              )}
-            </div>
+              <FieldError msg={errors.consent} />
 
-            {/* Human verification (Cloudflare Turnstile) */}
-            <Turnstile
-              ref={registerTurnstile}
-              siteKey={TURNSTILE_SITE_KEY}
-              options={{ action: 'register', theme: 'dark' }}
-              onSuccess={setRegisterToken}
-              onExpire={() => setRegisterToken('')}
-              onError={() => setRegisterToken('')}
-            />
+              <div className="mt-6">
+                <Turnstile
+                  ref={registerTurnstile}
+                  siteKey={TURNSTILE_SITE_KEY}
+                  options={{ action: 'register', theme: 'dark' }}
+                  onSuccess={setRegisterToken}
+                  onExpire={() => setRegisterToken('')}
+                  onError={() => setRegisterToken('')}
+                />
+              </div>
 
-            {/* Submit Step 1 Button */}
-            <div className="flex justify-end">
               <button
                 type="submit"
                 disabled={isSubmitting || !registerToken}
-                className="w-full sm:w-auto px-8 py-3.5 bg-[var(--card-red)] hover:brightness-110 disabled:bg-neutral-800 disabled:text-neutral-500 text-white font-label font-bold tracking-wider text-xs sm:text-sm rounded border border-red-500 flex items-center justify-center gap-3 transition-all"
+                className="mt-6 w-full sm:w-auto inline-flex items-center justify-center gap-3 rounded-lg bg-[var(--card-red)] px-8 py-4 font-poster uppercase text-2xl tracking-wide text-white shadow-lg shadow-black/40 transition hover:brightness-110 disabled:bg-neutral-800 disabled:text-neutral-500 disabled:shadow-none"
               >
                 {isSubmitting ? (
                   <>
-                    <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                    <span>Saving your team…</span>
+                    <span className="w-5 h-5 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                    Saving your team…
                   </>
                 ) : (
                   <>
-                    <span>Continue to payment</span>
-                    <ArrowRight className="w-4 h-4" />
+                    Deal me in
+                    <ArrowRight className="w-5 h-5" />
                   </>
                 )}
               </button>
-            </div>
+              {!registerToken && !isSubmitting && (
+                <p className="mt-3 text-sm font-label text-neutral-500">Complete the check above to continue.</p>
+              )}
+            </section>
           </form>
-        )}
 
-        {/* ========================================================================= */}
-        {/* STEP 2: UPI PAYMENT & QR CODE PLACEHOLDER */}
-        {/* ========================================================================= */}
-        {currentStep === 2 && (
-          <div className="space-y-8 animate-fadeIn">
-            {/* Team ID, on a paper card */}
-            <div className="paper-card rounded-2xl p-2.5">
-              <div className="rounded-xl border border-[var(--card-red)]/45 px-6 py-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                <div>
-                  <div className="font-label text-[11px] font-bold uppercase tracking-[0.16em] text-[var(--card-red)]">
-                    Your Team ID
-                  </div>
-                  <div className="font-poster text-5xl uppercase leading-none text-[var(--ink)] mt-1">{teamId}</div>
-                  <p className="mt-2 text-sm font-label text-[var(--ink)]/70">
-                    Put this in the UPI payment note. We&apos;ve also emailed it to the team leader.
-                  </p>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => copyToClipboard(teamId, 'teamId')}
-                  className="px-4 py-2 rounded-md bg-[var(--ink)] hover:bg-black text-[var(--paper)] font-label text-sm font-semibold flex items-center gap-2"
-                >
-                  {copiedTeamId ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
-                  <span>{copiedTeamId ? 'Copied' : 'Copy'}</span>
-                </button>
-              </div>
-            </div>
+          {/* Live preview of the team, desktop only */}
+          <aside className="hidden lg:block lg:col-span-5 lg:sticky lg:top-8">
+            <YourHand teamName={teamName} players={activePlayers} />
+          </aside>
+        </div>
+      )}
 
-            {/* Payment Protocol & QR Placeholder Box */}
-            <div className="grid grid-cols-1 md:grid-cols-12 gap-8 items-start">
-              {/* Left Column: QR Code Display Card */}
-              <div className="md:col-span-5 p-6 rounded-2xl bg-[#0e0e11] border border-neutral-800 text-center flex flex-col items-center">
-                <div className="text-xs font-label text-neutral-400 mb-3 tracking-widest uppercase flex items-center gap-2">
-                  <QrCode className="w-4 h-4 text-red-500" />
-                  <span>Scan to pay</span>
+      {/* ─────────────────────────── STEP 2 ─────────────────────────── */}
+      {currentStep === 2 && (
+        <div className="grid lg:grid-cols-12 gap-10 items-start">
+          {/* The QR, as a card */}
+          <div className="lg:col-span-5">
+            <div className="paper-card rounded-2xl p-2.5 text-[var(--ink)]">
+              <div className="relative rounded-xl border border-[var(--card-red)]/45 p-6 flex flex-col items-center text-center">
+                <span aria-hidden="true" className="absolute top-2 left-3 text-lg">♠</span>
+                <span aria-hidden="true" className="absolute top-2 right-3 text-lg text-[var(--card-red)]">♥</span>
+                <span aria-hidden="true" className="absolute bottom-2 left-3 text-lg text-[var(--card-red)]">♦</span>
+                <span aria-hidden="true" className="absolute bottom-2 right-3 text-lg">♣</span>
+
+                <p className="font-label text-[11px] font-bold uppercase tracking-[0.16em] text-[var(--card-red)]">Your Team ID</p>
+                <div className="mt-1 flex items-center gap-2">
+                  <span className="font-poster text-5xl uppercase leading-none">{teamId}</span>
+                  <button
+                    type="button"
+                    onClick={() => copyToClipboard(teamId, 'teamId')}
+                    className="p-2 rounded-md hover:bg-black/5"
+                    aria-label="Copy Team ID"
+                  >
+                    {copiedTeamId ? <Check className="w-5 h-5 text-emerald-700" /> : <Copy className="w-5 h-5" />}
+                  </button>
                 </div>
 
-                {/* QR Code Container */}
-                <div className="w-64 h-64 p-2 bg-[#09090c] rounded-xl border border-red-900/60 flex items-center justify-center relative mb-4">
+                <div className="mt-5 w-60 h-60 rounded-xl bg-white p-2 shadow-inner">
                   <UpiQr value={upiQrString} teamId={teamId} />
                 </div>
+                <p className="mt-3 text-sm font-label text-[var(--ink)]/70">Scan with GPay, PhonePe, Paytm or BHIM</p>
+                {upiQrString && (
+                  // On a phone you can't scan your own screen — hand off to the UPI app instead
+                  <a
+                    href={upiQrString}
+                    className="sm:hidden mt-4 w-full inline-flex items-center justify-center gap-2 rounded-lg bg-[var(--ink)] px-5 py-3 font-label text-sm font-bold text-[var(--paper)]"
+                  >
+                    Open UPI app
+                    <ArrowRight className="w-4 h-4" />
+                  </a>
+                )}
 
-                <div className="text-[11px] font-label text-neutral-400">
-                  Scan using GPay, PhonePe, Paytm, or BHIM
-                </div>
-              </div>
-
-              {/* Right Column: Payment Details & Critical Instructions */}
-              <div className="md:col-span-7 space-y-4">
-                {/* Fee & UPI Card */}
-                <div className="p-5 rounded-2xl bg-[#0e0e11] border border-neutral-800 space-y-4">
-                  <div className="flex justify-between items-center pb-3 border-b border-neutral-800">
-                    <span className="text-xs font-label text-neutral-400 uppercase">
-                      Entry fee
-                    </span>
-                    <span className="text-2xl font-bold font-label text-white">₹{fee}</span>
-                  </div>
-
+                <div className="mt-5 w-full border-t border-[var(--ink)]/15 pt-4 grid grid-cols-2 gap-3 text-left">
                   <div>
-                    <label className="block text-sm font-label font-semibold text-neutral-300 mb-1">
-                      UPI ID
-                    </label>
-                    <div className="flex items-center gap-2">
-                      <div className="flex-1 px-3 py-2 bg-neutral-900 border border-neutral-700 rounded font-label text-sm text-red-400 select-all">
-                        {upiId}
-                      </div>
-                      <button
-                        type="button"
-                        onClick={() => copyToClipboard(upiId, 'upi')}
-                        className="px-3 py-2 bg-neutral-800 hover:bg-neutral-700 rounded text-neutral-200 font-label text-xs border border-neutral-700 flex items-center gap-1.5"
-                      >
-                        {copiedUpi ? (
-                          <Check className="w-4 h-4 text-emerald-400" />
-                        ) : (
-                          <Copy className="w-4 h-4" />
-                        )}
-                        <span>{copiedUpi ? 'Copied' : 'Copy'}</span>
-                      </button>
-                    </div>
+                    <p className="font-label text-[11px] font-bold uppercase tracking-[0.16em] text-[var(--ink)]/55">Amount</p>
+                    <p className="font-poster text-3xl leading-none mt-1">₹{fee}</p>
                   </div>
-
-                  <div className="text-xs font-label text-neutral-400">
-                    Payee Account: <span className="text-neutral-200">{payeeName}</span>
+                  <div>
+                    <p className="font-label text-[11px] font-bold uppercase tracking-[0.16em] text-[var(--ink)]/55">UPI ID</p>
+                    <button
+                      type="button"
+                      onClick={() => copyToClipboard(upiId, 'upi')}
+                      className="mt-1 inline-flex items-center gap-1.5 font-label font-semibold text-[15px] break-all text-left hover:text-[var(--card-red)]"
+                    >
+                      {upiId}
+                      {copiedUpi ? <Check className="w-4 h-4 shrink-0" /> : <Copy className="w-4 h-4 shrink-0" />}
+                    </button>
                   </div>
                 </div>
-
-                {/* CRITICAL NOTE ALERT */}
-                <div className="p-4 rounded-lg bg-amber-950/40 border border-amber-600/70 text-amber-200 flex items-start gap-3">
-                  <Info className="w-5 h-5 text-amber-400 shrink-0 mt-0.5" />
-                  <div className="text-xs font-label leading-relaxed">
-                    <strong className="text-amber-300 block mb-1">
-                      Add your Team ID to the payment note
-                    </strong>
-                    When completing payment in your UPI app, type{' '}
-                    <strong className="text-white underline">{teamId}</strong> in the payment
-                    note / remarks. This enables instantaneous matching during manual admin review.
-                  </div>
-                </div>
+                <p className="mt-3 w-full text-left text-xs font-label text-[var(--ink)]/55">Paying {payeeName}</p>
               </div>
             </div>
+          </div>
 
-            {/* UTR Submission Form */}
-            <form
-              onSubmit={handleStep2Submit}
-              className="p-6 rounded-2xl bg-[#0e0e11] border border-neutral-800 space-y-6"
-            >
-              <div className="text-xs font-label font-bold tracking-[0.16em] text-[var(--card-red)] uppercase flex items-center gap-2">
-                <Lock className="w-4 h-4" />
-                <span>Submit your payment</span>
-              </div>
+          {/* Instructions + UTR */}
+          <div className="lg:col-span-7">
+            <ol className="space-y-5">
+              {[
+                ['Scan & pay ₹' + fee, 'Scan the QR, pay to the UPI ID on the card, or tap “Open UPI app” on your phone.'],
+                ['Add ' + teamId + ' to the note', 'Put your Team ID in the UPI payment note so we can match your payment.'],
+                ['Send us the UTR', 'Copy the 12-digit UPI transaction ID from your payment app and enter it below.'],
+              ].map(([title, text], i) => (
+                <li key={title} className="flex gap-4">
+                  <span className="font-poster text-4xl leading-none text-[var(--card-red)] w-8 shrink-0">{i + 1}</span>
+                  <div>
+                    <p className="font-heading text-lg font-bold text-neutral-100">{title}</p>
+                    <p className="text-neutral-400">{text}</p>
+                  </div>
+                </li>
+              ))}
+            </ol>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {/* UTR Input */}
-                <div>
-                  <label className="block text-sm font-label font-semibold text-neutral-200 mb-1">
-                    12-digit UPI transaction ID (UTR) <span className="text-red-500">*</span>
-                  </label>
+            <form onSubmit={handleStep2Submit} className="mt-10 rounded-2xl border border-neutral-800 bg-[#0d0d10] p-5 sm:p-7 space-y-5" noValidate>
+              <div className="grid sm:grid-cols-2 gap-4">
+                <Field label="UTR (12 digits)" error={errors.utr} hint="GPay: UPI transaction ID · PhonePe: UTR · Paytm: UPI Ref No.">
                   <input
                     type="text"
+                    inputMode="numeric"
                     required
                     maxLength={12}
-                    placeholder="e.g. 423456789012"
+                    placeholder="423456789012"
                     value={utr}
                     onChange={(e) => {
                       setUtr(e.target.value.replace(/\D/g, ''));
-                      if (errors.utr) {
-                        setErrors((prev) => {
-                          const n = { ...prev };
-                          delete n.utr;
-                          return n;
-                        });
-                      }
+                      if (errors.utr) setErrors((prev) => { const n = { ...prev }; delete n.utr; return n; });
                     }}
-                    className={`w-full px-4 py-2.5 bg-neutral-900 border rounded font-label text-sm text-white placeholder-neutral-600 tracking-wider focus:outline-none focus:border-[var(--paper)] ${
-                      errors.utr ? 'border-red-500' : 'border-neutral-700'
-                    }`}
+                    className={`${inputClass(errors.utr)} tracking-[0.2em] tabular-nums`}
                   />
-                  {errors.utr ? (
-                    <p className="mt-1 text-xs text-red-400 font-label">{errors.utr}</p>
-                  ) : (
-                    <p className="mt-1 text-[10px] text-neutral-500 font-label">
-                      GPay: UPI Txn ID · PhonePe: UTR · Paytm: UPI Ref No.
-                    </p>
-                  )}
-                </div>
-
-                {/* Confirm UTR */}
-                <div>
-                  <label className="block text-sm font-label font-semibold text-neutral-200 mb-1">
-                    Confirm UTR <span className="text-red-500">*</span>
-                  </label>
+                </Field>
+                <Field label="Confirm UTR" error={errors.confirmUtr}>
                   <input
                     type="text"
+                    inputMode="numeric"
                     required
                     maxLength={12}
-                    placeholder="Re-enter 12-digit UTR"
+                    placeholder="Type it again"
                     value={confirmUtr}
                     onChange={(e) => {
                       setConfirmUtr(e.target.value.replace(/\D/g, ''));
-                      if (errors.confirmUtr) {
-                        setErrors((prev) => {
-                          const n = { ...prev };
-                          delete n.confirmUtr;
-                          return n;
-                        });
-                      }
+                      if (errors.confirmUtr) setErrors((prev) => { const n = { ...prev }; delete n.confirmUtr; return n; });
                     }}
-                    className={`w-full px-4 py-2.5 bg-neutral-900 border rounded font-label text-sm text-white placeholder-neutral-600 tracking-wider focus:outline-none focus:border-[var(--paper)] ${
-                      errors.confirmUtr ? 'border-red-500' : 'border-neutral-700'
-                    }`}
+                    className={`${inputClass(errors.confirmUtr)} tracking-[0.2em] tabular-nums`}
                   />
-                  {errors.confirmUtr && (
-                    <p className="mt-1 text-xs text-red-400 font-label">{errors.confirmUtr}</p>
-                  )}
-                </div>
-
-                {/* Payer Name / Account */}
-                <div className="sm:col-span-2">
-                  <label className="block text-sm font-label font-semibold text-neutral-300 mb-1">
-                    Paid from (name or UPI ID) — optional, helps us verify faster
-                  </label>
-                  <input
-                    type="text"
-                    placeholder="e.g. Aarav Sharma / aarav@oksbi"
-                    value={payerName}
-                    onChange={(e) => setPayerName(e.target.value)}
-                    className="w-full px-4 py-2 bg-neutral-900 border border-neutral-700 rounded font-label text-xs text-white placeholder-neutral-600 focus:outline-none focus:border-[var(--paper)]"
-                  />
-                </div>
+                </Field>
+                <Field label="Paid from (optional)" hint="Name or UPI ID — helps us verify faster" className="sm:col-span-2">
+                  <input type="text" placeholder="Aarav Sharma / aarav@oksbi" value={payerName} onChange={(e) => setPayerName(e.target.value)} className={inputClass()} />
+                </Field>
               </div>
 
               <Turnstile
@@ -894,57 +694,57 @@ export default function RegisterPage() {
                 onError={() => setPaymentToken('')}
               />
 
-              {/* Submit Proof Button */}
-              <div className="flex items-center justify-end pt-2">
-                <button
-                  type="submit"
-                  disabled={isSubmitting || !paymentToken}
-                  className="px-8 py-3 bg-[var(--card-red)] hover:brightness-110 disabled:bg-neutral-800 disabled:text-neutral-500 text-white font-label font-bold tracking-wider text-xs sm:text-sm rounded border border-red-500 flex items-center gap-3 transition-all"
-                >
-                  {isSubmitting ? (
-                    <>
-                      <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                      <span>Submitting…</span>
-                    </>
-                  ) : (
-                    <>
-                      <span>Submit UTR</span>
-                      <Check className="w-4 h-4" />
-                    </>
-                  )}
-                </button>
-              </div>
+              <button
+                type="submit"
+                disabled={isSubmitting || !paymentToken}
+                className="w-full inline-flex items-center justify-center gap-3 rounded-lg bg-[var(--card-red)] px-8 py-4 font-poster uppercase text-2xl tracking-wide text-white transition hover:brightness-110 disabled:bg-neutral-800 disabled:text-neutral-500"
+              >
+                {isSubmitting ? (
+                  <>
+                    <span className="w-5 h-5 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                    Submitting…
+                  </>
+                ) : (
+                  <>
+                    Submit UTR
+                    <ArrowRight className="w-5 h-5" />
+                  </>
+                )}
+              </button>
+              <p className="text-sm font-label text-neutral-500">
+                Closed this page? The payment link is also in the email we sent the team leader.
+              </p>
             </form>
           </div>
-        )}
+        </div>
+      )}
 
-        {/* ========================================================================= */}
-        {/* STEP 3: CLEARANCE STATUS & CONFIRMATION */}
-        {/* ========================================================================= */}
-        {currentStep === 3 && (
-          <div className="paper-card rounded-2xl p-2.5 text-[var(--ink)]">
-            <div className="rounded-xl border border-[var(--card-red)]/45 p-6 sm:p-10 text-center space-y-6">
-            <div>
-              <div className="font-label text-[11px] font-bold uppercase tracking-[0.16em] text-[var(--card-red)]">
-                UTR received
-              </div>
-              <h2 className="font-poster text-4xl sm:text-5xl uppercase leading-none mt-2">Welcome, Player</h2>
-              <p className="mt-3 text-base font-label text-[var(--ink)]/75 max-w-lg mx-auto leading-relaxed">
-                We&apos;ll check your payment against our bank statement and email the team leader as soon as
-                it&apos;s verified. Your Entry Visa comes with that email.
-              </p>
-            </div>
+      {/* ─────────────────────────── STEP 3 ─────────────────────────── */}
+      {currentStep === 3 && (
+        <div className="max-w-2xl mx-auto paper-card rounded-2xl p-2.5 text-[var(--ink)]">
+          <div className="relative rounded-xl border border-[var(--card-red)]/45 p-6 sm:p-10 text-center">
+            <span aria-hidden="true" className="absolute top-3 left-4 text-2xl">♠</span>
+            <span aria-hidden="true" className="absolute top-3 right-4 text-2xl text-[var(--card-red)]">♥</span>
+            <span aria-hidden="true" className="absolute bottom-3 left-4 text-2xl text-[var(--card-red)]">♦</span>
+            <span aria-hidden="true" className="absolute bottom-3 right-4 text-2xl">♣</span>
 
-            <div className="max-w-md mx-auto">
-              <div className="font-label text-[11px] font-bold uppercase tracking-[0.16em] text-[var(--ink)]/55">Team ID</div>
-              <div className="font-poster text-6xl uppercase leading-none mt-1">{teamId}</div>
-              <div className="mt-3 inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[var(--ink)] text-[var(--paper)] text-xs font-label font-semibold">
+            <p className="font-label text-[11px] font-bold uppercase tracking-[0.16em] text-[var(--card-red)]">UTR received</p>
+            <h2 className="font-poster text-5xl sm:text-6xl uppercase leading-none mt-2">Welcome, Player</h2>
+            <p className="mt-4 text-base font-label text-[var(--ink)]/75 max-w-md mx-auto leading-relaxed">
+              We&apos;ll check your payment against our bank statement and email the team leader once it&apos;s
+              verified. Your Entry Visa comes with that email.
+            </p>
+
+            <div className="mt-8">
+              <p className="font-label text-[11px] font-bold uppercase tracking-[0.16em] text-[var(--ink)]/55">Team ID</p>
+              <p className="font-poster text-7xl uppercase leading-none mt-1">{teamId}</p>
+              <span className="mt-3 inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[var(--ink)] text-[var(--paper)] text-xs font-label font-semibold">
                 <Clock className="w-3.5 h-3.5" />
-                <span>{paymentSuccessStatus === 'UNDER_REVIEW' ? 'Payment under review' : paymentSuccessStatus}</span>
-              </div>
+                {paymentSuccessStatus === 'UNDER_REVIEW' ? 'Payment under review' : paymentSuccessStatus}
+              </span>
             </div>
 
-            <dl className="max-w-md mx-auto text-left grid grid-cols-2 gap-x-6 gap-y-3 text-sm font-label border-t border-[var(--ink)]/15 pt-5">
+            <dl className="mt-8 max-w-sm mx-auto text-left grid grid-cols-2 gap-x-6 gap-y-3 text-sm font-label border-t border-[var(--ink)]/15 pt-5">
               <dt className="text-[var(--ink)]/55">Team</dt>
               <dd className="font-semibold text-right">{teamName}</dd>
               <dt className="text-[var(--ink)]/55">Players</dt>
@@ -953,38 +753,138 @@ export default function RegisterPage() {
               <dd className="font-semibold text-right tabular-nums">{utr}</dd>
             </dl>
 
-            {/* Action Buttons */}
-            <div className="pt-4 flex flex-col sm:flex-row items-center justify-center gap-4">
+            <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-3">
               <button
                 type="button"
                 onClick={() => copyToClipboard(teamId, 'teamId')}
-                className="w-full sm:w-auto px-6 py-3 bg-[var(--ink)] hover:bg-black text-[var(--paper)] font-label text-sm font-bold rounded-md flex items-center justify-center gap-2 transition-colors"
+                className="w-full sm:w-auto px-6 py-3 rounded-md bg-[var(--ink)] text-[var(--paper)] font-label text-sm font-bold inline-flex items-center justify-center gap-2 hover:bg-black"
               >
-                {copiedTeamId ? (
-                  <>
-                    <Check className="w-4 h-4 text-emerald-400" />
-                    <span className="text-emerald-400">Copied</span>
-                  </>
-                ) : (
-                  <>
-                    <Copy className="w-4 h-4" />
-                    <span>Copy Team ID</span>
-                  </>
-                )}
+                {copiedTeamId ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+                {copiedTeamId ? 'Copied' : 'Copy Team ID'}
               </button>
-
               <Link
                 href="/"
                 onClick={() => playHudClick()}
-                className="w-full sm:w-auto px-6 py-3 bg-[var(--card-red)] hover:brightness-110 text-white font-label text-sm font-bold rounded-md flex items-center justify-center gap-2 transition-colors"
+                className="w-full sm:w-auto px-6 py-3 rounded-md bg-[var(--card-red)] text-white font-label text-sm font-bold inline-flex items-center justify-center gap-2 hover:brightness-110"
               >
-                <span>Back to the site</span>
+                Back to the site
                 <ArrowRight className="w-4 h-4" />
               </Link>
             </div>
-            </div>
           </div>
-        )}
+        </div>
+      )}
     </RegisterShell>
+  );
+}
+
+/* ── Small building blocks ─────────────────────────────────────────────── */
+
+const SUITS = [
+  { symbol: '♠', red: false },
+  { symbol: '♥', red: true },
+  { symbol: '♦', red: true },
+  { symbol: '♣', red: false },
+];
+
+function inputClass(error?: string) {
+  return `w-full rounded-lg bg-[#141417] border px-4 py-3 text-[15px] font-label text-white placeholder:text-neutral-600 outline-none transition focus:border-[var(--paper)] focus:bg-[#18181c] ${
+    error ? 'border-[var(--card-red)]' : 'border-neutral-800 hover:border-neutral-700'
+  }`;
+}
+
+function SectionTitle({ n, title, note }: { n: string; title: string; note?: string }) {
+  return (
+    <div className="flex items-end gap-4 border-b border-neutral-800 pb-3">
+      <span className="font-poster text-4xl leading-none text-[var(--card-red)]">{n}</span>
+      <div>
+        <h2 className="font-poster uppercase text-3xl leading-none text-[#f5eee1]">{title}</h2>
+        {note && <p className="mt-1.5 text-sm font-label text-neutral-500">{note}</p>}
+      </div>
+    </div>
+  );
+}
+
+function FieldError({ msg }: { msg?: string }) {
+  if (!msg) return null;
+  return <p className="mt-1.5 text-sm font-label text-[#ff6b6b]">{msg}</p>;
+}
+
+function Field({
+  label,
+  error,
+  hint,
+  className = '',
+  children,
+}: {
+  label: string;
+  error?: string;
+  hint?: string;
+  className?: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <label className={`block ${className}`}>
+      <span className="block mb-1.5 text-sm font-label font-semibold text-neutral-300">{label}</span>
+      {children}
+      {error ? <FieldError msg={error} /> : hint ? <p className="mt-1.5 text-xs font-label text-neutral-500">{hint}</p> : null}
+    </label>
+  );
+}
+
+/* The team as a fanned hand of playing cards, filled in as you type. */
+function YourHand({ teamName, players }: { teamName: string; players: PlayerFormState[] }) {
+  const n = players.length;
+  return (
+    <div className="paper-card rounded-2xl p-2.5 text-[var(--ink)]">
+      <div className="rounded-xl border border-[var(--card-red)]/45 p-6">
+        <p className="font-label text-[11px] font-bold uppercase tracking-[0.16em] text-[var(--card-red)]">Your hand</p>
+        <p className="font-poster uppercase text-4xl leading-none mt-1 truncate">{teamName.trim() || 'Your team'}</p>
+
+        <div className="relative h-64 mt-6" aria-hidden="true">
+          {players.map((p, i) => {
+            const suit = SUITS[i];
+            const spread = n === 1 ? 0 : (i - (n - 1) / 2) * (n === 4 ? 13 : 16);
+            const x = (i - (n - 1) / 2) * (n === 4 ? 62 : 74);
+            return (
+              <div
+                key={i}
+                className="absolute left-1/2 top-2 w-32 aspect-[5/7] -ml-16 rounded-xl bg-[#fbf6ec] border border-[var(--ink)]/15 shadow-[0_10px_25px_-10px_rgba(0,0,0,0.5)] p-2 transition-transform duration-300"
+                style={{ transform: `translateX(${x}px) rotate(${spread}deg)`, transformOrigin: '50% 120%', zIndex: i }}
+              >
+                <div className="h-full rounded-lg border border-[var(--card-red)]/35 flex flex-col p-1.5">
+                  <span className={`text-sm leading-none ${suit.red ? 'text-[var(--card-red)]' : ''}`}>{suit.symbol}</span>
+                  <div className="flex-1 flex flex-col items-center justify-center text-center px-1">
+                    <span className={`text-3xl leading-none ${suit.red ? 'text-[var(--card-red)]' : ''}`}>{suit.symbol}</span>
+                    <span className="mt-2 font-poster uppercase text-sm leading-tight line-clamp-2 break-words">
+                      {p.name.trim() || `Player ${i + 1}`}
+                    </span>
+                    <span className="mt-0.5 max-w-full truncate text-[9px] font-label text-[var(--ink)]/55">
+                      {p.regNo.trim() || (i === 0 ? 'Team leader' : '')}
+                    </span>
+                  </div>
+                  <span className={`self-end rotate-180 text-sm leading-none ${suit.red ? 'text-[var(--card-red)]' : ''}`}>{suit.symbol}</span>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        <dl className="mt-2 grid grid-cols-3 gap-3 border-t border-[var(--ink)]/15 pt-4 text-center">
+          <div>
+            <dt className="font-label text-[10px] font-bold uppercase tracking-[0.16em] text-[var(--ink)]/55">When</dt>
+            <dd className="font-poster text-xl uppercase leading-none mt-1">5–6 Oct</dd>
+          </div>
+          <div>
+            <dt className="font-label text-[10px] font-bold uppercase tracking-[0.16em] text-[var(--ink)]/55">Where</dt>
+            <dd className="font-poster text-xl uppercase leading-none mt-1">TP2 712</dd>
+          </div>
+          <div>
+            <dt className="font-label text-[10px] font-bold uppercase tracking-[0.16em] text-[var(--ink)]/55">Entry</dt>
+            <dd className="font-poster text-xl uppercase leading-none mt-1">₹199</dd>
+          </div>
+        </dl>
+      </div>
+    </div>
   );
 }
