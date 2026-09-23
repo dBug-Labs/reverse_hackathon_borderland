@@ -36,7 +36,7 @@ export async function proxy(req: NextRequest) {
   if (
     (pathname.startsWith('/admin') || pathname.startsWith('/api/admin')) &&
     !pathname.startsWith('/admin/login') &&
-    !pathname.startsWith('/api/admin/login')
+    pathname !== '/api/admin/login' // the login API must be reachable without a session
   ) {
     const token = req.cookies.get('bnd_admin')?.value;
     const scope = await getScope(token, secret);
@@ -56,7 +56,7 @@ export async function proxy(req: NextRequest) {
   if (
     (pathname.startsWith('/attendance') || pathname.startsWith('/api/attendance')) &&
     !pathname.startsWith('/attendance/login') &&
-    !pathname.startsWith('/api/attendance/login')
+    pathname !== '/api/attendance/login' // the login API must be reachable without a session
   ) {
     const token = req.cookies.get('bnd_attendance')?.value;
     const scope = await getScope(token, secret);

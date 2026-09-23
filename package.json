@@ -15,6 +15,7 @@
     "@google/genai": "^2.4.0",
     "@marsidev/react-turnstile": "^1.6.1",
     "jose": "^6.2.12",
+    "jsqr": "^1.4.0",
     "lucide-react": "^0.546.0",
     "mongodb": "^7.6.0",
     "motion": "^12.23.24",
