@@ -27,7 +27,7 @@ export default function ResumePaymentPage() {
   // Signed pay token from the email link (/register/pay/DBG-472?t=...)
   const payToken = useSearchParams().get('t') ?? '';
 
-  const [fee, setFee] = useState(300);
+  const [fee, setFee] = useState(199);
   const [upiId, setUpiId] = useState('shauryaaojha@oksbi');
   const [payeeName, setPayeeName] = useState('SRM DBUG Labs');
   const [utr, setUtr] = useState('');

@@ -58,7 +58,7 @@ async function seedEvent() {
     registrationClosesAt: new Date('2025-02-10T23:59:59+05:30'),
     forceClosed: false,
     capacity: 120,
-    fee: 200,
+    fee: 199,
     teamSize: { min: 2, max: 4 },
     upiId: 'shauryaaojha@oksbi',
     payeeName: 'DBUG Labs',

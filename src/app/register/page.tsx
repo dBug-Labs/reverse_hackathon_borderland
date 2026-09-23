@@ -84,7 +84,7 @@ export default function RegisterPage() {
 
   // Step 2 & 3 State
   const [teamId, setTeamId] = useState<string>('');
-  const [fee, setFee] = useState<number>(300);
+  const [fee, setFee] = useState<number>(199);
   const [upiId, setUpiId] = useState<string>('shauryaaojha@oksbi');
   const [payeeName, setPayeeName] = useState<string>('SRM DBUG Labs');
   const [utr, setUtr] = useState<string>('');
