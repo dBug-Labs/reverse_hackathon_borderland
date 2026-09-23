@@ -26,7 +26,6 @@ const envSchema = z
       .enum(['true', 'false'])
       .default('true')
       .transform((v) => v === 'true'),
-    ADMIN_NOTIFY_EMAIL: z.string().email('ADMIN_NOTIFY_EMAIL must be a valid email').optional(),
 
     // ── Auth ───────────────────────────────────────────────────
     ADMIN_PASSWORD: z.string().min(12, 'ADMIN_PASSWORD must be at least 12 characters'),

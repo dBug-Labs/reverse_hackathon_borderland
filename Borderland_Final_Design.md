@@ -394,7 +394,7 @@ flowchart TB
     SVC --> REG & PAY & EV & AL & MET & RB & ABL
     SVC -->|"enqueue"| EJ
     SVC --> AFT -->|"send now"| SMTP
-    GHA --> CRON -->|"retry / expire / digest"| EJ
+    GHA --> CRON -->|"retry / expire"| EJ
     CRON --> SMTP
 ```
 
@@ -657,7 +657,7 @@ Payment attempts have their own small state: `SUBMITTED → APPROVED | REJECTED`
 | From → To | Who | Side-effects |
 |---|---|---|
 | — → PAYMENT_PENDING | leader | email `REGISTERED` |
-| PAYMENT_PENDING / REJECTED → UNDER_REVIEW | leader | new `payments` doc, email `PROOF_RECEIVED`, counts in admin digest |
+| PAYMENT_PENDING / REJECTED → UNDER_REVIEW | leader | new `payments` doc, email `PROOF_RECEIVED` |
 | UNDER_REVIEW → CONFIRMED | admin | payment APPROVED, `verifiedBy/At`, **Visa issued**, email `CONFIRMED` (Visa + QR), audit |
 | UNDER_REVIEW → REJECTED | admin | reason required, payment REJECTED, `rejectCount++`, email `REJECTED`, audit |
 | REJECTED → UNDER_REVIEW (undo) | admin | reverts last payment to SUBMITTED, audit, no email |
@@ -800,7 +800,6 @@ Rule of thumb: **pages and route handlers stay thin** and call `lib/services/`.
 | `MAIL_FROM` | — | e.g. `Borderland · SRM DBUG Labs <club@…>` |
 | `EMAIL_DAILY_CAP` | — | e.g. `450` (personal) / `1800` (Workspace) |
 | `VISA_CC_MEMBERS` | — | `true` = Visa email CCs all players |
-| `ADMIN_NOTIFY_EMAIL` | — | Where the "N payments waiting" digest goes |
 | **`ADMIN_PASSWORD`** | 🔒 | Password for `/admin` (C9). 16+ random chars |
 | **`ATTENDANCE_PASSWORD`** | 🔒 | Password for `/attendance` (C9). **Must differ** from `ADMIN_PASSWORD` — app refuses to start if equal |
 | `SESSION_SECRET` | 🔒 | 32+ random chars, signs both session cookies |
@@ -908,7 +907,7 @@ Rule of thumb: **pages and route handlers stay thin** and call `lib/services/`.
 
 #### Cron (header `Authorization: Bearer CRON_SECRET`)
 
-`/api/cron/emails` (retry, every 15 min) · `/api/cron/expire` (hourly) · `/api/cron/digest` (hourly admin digest) · `/api/cron/remind` (unpaid after 24 h).
+`/api/cron/emails` (retry, every 15 min) · `/api/cron/expire` (hourly) · `/api/cron/remind` (unpaid after 24 h).
 Vercel Hobby cron runs only daily, so call these from a **GitHub Actions schedule** (or Vercel Pro cron).
 
 ### 7.6.1 Error codes
@@ -1041,7 +1040,6 @@ Never show raw errors like `E11000 duplicate key` — translate them (the index 
 | Rejected | Admin rejects | leader | "Action needed — we couldn't verify your payment" | reason, re-submit link, contact |
 | Unpaid reminder | 24 h after Step 1 | leader | "Your spot isn't locked yet" | resume link, deadline |
 | Your link | Duplicate attempt / resend | leader | "Your Borderland registration link" | status + pay links |
-| Admin digest | Hourly, if new UTRs | `ADMIN_NOTIFY_EMAIL` | "N payments waiting" | count + link to `/admin` |
 | Event reminder | Admin-triggered, 1 day before | all confirmed players | "Tomorrow: the games begin" | venue, time, Visa link |
 
 #### K. CSV export
@@ -1243,7 +1241,7 @@ Build in order; finish and test each phase before the next. Give your AI tool **
 - [ ] Indexes created; event seeded
 - [ ] Event settings: fee, dates (IST), capacity, UPI ID, payee name — **UPI QR tested with a real ₹1 payment** on GPay, PhonePe and Paytm
 - [ ] Rules, refund policy, privacy pages live; FAQ mentions SRM email + teams of 2–4
-- [ ] GitHub Actions schedule calling `/api/cron/emails`, `/expire`, `/digest`, `/remind` with `CRON_SECRET`
+- [ ] GitHub Actions schedule calling `/api/cron/emails`, `/expire`, `/remind` with `CRON_SECRET`
 - [ ] Atlas backups on
 - [ ] Turnstile loads on live site; Lighthouse mobile ≥ 90
 - [ ] Admins know the routine: upload statement → approve MATCHED → handle the rest

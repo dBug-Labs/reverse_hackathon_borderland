@@ -7,7 +7,6 @@ import * as confirmed from './templates/confirmed';
 import * as rejected from './templates/rejected';
 import * as reminder from './templates/reminder';
 import * as yourLink from './templates/yourLink';
-import * as digest from './templates/digest';
 
 /**
  * Nodemailer transport (Gmail SMTP 465 SSL).
@@ -45,7 +44,6 @@ const templates: Record<string, {
   REJECTED: rejected,
   REMINDER: reminder,
   YOUR_LINK: yourLink,
-  DIGEST: digest,
   EVENT_REMINDER: reminder, // reuse reminder template with different data
 };
 
@@ -63,7 +61,6 @@ export async function sendEmail(opts: {
 
   const info = await t.sendMail({
     from: env.MAIL_FROM,
-    replyTo: env.ADMIN_NOTIFY_EMAIL || undefined,
     to: opts.to,
     cc: opts.cc,
     subject: opts.subject,

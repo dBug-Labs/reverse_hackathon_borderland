@@ -33,7 +33,6 @@ export type EmailTemplate =
   | 'REJECTED'
   | 'REMINDER'
   | 'YOUR_LINK'
-  | 'DIGEST'
   | 'EVENT_REMINDER';
 
 // ── Session scopes ─────────────────────────────────────────────────────────
