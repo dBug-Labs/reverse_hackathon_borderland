@@ -65,7 +65,7 @@ export const EntryPassModal: React.FC<EntryPassModalProps> = ({
                 <span>AUTHENTICATED</span>
               </div>
               <h2 className="text-2xl sm:text-3xl font-display font-black tracking-tight text-white">
-                BORDERLAND PROTOCOL
+                HACKBACK
               </h2>
               <div className="text-xs text-neutral-400 font-sans mt-0.5">
                 2-Day Reverse Hackathon · dBug Labs × SRM IST
@@ -219,7 +219,7 @@ export const EntryPassModal: React.FC<EntryPassModalProps> = ({
               ))}
             </div>
             <div className="text-[10px] text-neutral-500 uppercase tracking-widest">
-              BORDERLAND PROTOCOL · SECURE CLEARANCE LEVEL 04
+              HACKBACK · SECURE CLEARANCE LEVEL 04
             </div>
           </div>
         </div>

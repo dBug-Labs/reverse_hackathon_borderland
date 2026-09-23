@@ -35,10 +35,9 @@ export const Navbar: React.FC<NavbarProps> = ({
 
   const navLinks = [
     { label: 'Concept', href: '#concept' },
-    { label: 'Games', href: '#games' },
+    { label: 'Workflow', href: '#workflow' },
     { label: 'Timeline', href: '#timeline' },
-    { label: 'Visa', href: '#visa' },
-    { label: 'Protocol', href: '#protocol' },
+    { label: 'Rules', href: '#protocol' },
     { label: 'FAQ', href: '#faq' },
   ];
 
@@ -57,7 +56,7 @@ export const Navbar: React.FC<NavbarProps> = ({
           className="text-lg sm:text-xl font-display font-bold tracking-widest text-neutral-100 hover:text-red-500 transition-colors flex items-center gap-2 whitespace-nowrap shrink-0"
         >
           <span className="text-red-600 select-none">♠</span>
-          <span>BORDERLAND PROTOCOL</span>
+          <span>HACKBACK</span>
         </a>
 
         {/* Zone 2: 4-6 clean text navigation links */}

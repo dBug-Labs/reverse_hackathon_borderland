@@ -530,7 +530,7 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
 
                 <div className="p-3 bg-red-950/30 border border-red-900/50 rounded text-xs font-mono text-red-300 flex items-center gap-2">
                   <Lock className="w-4 h-4 text-red-500 shrink-0" />
-                  <span>By submitting, you pledge adherence to the 4 Borderland Protocols.</span>
+                  <span>By submitting, you pledge adherence to the 4 HACKBACK Protocols.</span>
                 </div>
               </div>
             )}

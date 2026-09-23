@@ -18,10 +18,10 @@ export const Footer: React.FC = () => {
           <div className="md:col-span-2 space-y-3">
             <div className="flex items-center gap-2 text-white font-display font-bold text-base tracking-widest">
               <span className="text-red-500">♠</span>
-              <span>BORDERLAND PROTOCOL</span>
+              <span>HACKBACK</span>
             </div>
             <div className="text-red-400 text-xs tracking-wider">
-              ALICE IN BORDERLAND — FOR NOW
+              NAVIGATE THE BORDERLAND
             </div>
             <p className="text-neutral-400 text-xs font-sans max-w-sm leading-relaxed">
               A 2-Day Reverse Hackathon challenging Player Groups to uncover the hidden architecture, users, and vulnerabilities of mystery products.
@@ -43,8 +43,8 @@ export const Footer: React.FC = () => {
                 </a>
               </li>
               <li>
-                <a href="#games" className="hover:text-red-400 transition-colors">
-                  The Four Games
+                <a href="#workflow" className="hover:text-red-400 transition-colors">
+                  Event Workflow
                 </a>
               </li>
               <li>
@@ -53,13 +53,8 @@ export const Footer: React.FC = () => {
                 </a>
               </li>
               <li>
-                <a href="#visa" className="hover:text-red-400 transition-colors">
-                  Player Visa System
-                </a>
-              </li>
-              <li>
                 <a href="#protocol" className="hover:text-red-400 transition-colors">
-                  Borderland Protocol
+                  HACKBACK Rules
                 </a>
               </li>
               <li>
@@ -111,7 +106,7 @@ export const Footer: React.FC = () => {
         {/* Bottom bar */}
         <div className="pt-6 flex flex-col sm:flex-row items-center justify-between text-[11px] text-neutral-400 gap-4">
           <div>
-            © {new Date().getFullYear()} BORDERLAND PROTOCOL · dBug Labs · All rights reserved.
+            © {new Date().getFullYear()} HACKBACK · dBug Labs · All rights reserved.
           </div>
           <button
             onClick={scrollToTop}
