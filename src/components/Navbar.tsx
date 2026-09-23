@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import Link from 'next/link';
 import { Volume2, VolumeX, Menu, X, ShieldCheck } from 'lucide-react';
 import { isSoundEnabled, setSoundEnabled, playHudClick } from '../utils/sound';
 
@@ -96,15 +97,15 @@ export const Navbar: React.FC<NavbarProps> = ({
               <span>MY VISA PASS</span>
             </button>
           ) : (
-            <button
+            <Link
+              href="/register"
               onClick={() => {
                 playHudClick();
-                onOpenRegister();
               }}
-              className="relative group px-4 py-2 text-xs font-mono font-semibold tracking-wider text-white bg-red-600 hover:bg-red-500 rounded border border-red-500/80 transition-all shadow-[0_0_15px_rgba(220,38,38,0.4)] whitespace-nowrap active:scale-95"
+              className="relative group px-4 py-2 text-xs font-mono font-semibold tracking-wider text-white bg-red-600 hover:bg-red-500 rounded border border-red-500/80 transition-all shadow-[0_0_15px_rgba(220,38,38,0.4)] whitespace-nowrap active:scale-95 inline-block text-center"
             >
               <span>ENTER THE BORDERLAND</span>
-            </button>
+            </Link>
           )}
 
           {/* Mobile hamburger */}
@@ -137,16 +138,16 @@ export const Navbar: React.FC<NavbarProps> = ({
             ))}
           </nav>
           <div className="pt-2 border-t border-neutral-800">
-            <button
+            <Link
+              href="/register"
               onClick={() => {
                 playHudClick();
                 setMobileMenuOpen(false);
-                onOpenRegister();
               }}
-              className="w-full py-2.5 text-xs font-mono font-bold tracking-wider text-center text-white bg-red-600 hover:bg-red-500 rounded border border-red-500"
+              className="block w-full py-2.5 text-xs font-mono font-bold tracking-wider text-center text-white bg-red-600 hover:bg-red-500 rounded border border-red-500"
             >
               ENTER THE BORDERLAND
-            </button>
+            </Link>
           </div>
         </div>
       )}

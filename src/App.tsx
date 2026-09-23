@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { TeamRegistration } from './types/borderland';
 import { Navbar } from './components/Navbar';
 import { Hero } from './components/Hero';
@@ -11,16 +12,15 @@ import { RulesSection } from './components/RulesSection';
 import { FaqSection } from './components/FaqSection';
 import { PartnersSection } from './components/PartnersSection';
 import { Footer } from './components/Footer';
-import { RegistrationModal } from './components/RegistrationModal';
 import { EntryPassModal } from './components/EntryPassModal';
 import { playHudClick } from './utils/sound';
 import { ShieldCheck } from 'lucide-react';
 
 export default function App() {
-  const [isRegisterOpen, setIsRegisterOpen] = useState(false);
+  const router = useRouter();
   const [isPassOpen, setIsPassOpen] = useState(false);
   const [registeredData, setRegisteredData] = useState<TeamRegistration | null>(null);
-  const [registeredCount, setRegisteredCount] = useState<number>(164);
+  const [registeredCount] = useState<number>(164);
 
   // Check for existing registration in localStorage on mount
   useEffect(() => {
@@ -35,12 +35,8 @@ export default function App() {
     }
   }, []);
 
-  const handleRegistrationSuccess = (reg: TeamRegistration) => {
-    setRegisteredData(reg);
-    setIsRegisterOpen(false);
-    setRegisteredCount((prev) => prev + 1);
-    setIsPassOpen(true);
-  };
+  // Registration lives on its own page (/register) — every CTA routes there.
+  const openRegister = () => router.push('/register');
 
   const scrollToWorkflow = () => {
     const el = document.getElementById('workflow') || document.getElementById('timeline') || document.getElementById('concept');
@@ -54,7 +50,7 @@ export default function App() {
       
       {/* Universal Fixed Top Navigation */}
       <Navbar
-        onOpenRegister={() => setIsRegisterOpen(true)}
+        onOpenRegister={openRegister}
         onOpenPass={() => setIsPassOpen(true)}
         hasRegistration={Boolean(registeredData)}
       />
@@ -62,7 +58,7 @@ export default function App() {
       <main>
         {/* 1. Hero Section (HACKBACK, Inverted City, 4 Flying Cars Popups) */}
         <Hero
-          onOpenRegister={() => setIsRegisterOpen(true)}
+          onOpenRegister={openRegister}
           onScrollToGames={scrollToWorkflow}
           registeredCount={registeredCount}
         />
@@ -88,13 +84,6 @@ export default function App() {
 
       {/* Footer */}
       <Footer />
-
-      {/* Multi-Step Registration Modal */}
-      <RegistrationModal
-        isOpen={isRegisterOpen}
-        onClose={() => setIsRegisterOpen(false)}
-        onSuccess={handleRegistrationSuccess}
-      />
 
       {/* Digital Entry Pass / Visa Pass Modal */}
       <EntryPassModal
@@ -127,7 +116,7 @@ export default function App() {
           <button
             onClick={() => {
               playHudClick();
-              setIsRegisterOpen(true);
+              openRegister();
             }}
             className="px-5 py-2 text-xs font-mono font-bold text-white bg-red-600 rounded border border-red-500 shadow-[0_0_12px_rgba(220,38,38,0.5)]"
           >
