@@ -1,3 +1,4 @@
+import { buildUpiIntent } from '@/lib/upi';
 import { ObjectId } from 'mongodb';
 import { getDb, getClient } from '@/lib/db';
 import { signMagicToken, signMagicLink } from '@/lib/security/magicLink';
@@ -106,7 +107,12 @@ export async function createTeam(
 
   // Build UPI info
   const note = teamId;
-  const qrString = `upi://pay?pa=${encodeURIComponent(eventDoc.upiId)}&pn=${encodeURIComponent(eventDoc.payeeName)}&am=${eventDoc.fee}&cu=INR&tn=${encodeURIComponent(note)}`;
+  const qrString = buildUpiIntent({
+    upiId: eventDoc.upiId,
+    payeeName: eventDoc.payeeName,
+    amount: eventDoc.fee,
+    note,
+  });
 
   return {
     teamId,

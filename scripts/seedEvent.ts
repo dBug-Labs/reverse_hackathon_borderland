@@ -60,7 +60,7 @@ async function seedEvent() {
     capacity: 120,
     fee: 200,
     teamSize: { min: 2, max: 4 },
-    upiId: 'dbug@upi',
+    upiId: 'shauryaaojha@oksbi',
     payeeName: 'DBUG Labs',
     teamIdPrefix: 'DBG',
     faq: [

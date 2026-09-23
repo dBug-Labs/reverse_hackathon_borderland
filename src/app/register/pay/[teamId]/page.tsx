@@ -2,9 +2,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
-import Image from 'next/image';
 import { useParams, useSearchParams } from 'next/navigation';
-import QRCode from 'qrcode';
 import { Turnstile, type TurnstileInstance } from '@marsidev/react-turnstile';
 import {
   ArrowLeft,
@@ -18,6 +16,8 @@ import {
   AlertCircle,
 } from 'lucide-react';
 import { playHudClick, playAccessGranted } from '@/utils/sound';
+import { UpiQr } from '@/components/UpiQr';
+import { buildUpiIntent } from '@/lib/upi';
 
 const TURNSTILE_SITE_KEY = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY ?? '';
 
@@ -28,7 +28,7 @@ export default function ResumePaymentPage() {
   const payToken = useSearchParams().get('t') ?? '';
 
   const [fee, setFee] = useState(300);
-  const [upiId, setUpiId] = useState('dbuglabs@upi');
+  const [upiId, setUpiId] = useState('shauryaaojha@oksbi');
   const [payeeName, setPayeeName] = useState('SRM DBUG Labs');
   const [utr, setUtr] = useState('');
   const [confirmUtr, setConfirmUtr] = useState('');
@@ -40,7 +40,7 @@ export default function ResumePaymentPage() {
   const [errorMsg, setErrorMsg] = useState<string | null>(
     payToken ? null : 'This payment link is incomplete. Open the link from your registration email.'
   );
-  const [qrDataUrl, setQrDataUrl] = useState('');
+  const [eventLoaded, setEventLoaded] = useState(false);
   const [turnstileToken, setTurnstileToken] = useState('');
   const turnstileRef = useRef<TurnstileInstance | undefined>(undefined);
 
@@ -54,13 +54,17 @@ export default function ResumePaymentPage() {
         setFee(event.fee);
         setUpiId(event.upiId);
         setPayeeName(event.payeeName);
-        const upiString = `upi://pay?pa=${encodeURIComponent(event.upiId)}&pn=${encodeURIComponent(event.payeeName)}&am=${event.fee}&cu=INR&tn=${encodeURIComponent(teamId)}`;
-        return QRCode.toDataURL(upiString, { width: 480, margin: 1 }).then(setQrDataUrl);
+        setEventLoaded(true);
       })
       .catch(() => {
         // Keep the defaults; the UPI ID + note are still shown as text
       });
-  }, [teamId]);
+  }, []);
+
+  // Only show a scannable QR once the real fee / UPI ID have loaded
+  const upiQrString = eventLoaded
+    ? buildUpiIntent({ upiId, payeeName, amount: fee, note: teamId })
+    : '';
 
   const copyToClipboard = (text: string, type: 'upi' | 'teamId') => {
     playHudClick();
@@ -196,25 +200,7 @@ export default function ResumePaymentPage() {
                 </div>
 
                 <div className="w-64 h-64 p-2 bg-[#09090c] rounded-xl border border-red-900/60 shadow-[0_0_25px_rgba(220,38,38,0.2)] flex items-center justify-center relative mb-4">
-                  {qrDataUrl ? (
-                    // data: URL generated in the browser, so next/image adds nothing here
-                    <img
-                      src={qrDataUrl}
-                      alt={`UPI payment QR for ${teamId}`}
-                      width={240}
-                      height={240}
-                      className="w-full h-full object-contain rounded-lg"
-                    />
-                  ) : (
-                    <Image
-                      src="/qr-placeholder.svg"
-                      alt="UPI Payment QR Code Placeholder"
-                      width={240}
-                      height={240}
-                      className="w-full h-full object-contain"
-                      priority
-                    />
-                  )}
+                  <UpiQr value={upiQrString} teamId={teamId} />
                 </div>
 
                 <div className="text-[11px] font-mono text-neutral-400">

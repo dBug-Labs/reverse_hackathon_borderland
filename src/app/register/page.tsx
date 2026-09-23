@@ -1,9 +1,7 @@
 'use client';
 
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useRef, useState } from 'react';
 import Link from 'next/link';
-import Image from 'next/image';
-import QRCode from 'qrcode';
 import { Turnstile, type TurnstileInstance } from '@marsidev/react-turnstile';
 import {
   Shield,
@@ -21,6 +19,7 @@ import {
   Clock,
 } from 'lucide-react';
 import { playHudClick, playAccessGranted } from '@/utils/sound';
+import { UpiQr } from '@/components/UpiQr';
 
 const TURNSTILE_SITE_KEY = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY ?? '';
 
@@ -86,7 +85,7 @@ export default function RegisterPage() {
   // Step 2 & 3 State
   const [teamId, setTeamId] = useState<string>('');
   const [fee, setFee] = useState<number>(300);
-  const [upiId, setUpiId] = useState<string>('dbuglabs@upi');
+  const [upiId, setUpiId] = useState<string>('shauryaaojha@oksbi');
   const [payeeName, setPayeeName] = useState<string>('SRM DBUG Labs');
   const [utr, setUtr] = useState<string>('');
   const [confirmUtr, setConfirmUtr] = useState<string>('');
@@ -98,18 +97,10 @@ export default function RegisterPage() {
   const formOpenedAt = useRef(Date.now());
   const [resumeToken, setResumeToken] = useState('');
   const [upiQrString, setUpiQrString] = useState('');
-  const [qrDataUrl, setQrDataUrl] = useState('');
   const [registerToken, setRegisterToken] = useState('');
   const [paymentToken, setPaymentToken] = useState('');
   const registerTurnstile = useRef<TurnstileInstance | undefined>(undefined);
   const paymentTurnstile = useRef<TurnstileInstance | undefined>(undefined);
-
-  useEffect(() => {
-    if (!upiQrString) return;
-    QRCode.toDataURL(upiQrString, { width: 480, margin: 1 })
-      .then(setQrDataUrl)
-      .catch(() => setQrDataUrl(''));
-  }, [upiQrString]);
 
   // Handle Team Size change
   const handleTeamSizeChange = (newSize: number) => {
@@ -781,25 +772,7 @@ export default function RegisterPage() {
 
                 {/* QR Code Container */}
                 <div className="w-64 h-64 p-2 bg-[#09090c] rounded-xl border border-red-900/60 shadow-[0_0_25px_rgba(220,38,38,0.2)] flex items-center justify-center relative mb-4">
-                  {qrDataUrl ? (
-                    // data: URL generated in the browser, so next/image adds nothing here
-                    <img
-                      src={qrDataUrl}
-                      alt={`UPI payment QR for ${teamId}`}
-                      width={240}
-                      height={240}
-                      className="w-full h-full object-contain rounded-lg"
-                    />
-                  ) : (
-                    <Image
-                      src="/qr-placeholder.svg"
-                      alt="UPI Payment QR Code Placeholder"
-                      width={240}
-                      height={240}
-                      className="w-full h-full object-contain"
-                      priority
-                    />
-                  )}
+                  <UpiQr value={upiQrString} teamId={teamId} />
                 </div>
 
                 <div className="text-[11px] font-mono text-neutral-400">

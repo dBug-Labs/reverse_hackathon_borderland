@@ -4,6 +4,7 @@ import { teamSchema } from '@/lib/validation/team';
 import { verifyTurnstileToken } from '@/lib/security/turnstile';
 import { checkRateLimit, hashIp, getClientIp, logAbuse } from '@/lib/security/rateLimit';
 import { signMagicLink, signMagicToken } from '@/lib/security/magicLink';
+import { buildUpiIntent } from '@/lib/upi';
 import {
   createTeam,
   getActiveEvent,
@@ -148,7 +149,12 @@ export async function POST(req: NextRequest) {
               payeeName: event.payeeName,
               amount: event.fee,
               note: existing.teamId,
-              qrString: `upi://pay?pa=${encodeURIComponent(event.upiId)}&pn=${encodeURIComponent(event.payeeName)}&am=${event.fee}&cu=INR&tn=${encodeURIComponent(existing.teamId)}`,
+              qrString: buildUpiIntent({
+                upiId: event.upiId,
+                payeeName: event.payeeName,
+                amount: event.fee,
+                note: existing.teamId,
+              }),
             },
           },
         },
