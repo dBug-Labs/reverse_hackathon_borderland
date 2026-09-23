@@ -1,3 +1,5 @@
+'use client';
+
 import React, { useState, useEffect } from 'react';
 import { TeamRegistration } from './types/borderland';
 import { Navbar } from './components/Navbar';

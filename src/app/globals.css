@@ -2,7 +2,7 @@
 
 @layer base {
   body {
-    font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+    font-family: var(--font-plus-jakarta-sans), -apple-system, BlinkMacSystemFont, sans-serif;
     background-color: #08080a;
     color: #ededed;
     overflow-x: hidden;
@@ -35,15 +35,15 @@
 
 /* Custom typography classes */
 .font-display {
-  font-family: 'Cinzel', serif;
+  font-family: var(--font-cinzel), serif;
 }
 
 .font-heading {
-  font-family: 'Syne', sans-serif;
+  font-family: var(--font-syne), sans-serif;
 }
 
 .font-mono {
-  font-family: 'JetBrains Mono', monospace;
+  font-family: var(--font-jetbrains-mono), monospace;
 }
 
 /* Red Neon Glow utilities */
