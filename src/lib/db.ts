@@ -24,18 +24,28 @@ declare global {
 function getClientPromise(): Promise<MongoClient> {
   const uri = getEnv().MONGODB_URI;
 
+  // A failed connect must not stay cached, or a warm instance keeps failing
+  // (e.g. after an Atlas IP-allowlist change) until it is recycled.
+  const connect = (onFail: () => void) =>
+    new MongoClient(uri, options).connect().catch((err) => {
+      onFail();
+      throw err;
+    });
+
   if (process.env.NODE_ENV === 'development') {
     if (!global._mongoClientPromise) {
-      const client = new MongoClient(uri, options);
-      global._mongoClientPromise = client.connect();
+      global._mongoClientPromise = connect(() => {
+        global._mongoClientPromise = undefined;
+      });
     }
     return global._mongoClientPromise;
   }
 
   // Production: create once per cold-start
   if (!clientPromise) {
-    const client = new MongoClient(uri, options);
-    clientPromise = client.connect();
+    clientPromise = connect(() => {
+      clientPromise = undefined as unknown as Promise<MongoClient>;
+    });
   }
   return clientPromise;
 }
