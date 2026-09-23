@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireScope } from '@/lib/security/session';
-import { getTeamIncludeDeleted, editTeam } from '@/lib/services/registration';
+import { getTeamIncludeDeleted, editTeam, mapDuplicateKeyError } from '@/lib/services/registration';
 import { softDeleteTeam, restoreTeam } from '@/lib/services/registration';
 import { getPaymentHistory } from '@/lib/services/payment';
 import { logAction } from '@/lib/services/audit';
@@ -54,6 +54,7 @@ export async function PATCH(
 
   const { teamId } = await params;
   const ipHashed = hashIp(getClientIp(req.headers));
+  let body: any;
 
   try {
     const before = await getTeamIncludeDeleted(teamId);
@@ -64,7 +65,7 @@ export async function PATCH(
       );
     }
 
-    const body = await req.json();
+    body = await req.json();
     const updated = await editTeam(teamId, {
       teamName: body.teamName,
       players: body.players,
@@ -84,7 +85,11 @@ export async function PATCH(
     );
 
     return NextResponse.json({ ok: true, data: { registration: updated } });
-  } catch (error) {
+  } catch (error: any) {
+    const dup = mapDuplicateKeyError(error, (body?.players || []) as any);
+    if (dup) {
+      return NextResponse.json({ ok: false, ...dup }, { status: 409 });
+    }
     console.error(`PATCH /api/admin/registrations/${teamId} error:`, error);
     return NextResponse.json(
       { ok: false, code: 'INTERNAL', message: 'Something went wrong' },

@@ -45,9 +45,11 @@ export async function POST(
     });
 
     if (!result.success) {
+      const statusCode = result.code === 'NOT_FOUND' ? 404 :
+                         result.code === 'NOT_CONFIRMED' ? 400 : 500;
       return NextResponse.json(
-        { ok: false, code: 'NOT_FOUND', message: 'Team not found' },
-        { status: 404 }
+        { ok: false, code: result.code ?? 'INTERNAL', message: result.message ?? 'Failed to record attendance' },
+        { status: statusCode }
       );
     }
 

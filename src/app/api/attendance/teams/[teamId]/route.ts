@@ -25,13 +25,6 @@ export async function GET(
       );
     }
 
-    if (card.status !== 'CONFIRMED') {
-      return NextResponse.json(
-        { ok: false, code: 'NOT_CONFIRMED', message: `Team status is ${card.status} — not confirmed` },
-        { status: 400 }
-      );
-    }
-
     return NextResponse.json({ ok: true, data: card });
   } catch (error) {
     console.error(`GET /api/attendance/teams/${teamId} error:`, error);

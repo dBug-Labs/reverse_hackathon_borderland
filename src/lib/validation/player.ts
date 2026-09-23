@@ -41,17 +41,29 @@ export function createPlayerSchema(allowedDomain: string = DEFAULT_DOMAIN) {
     phone: z
       .string()
       .trim()
-      .transform((v) => v.replace(/^(\+91|0)/, '').replace(/[\s\-]/g, ''))
-      .pipe(
-        z
-          .string()
-          .regex(/^[6-9]\d{9}$/, 'Enter a 10-digit Indian mobile number')
-      )
-      .optional(),
+      .optional()
+      .transform((v) => {
+        if (!v) return undefined;
+        const cleaned = v.replace(/^(\+91|0)/, '').replace(/[\s\-]/g, '');
+        return cleaned || undefined;
+      })
+      .refine(
+        (v) => !v || /^[6-9]\d{9}$/.test(v),
+        { message: 'Enter a 10-digit Indian mobile number' }
+      ),
 
-    year: z.enum(['1', '2', '3', '4', '5', 'PG']).optional(),
+    year: z
+      .string()
+      .optional()
+      .transform((v) => (v === '' ? undefined : v))
+      .pipe(z.enum(['1', '2', '3', '4', '5', 'PG']).optional()),
 
-    department: z.string().trim().max(60, 'Department must be at most 60 characters').optional(),
+    department: z
+      .string()
+      .trim()
+      .max(60, 'Department must be at most 60 characters')
+      .optional()
+      .transform((v) => (v === '' ? undefined : v)),
   });
 }
 

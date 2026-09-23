@@ -38,26 +38,39 @@ export async function GET(req: NextRequest) {
       'Admin Notes',
     ];
 
+function sanitizeCell(val: unknown): string {
+  if (val === null || val === undefined) return '';
+  let str = String(val);
+  // CSV formula injection protection: prefix ' if starts with =, +, -, @, tab, newline
+  if (/^[=+\-@\t\r]/.test(str)) {
+    str = `'` + str;
+  }
+  if (/[",\n\r]/.test(str)) {
+    return `"${str.replace(/"/g, '""')}"`;
+  }
+  return str;
+}
+
     const rows = registrations.map((r) => {
       const leader = r.players.find((p) => p.isLeader) || r.players[0];
       const others = r.players.filter((p) => !p.isLeader);
 
       return [
-        r.teamId,
-        `"${(r.teamName || '').replace(/"/g, '""')}"`,
-        r.status,
-        r.players.length,
-        leader?.fullName || '',
-        leader?.email || '',
-        leader?.phone || '',
-        leader?.regNo || '',
-        others[0]?.fullName || '', others[0]?.email || '', others[0]?.regNo || '',
-        others[1]?.fullName || '', others[1]?.email || '', others[1]?.regNo || '',
-        others[2]?.fullName || '', others[2]?.email || '', others[2]?.regNo || '',
-        r.source || '',
-        r.createdAt?.toISOString() || '',
-        r.updatedAt?.toISOString() || '',
-        `"${(r.adminNotes || '').replace(/"/g, '""')}"`,
+        sanitizeCell(r.teamId),
+        sanitizeCell(r.teamName),
+        sanitizeCell(r.status),
+        sanitizeCell(r.players.length),
+        sanitizeCell(leader?.fullName),
+        sanitizeCell(leader?.email),
+        sanitizeCell(leader?.phone),
+        sanitizeCell(leader?.regNo),
+        sanitizeCell(others[0]?.fullName), sanitizeCell(others[0]?.email), sanitizeCell(others[0]?.regNo),
+        sanitizeCell(others[1]?.fullName), sanitizeCell(others[1]?.email), sanitizeCell(others[1]?.regNo),
+        sanitizeCell(others[2]?.fullName), sanitizeCell(others[2]?.email), sanitizeCell(others[2]?.regNo),
+        sanitizeCell(r.source),
+        sanitizeCell(r.createdAt?.toISOString()),
+        sanitizeCell(r.updatedAt?.toISOString()),
+        sanitizeCell(r.adminNotes),
       ].join(',');
     });
 

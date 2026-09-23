@@ -157,6 +157,7 @@ export async function processQueue(maxJobs: number = 10): Promise<{
 // ── Retry a specific failed job (admin) ─────────────────────────────────────
 
 export async function retryJob(jobId: string): Promise<boolean> {
+  if (!ObjectId.isValid(jobId)) return false;
   const db = await getDb();
   const result = await db.collection('emailJobs').updateOne(
     { _id: new ObjectId(jobId), status: 'FAILED' },

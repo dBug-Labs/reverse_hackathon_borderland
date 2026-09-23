@@ -97,6 +97,8 @@ export interface MarkAttendanceInput {
 
 export interface MarkAttendanceResult {
   success: boolean;
+  code?: string;
+  message?: string;
   alreadyMarked?: {
     markedAt: Date;
     markedBy: string;
@@ -110,45 +112,52 @@ export async function markAttendance(
 ): Promise<MarkAttendanceResult> {
   const db = await getDb();
 
-  // Check if already marked for this day
-  const existing = await db.collection<Registration>('registrations').findOne(
-    {
-      teamId,
-      deletedAt: { $exists: false },
-      'attendance.day': input.day,
-    },
-    { projection: { attendance: 1 } }
+  // Find team and check status
+  const reg = await db.collection<Registration>('registrations').findOne(
+    { teamId, deletedAt: { $exists: false } },
+    { projection: { status: 1, attendance: 1 } }
   );
 
-  if (existing) {
-    const dayEntry = existing.attendance?.find((a) => a.day === input.day);
-    if (dayEntry) {
-      // Already marked — allow add-only edit (for late arrivals)
-      const mergedPresent = Array.from(
-        new Set([...dayEntry.playersPresent, ...input.playersPresent])
-      ).sort();
+  if (!reg) {
+    return { success: false, code: 'NOT_FOUND', message: 'Team not found' };
+  }
 
-      await db.collection('registrations').updateOne(
-        { teamId, 'attendance.day': input.day },
-        {
-          $set: {
-            'attendance.$.playersPresent': mergedPresent,
-            'attendance.$.markedAt': new Date(), // update timestamp
-            'attendance.$.markedBy': input.volunteerName,
-            updatedAt: new Date(),
-          },
-        }
-      );
+  if (reg.status !== 'CONFIRMED') {
+    return {
+      success: false,
+      code: 'NOT_CONFIRMED',
+      message: `Team status is ${reg.status} — only CONFIRMED teams can be marked present`,
+    };
+  }
 
-      return {
-        success: true,
-        alreadyMarked: {
-          markedAt: dayEntry.markedAt,
-          markedBy: dayEntry.markedBy,
-          playersPresent: dayEntry.playersPresent,
+  // Check if already marked for this day
+  const dayEntry = reg.attendance?.find((a) => a.day === input.day);
+  if (dayEntry) {
+    // Already marked — allow add-only edit (for late arrivals)
+    const mergedPresent = Array.from(
+      new Set([...dayEntry.playersPresent, ...input.playersPresent])
+    ).sort();
+
+    await db.collection('registrations').updateOne(
+      { teamId, 'attendance.day': input.day },
+      {
+        $set: {
+          'attendance.$.playersPresent': mergedPresent,
+          'attendance.$.markedAt': new Date(),
+          'attendance.$.markedBy': input.volunteerName,
+          updatedAt: new Date(),
         },
-      };
-    }
+      }
+    );
+
+    return {
+      success: true,
+      alreadyMarked: {
+        markedAt: dayEntry.markedAt,
+        markedBy: dayEntry.markedBy,
+        playersPresent: dayEntry.playersPresent,
+      },
+    };
   }
 
   // First time marking for this day
@@ -168,7 +177,7 @@ export async function markAttendance(
   );
 
   if (result.modifiedCount === 0) {
-    return { success: false };
+    return { success: false, code: 'INTERNAL', message: 'Failed to record attendance' };
   }
 
   return { success: true };
