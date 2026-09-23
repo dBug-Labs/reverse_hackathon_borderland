@@ -48,14 +48,14 @@ async function seedEvent() {
   console.log('Connected to MongoDB. Seeding event...\n');
 
   const event = {
-    slug: 'borderland-2025',
+    slug: 'borderland-2026',
     name: 'Borderland',
     tagline: 'SRM\'s Ultimate Reverse Hackathon',
-    venue: 'SRM University, Kattankulathur',
-    day1Date: new Date('2025-02-15T09:00:00+05:30'),
-    day2Date: new Date('2025-02-16T09:00:00+05:30'),
-    registrationOpensAt: new Date('2025-01-15T00:00:00+05:30'),
-    registrationClosesAt: new Date('2025-02-10T23:59:59+05:30'),
+    venue: 'TP2 712',
+    day1Date: new Date('2026-10-05T09:00:00+05:30'),
+    day2Date: new Date('2026-10-06T09:00:00+05:30'),
+    registrationOpensAt: new Date('2026-09-23T00:00:00+05:30'),
+    registrationClosesAt: new Date('2026-10-03T23:59:59+05:30'),
     forceClosed: false,
     capacity: 120,
     fee: 199,
@@ -82,7 +82,7 @@ async function seedEvent() {
   };
 
   const result = await db.collection('events').updateOne(
-    { slug: 'borderland-2025' },
+    { slug: 'borderland-2026' },
     { $set: event },
     { upsert: true }
   );

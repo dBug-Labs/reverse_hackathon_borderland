@@ -29,7 +29,7 @@ const envSchema = z
 
     // ── Auth ───────────────────────────────────────────────────
     ADMIN_PASSWORD: z.string().min(12, 'ADMIN_PASSWORD must be at least 12 characters'),
-    ATTENDANCE_PASSWORD: z.string().min(12, 'ATTENDANCE_PASSWORD must be at least 12 characters'),
+    ATTENDANCE_PASSWORD: z.string().min(10, 'ATTENDANCE_PASSWORD must be at least 10 characters'),
     SESSION_SECRET: z.string().min(32, 'SESSION_SECRET must be at least 32 characters'),
     LINK_SECRET: z.string().min(32, 'LINK_SECRET must be at least 32 characters'),
     CRON_SECRET: z.string().min(16, 'CRON_SECRET must be at least 16 characters'),

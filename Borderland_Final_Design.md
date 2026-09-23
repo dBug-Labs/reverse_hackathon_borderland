@@ -801,7 +801,7 @@ Rule of thumb: **pages and route handlers stay thin** and call `lib/services/`.
 | `EMAIL_DAILY_CAP` | — | e.g. `450` (personal) / `1800` (Workspace) |
 | `VISA_CC_MEMBERS` | — | `true` = Visa email CCs all players |
 | **`ADMIN_PASSWORD`** | 🔒 | Password for `/admin` (C9). 16+ random chars |
-| **`ATTENDANCE_PASSWORD`** | 🔒 | Password for `/attendance` (C9). **Must differ** from `ADMIN_PASSWORD` — app refuses to start if equal |
+| **`ATTENDANCE_PASSWORD`** | 🔒 | Password for `/attendance` (C9), 10+ chars. **Must differ** from `ADMIN_PASSWORD` — app refuses to start if equal |
 | `SESSION_SECRET` | 🔒 | 32+ random chars, signs both session cookies |
 | `LINK_SECRET` | 🔒 | 32+ random chars, signs magic links (the attendance QR is **not** signed) |
 | `CRON_SECRET` | 🔒 | Protects `/api/cron/*` |
@@ -947,7 +947,7 @@ Never show raw errors like `E11000 duplicate key` — translate them (the index 
 6. **Every route handler re-checks** with `requireScope("admin")` / `requireScope("attendance")` — middleware is a convenience, not the security boundary.
 7. **Rotating a password:** change the env var → redeploy → `pwv` no longer matches → everyone in that area is logged out.
 8. Generic error: "Invalid password" (never hint which part was wrong).
-9. Startup check: refuse to boot if either password is missing, shorter than 12 chars, or both are equal.
+9. Startup check: refuse to boot if either password is missing, too short (admin < 12, attendance < 10 chars), or both are equal.
 
 #### B. Form rules (validation)
 
