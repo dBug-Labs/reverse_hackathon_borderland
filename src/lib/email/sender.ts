@@ -35,8 +35,11 @@ function getTransport(): Transporter {
 
 // ── Template registry ───────────────────────────────────────────────────────
 
+type Attachment = { filename: string; content: Buffer; cid?: string; contentType?: string };
+
 const templates: Record<string, {
   render: (data: Record<string, unknown>) => { subject: string; html: string; text: string };
+  attachments?: (data: Record<string, unknown>) => Promise<Attachment[]>;
 }> = {
   REGISTERED: registered,
   PROOF_RECEIVED: proofReceived,
@@ -55,6 +58,7 @@ export async function sendEmail(opts: {
   subject: string;
   html: string;
   text: string;
+  attachments?: Attachment[];
 }): Promise<string> {
   const env = getEnv();
   const t = getTransport();
@@ -66,6 +70,7 @@ export async function sendEmail(opts: {
     subject: opts.subject,
     html: opts.html,
     text: opts.text,
+    attachments: opts.attachments,
   });
 
   return info.messageId;
@@ -81,6 +86,7 @@ export async function sendTemplateEmail(job: EmailJob): Promise<string> {
   }
 
   const { subject, html, text } = templateModule.render(job.templateData);
+  const attachments = templateModule.attachments ? await templateModule.attachments(job.templateData) : undefined;
 
   return sendEmail({
     to: job.to,
@@ -88,5 +94,6 @@ export async function sendTemplateEmail(job: EmailJob): Promise<string> {
     subject,
     html,
     text,
+    attachments,
   });
 }

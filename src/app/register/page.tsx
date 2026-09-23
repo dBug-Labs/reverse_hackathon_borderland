@@ -79,15 +79,12 @@ export default function RegisterPage() {
   const [payerName, setPayerName] = useState<string>('');
   const [paymentSuccessStatus, setPaymentSuccessStatus] = useState<string>('UNDER_REVIEW');
 
-  // API plumbing: idempotency key + time-trap for Step 1, pay token for Step 2
+  // API plumbing: idempotency key + time-trap; Turnstile runs on the final submit
   const [idempotencyKey] = useState(() => crypto.randomUUID());
   const formOpenedAt = useRef(Date.now());
-  const [resumeToken, setResumeToken] = useState('');
   const [upiQrString, setUpiQrString] = useState('');
   const [registerToken, setRegisterToken] = useState('');
-  const [paymentToken, setPaymentToken] = useState('');
   const registerTurnstile = useRef<TurnstileInstance | undefined>(undefined);
-  const paymentTurnstile = useRef<TurnstileInstance | undefined>(undefined);
 
   // Handle Team Size change
   const handleTeamSizeChange = (newSize: number) => {
@@ -183,7 +180,24 @@ export default function RegisterPage() {
     return Object.keys(newErrors).length === 0;
   };
 
-  // Submit Step 1
+  const teamPayload = () => ({
+    teamName: teamName.trim(),
+    players: players.slice(0, teamSize).map((p, idx) => ({
+      slot: idx + 1,
+      isLeader: idx === 0,
+      fullName: p.name.trim(),
+      email: p.email.trim().toLowerCase(),
+      regNo: p.regNo.trim().toUpperCase(),
+      phone: p.phone.trim() || undefined,
+      year: p.year || undefined,
+      department: p.department.trim() || undefined,
+    })),
+    consent,
+    website: honeypot, // Honeypot
+    _formOpenedAt: formOpenedAt.current,
+  });
+
+  // Step 1: check the team (nothing is saved, no Team ID is reserved)
   const handleStep1Submit = async (e: React.FormEvent) => {
     e.preventDefault();
     playHudClick();
@@ -197,27 +211,10 @@ export default function RegisterPage() {
     setIsSubmitting(true);
 
     try {
-      const response = await fetch('/api/registrations', {
+      const response = await fetch('/api/registrations/check', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          teamName: teamName.trim(),
-          players: players.slice(0, teamSize).map((p, idx) => ({
-            slot: idx + 1,
-            isLeader: idx === 0,
-            fullName: p.name.trim(),
-            email: p.email.trim().toLowerCase(),
-            regNo: p.regNo.trim().toUpperCase(),
-            phone: p.phone.trim() || undefined,
-            year: p.year || undefined,
-            department: p.department.trim() || undefined,
-          })),
-          consent,
-          website: honeypot, // Honeypot
-          _formOpenedAt: formOpenedAt.current,
-          turnstileToken: registerToken,
-          idempotencyKey,
-        }),
+        body: JSON.stringify(teamPayload()),
       });
 
       const data = await response.json();
@@ -227,18 +224,14 @@ export default function RegisterPage() {
           setErrors(toFormErrors(data.fields));
         }
         setGlobalError(data.message || 'Registration failed. Please review your entries.');
-        // Turnstile tokens are single-use — get a fresh one for the retry
-        setRegisterToken('');
-        registerTurnstile.current?.reset();
         setIsSubmitting(false);
         return;
       }
 
-      // Success Step 1
+      // Details look good — show the payment step with a suggested Team ID
       const result = data.data;
       playAccessGranted();
-      setTeamId(result.teamId);
-      setResumeToken(result.resumeToken);
+      setTeamId(result.candidateTeamId);
       setFee(result.upi.amount);
       setUpiId(result.upi.id);
       setPayeeName(result.upi.payeeName);
@@ -274,34 +267,40 @@ export default function RegisterPage() {
     setIsSubmitting(true);
 
     try {
-      const response = await fetch(
-        `/api/registrations/${encodeURIComponent(teamId)}/payment?t=${encodeURIComponent(resumeToken)}`,
-        {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            utr: cleanUtr,
-            confirmUtr: cleanConfirm,
-            amount: fee,
-            payerUpi: payerName.trim() || undefined,
-            turnstileToken: paymentToken,
-          }),
-        }
-      );
+      const response = await fetch('/api/registrations', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ...teamPayload(),
+          candidateTeamId: teamId,
+          utr: cleanUtr,
+          confirmUtr: cleanConfirm,
+          amount: fee,
+          payerUpi: payerName.trim() || undefined,
+          turnstileToken: registerToken,
+          idempotencyKey,
+        }),
+      });
 
       const data = await response.json();
 
       if (!response.ok || !data.ok) {
-        if (data.fields) {
-          setErrors(data.fields);
+        const fields: Record<string, string> = data.fields ? toFormErrors(data.fields) : {};
+        setErrors(fields);
+        setGlobalError(data.message || 'Submission failed.');
+        // Turnstile tokens are single-use — get a fresh one for the retry
+        setRegisterToken('');
+        registerTurnstile.current?.reset();
+        // A problem with the team itself (e.g. a player registered meanwhile) → back to Step 1
+        if (Object.keys(fields).some((k) => k.startsWith('players') || k === 'teamName')) {
+          setCurrentStep(1);
+          window.scrollTo({ top: 0, behavior: 'smooth' });
         }
-        setGlobalError(data.message || 'Payment submission failed.');
-        setPaymentToken('');
-        paymentTurnstile.current?.reset();
         setIsSubmitting(false);
         return;
       }
 
+      setTeamId(data.data.teamId); // final ID (the suggested one unless it was just taken)
       playAccessGranted();
       setPaymentSuccessStatus(data.data?.status || 'UNDER_REVIEW');
       setCurrentStep(3);
@@ -330,12 +329,12 @@ export default function RegisterPage() {
   return (
     <RegisterShell
       eyebrow="Registration · ₹199 per team"
-      title={currentStep === 3 ? 'You’re in the queue' : currentStep === 2 ? 'Pay to lock your spot' : 'Register your team'}
+      title={currentStep === 3 ? 'Submission received' : currentStep === 2 ? 'Pay & submit' : 'Register your team'}
       subtitle={
         currentStep === 1
           ? 'Teams of 2–4 SRM students. Build your hand, then pay ₹199 by UPI.'
           : currentStep === 2
-          ? 'Pay by UPI with your Team ID in the note, then send us the 12-digit UTR.'
+          ? 'Pay ₹199 by UPI with your Team ID in the note, then submit the 12-digit UTR to register.'
           : undefined
       }
       width="xl"
@@ -527,26 +526,15 @@ export default function RegisterPage() {
               </label>
               <FieldError msg={errors.consent} />
 
-              <div className="mt-6">
-                <Turnstile
-                  ref={registerTurnstile}
-                  siteKey={TURNSTILE_SITE_KEY}
-                  options={{ action: 'register', theme: 'dark' }}
-                  onSuccess={setRegisterToken}
-                  onExpire={() => setRegisterToken('')}
-                  onError={() => setRegisterToken('')}
-                />
-              </div>
-
               <button
                 type="submit"
-                disabled={isSubmitting || !registerToken}
+                disabled={isSubmitting}
                 className="mt-6 w-full sm:w-auto inline-flex items-center justify-center gap-3 rounded-lg bg-[var(--card-red)] px-8 py-4 font-poster uppercase text-2xl tracking-wide text-white shadow-lg shadow-black/40 transition hover:brightness-110 disabled:bg-neutral-800 disabled:text-neutral-500 disabled:shadow-none"
               >
                 {isSubmitting ? (
                   <>
                     <span className="w-5 h-5 border-2 border-current border-t-transparent rounded-full animate-spin" />
-                    Saving your team…
+                    Checking your team…
                   </>
                 ) : (
                   <>
@@ -555,9 +543,9 @@ export default function RegisterPage() {
                   </>
                 )}
               </button>
-              {!registerToken && !isSubmitting && (
-                <p className="mt-3 text-sm font-label text-neutral-500">Complete the check above to continue.</p>
-              )}
+              <p className="mt-3 text-sm font-label text-neutral-500">
+                Nothing is saved yet — your team is registered when you submit the payment UTR.
+              </p>
             </section>
           </form>
 
@@ -636,7 +624,7 @@ export default function RegisterPage() {
               {[
                 ['Scan & pay ₹' + fee, 'Scan the QR, pay to the UPI ID on the card, or tap “Open UPI app” on your phone.'],
                 ['Add ' + teamId + ' to the note', 'Put your Team ID in the UPI payment note so we can match your payment.'],
-                ['Send us the UTR', 'Copy the 12-digit UPI transaction ID from your payment app and enter it below.'],
+                ['Submit your UTR', 'Enter the 12-digit UPI transaction ID from your payment app. Your team is registered the moment you submit.'],
               ].map(([title, text], i) => (
                 <li key={title} className="flex gap-4">
                   <span className="font-poster text-4xl leading-none text-[var(--card-red)] w-8 shrink-0">{i + 1}</span>
@@ -686,17 +674,17 @@ export default function RegisterPage() {
               </div>
 
               <Turnstile
-                ref={paymentTurnstile}
+                ref={registerTurnstile}
                 siteKey={TURNSTILE_SITE_KEY}
-                options={{ action: 'payment', theme: 'dark' }}
-                onSuccess={setPaymentToken}
-                onExpire={() => setPaymentToken('')}
-                onError={() => setPaymentToken('')}
+                options={{ action: 'register', theme: 'dark' }}
+                onSuccess={setRegisterToken}
+                onExpire={() => setRegisterToken('')}
+                onError={() => setRegisterToken('')}
               />
 
               <button
                 type="submit"
-                disabled={isSubmitting || !paymentToken}
+                disabled={isSubmitting || !registerToken}
                 className="w-full inline-flex items-center justify-center gap-3 rounded-lg bg-[var(--card-red)] px-8 py-4 font-poster uppercase text-2xl tracking-wide text-white transition hover:brightness-110 disabled:bg-neutral-800 disabled:text-neutral-500"
               >
                 {isSubmitting ? (
@@ -706,14 +694,22 @@ export default function RegisterPage() {
                   </>
                 ) : (
                   <>
-                    Submit UTR
+                    Submit registration
                     <ArrowRight className="w-5 h-5" />
                   </>
                 )}
               </button>
-              <p className="text-sm font-label text-neutral-500">
-                Closed this page? The payment link is also in the email we sent the team leader.
-              </p>
+              <button
+                type="button"
+                onClick={() => {
+                  playHudClick();
+                  setCurrentStep(1);
+                  window.scrollTo({ top: 0, behavior: 'smooth' });
+                }}
+                className="text-sm font-label font-semibold text-neutral-400 hover:text-white"
+              >
+                ← Edit team details
+              </button>
             </form>
           </div>
         </div>
@@ -728,11 +724,11 @@ export default function RegisterPage() {
             <span aria-hidden="true" className="absolute bottom-3 left-4 text-2xl text-[var(--card-red)]">♦</span>
             <span aria-hidden="true" className="absolute bottom-3 right-4 text-2xl">♣</span>
 
-            <p className="font-label text-[11px] font-bold uppercase tracking-[0.16em] text-[var(--card-red)]">UTR received</p>
+            <p className="font-label text-[11px] font-bold uppercase tracking-[0.16em] text-[var(--card-red)]">Awaiting payment verification</p>
             <h2 className="font-poster text-5xl sm:text-6xl uppercase leading-none mt-2">Welcome, Player</h2>
             <p className="mt-4 text-base font-label text-[var(--ink)]/75 max-w-md mx-auto leading-relaxed">
-              We&apos;ll check your payment against our bank statement and email the team leader once it&apos;s
-              verified. Your Entry Visa comes with that email.
+              We&apos;ve emailed the team leader a confirmation. Once we verify your payment against our bank
+              statement, you&apos;ll get a second email with your Entry Visa.
             </p>
 
             <div className="mt-8">

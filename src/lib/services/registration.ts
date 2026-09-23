@@ -3,7 +3,7 @@ import { ObjectId } from 'mongodb';
 import { getDb, getClient } from '@/lib/db';
 import { signMagicToken, signMagicLink } from '@/lib/security/magicLink';
 import type { Registration, Player, EventDoc } from '@/lib/types';
-import type { TeamInput } from '@/lib/validation/team';
+import type { TeamInput, TeamDetailsInput, RegistrationSubmitInput } from '@/lib/validation/team';
 
 /**
  * Registration service — all business logic for creating and managing teams.
@@ -285,4 +285,174 @@ export function mapDuplicateKeyError(
     code: 'DUPLICATE',
     message: 'A registration with these details already exists',
   };
+}
+
+// ── One-pass registration: check → pay → submit ─────────────────────────────
+//
+// Nothing is written until the team submits its UTR. Step 1 only checks for
+// conflicts and suggests a Team ID; the ID is not reserved, so an abandoned
+// form leaves nothing behind.
+
+type TeamLike = Pick<TeamDetailsInput, 'teamName' | 'players'>;
+
+/**
+ * Check a team against existing registrations without writing anything.
+ * Returns the first conflict in the same shape as mapDuplicateKeyError.
+ */
+export async function findTeamConflicts(
+  input: TeamLike
+): Promise<{ code: string; message: string; fields?: Record<string, string> } | null> {
+  const db = await getDb();
+  const col = db.collection<Registration>('registrations');
+  const emails = input.players.map((p) => p.email);
+  const regNos = input.players.map((p) => p.regNo);
+  const leader = input.players.find((p) => p.isLeader);
+
+  // Soft-deleted teams still hold their emails / reg nos (same as the unique indexes)
+  const clash = await col.findOne(
+    {
+      $or: [
+        { 'players.email': { $in: emails } },
+        { 'players.regNo': { $in: regNos } },
+        { teamNameLower: input.teamName.toLowerCase() },
+        ...(leader?.phone ? [{ leaderPhone: leader.phone }] : []),
+      ],
+    },
+    { projection: { players: 1, teamNameLower: 1, leaderPhone: 1 } }
+  );
+  if (!clash) return null;
+
+  const takenEmails = new Set(clash.players.map((p) => p.email));
+  const takenRegNos = new Set(clash.players.map((p) => p.regNo));
+  const emailSlot = input.players.findIndex((p) => takenEmails.has(p.email));
+  if (emailSlot >= 0) {
+    return {
+      code: 'PLAYER_ALREADY_REGISTERED',
+      message: `Player ${emailSlot + 1} is already registered in another team`,
+      fields: { [`players.${emailSlot}.email`]: 'This email is already in another team' },
+    };
+  }
+  const regSlot = input.players.findIndex((p) => takenRegNos.has(p.regNo));
+  if (regSlot >= 0) {
+    return {
+      code: 'PLAYER_ALREADY_REGISTERED',
+      message: `Player ${regSlot + 1} is already registered in another team`,
+      fields: { [`players.${regSlot}.regNo`]: 'This register number is already in another team' },
+    };
+  }
+  if (clash.teamNameLower === input.teamName.toLowerCase()) {
+    return { code: 'TEAM_NAME_TAKEN', message: 'That team name is taken', fields: { teamName: 'That team name is taken' } };
+  }
+  const leaderIdx = input.players.findIndex((p) => p.isLeader);
+  return {
+    code: 'DUPLICATE_PHONE',
+    message: 'This phone number is already registered with another team',
+    fields: { [`players.${leaderIdx}.phone`]: 'This number is already registered with another team' },
+  };
+}
+
+/** A currently-free Team ID to show on the payment step. Not reserved. */
+export async function pickCandidateTeamId(eventDoc: EventDoc): Promise<string> {
+  return generateUniqueTeamId(eventDoc.teamIdPrefix || 'DBG');
+}
+
+export function upiDetails(eventDoc: EventDoc, note: string) {
+  return {
+    id: eventDoc.upiId,
+    payeeName: eventDoc.payeeName,
+    amount: eventDoc.fee,
+    note,
+    qrString: buildUpiIntent({ upiId: eventDoc.upiId, payeeName: eventDoc.payeeName, amount: eventDoc.fee, note }),
+  };
+}
+
+/**
+ * Save the team and its first payment attempt together (UNDER_REVIEW).
+ * Uses the candidate Team ID if it is still free, otherwise a new one.
+ * Duplicate players / team name / UTR surface as MongoDB 11000 errors.
+ */
+export async function createTeamWithPayment(
+  input: RegistrationSubmitInput,
+  eventDoc: EventDoc,
+  ipHash: string,
+  userAgent: string
+): Promise<{ teamId: string }> {
+  const db = await getDb();
+  const client = await getClient();
+  const prefix = eventDoc.teamIdPrefix || 'DBG';
+
+  let teamId =
+    input.candidateTeamId && input.candidateTeamId.startsWith(`${prefix}-`)
+      ? input.candidateTeamId
+      : await generateUniqueTeamId(prefix);
+
+  const leader = input.players.find((p) => p.isLeader)!;
+  const players: Player[] = input.players.map((p) => ({
+    slot: p.slot as 1 | 2 | 3 | 4,
+    isLeader: p.isLeader,
+    fullName: p.fullName,
+    email: p.email,
+    regNo: p.regNo,
+    phone: p.phone,
+    year: p.year,
+    department: p.department,
+  }));
+
+  for (let attempt = 0; attempt < 3; attempt++) {
+    const session = client.startSession();
+    try {
+      await session.withTransaction(async () => {
+        const now = new Date();
+        const reg = await db.collection('registrations').insertOne(
+          {
+            teamId,
+            eventId: eventDoc._id,
+            teamName: input.teamName,
+            teamNameLower: input.teamName.toLowerCase(),
+            players,
+            leaderEmail: leader.email,
+            leaderPhone: leader.phone!,
+            status: 'UNDER_REVIEW',
+            rejectCount: 0,
+            attendance: [],
+            idempotencyKey: input.idempotencyKey,
+            ipHash,
+            userAgent,
+            consentAt: now,
+            source: input.source,
+            createdAt: now,
+            updatedAt: now,
+            expiresAt: new Date(eventDoc.registrationClosesAt.getTime() + 2 * 24 * 60 * 60 * 1000),
+          } as any,
+          { session }
+        );
+        const payment = await db.collection('payments').insertOne(
+          {
+            registrationId: reg.insertedId,
+            teamId,
+            utr: input.utr,
+            amount: input.amount,
+            payerUpi: input.payerUpi,
+            status: 'SUBMITTED',
+            createdAt: now,
+          } as any,
+          { session }
+        );
+        await db
+          .collection('registrations')
+          .updateOne({ _id: reg.insertedId }, { $set: { currentPaymentId: payment.insertedId } }, { session });
+      });
+      return { teamId };
+    } catch (error: any) {
+      // Someone saved the same candidate ID a moment ago — take a fresh one and retry
+      if (error?.code === 11000 && error?.keyPattern?.teamId) {
+        teamId = await generateUniqueTeamId(prefix);
+        continue;
+      }
+      throw error;
+    } finally {
+      await session.endSession();
+    }
+  }
+  throw new Error('Could not save the team after 3 attempts');
 }

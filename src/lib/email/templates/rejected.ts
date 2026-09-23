@@ -3,6 +3,7 @@
  *
  * Data: teamId, teamName, reason, resubmitLink, contactEmail
  */
+import { C, button, emailLayout, esc, label } from '../layout';
 
 export function render(data: Record<string, unknown>) {
   const d = data as {
@@ -26,29 +27,22 @@ ${d.resubmitLink}
 
 If you believe this is a mistake, contact us${d.contactEmail ? ` at ${d.contactEmail}` : ''}.
 
-— Borderland · SRM DBUG Labs`;
+— HACKBACK · dBug Labs`;
 
-  const html = `
-<div style="font-family: 'Segoe UI', sans-serif; max-width: 600px; margin: 0 auto; background: #0a0a0a; color: #e0e0e0; padding: 32px; border-radius: 12px;">
-  <h1 style="color: #ff6b6b; font-size: 24px; margin-bottom: 4px;">Payment Verification Failed</h1>
-  <p style="color: #888; margin-top: 0;">Team <strong style="color: #fff;">${d.teamId}</strong> — ${d.teamName}</p>
-
-  <div style="background: #2e1a1a; padding: 16px; border-radius: 8px; margin: 16px 0; border-left: 4px solid #ff6b6b;">
-    <h3 style="color: #ff6b6b; margin-top: 0;">Reason</h3>
-    <p style="margin: 0;">${d.reason}</p>
-  </div>
-
-  <p>Don't worry — you can submit a corrected UTR. Make sure you're using the <strong>12-digit UPI Transaction ID</strong> (not the T-number or order ID).</p>
-
-  <div style="text-align: center; margin: 24px 0;">
-    <a href="${d.resubmitLink}" style="display: inline-block; background: #ff6b6b; color: #fff; padding: 12px 32px; border-radius: 8px; text-decoration: none; font-weight: bold;">Re-submit UTR →</a>
-  </div>
-
-  ${d.contactEmail ? `<p style="color: #888; font-size: 13px;">If you believe this is a mistake, contact us at <a href="mailto:${d.contactEmail}" style="color: #00bfff;">${d.contactEmail}</a>.</p>` : ''}
-
-  <hr style="border: none; border-top: 1px solid #333; margin: 24px 0;">
-  <p style="color: #555; font-size: 12px; text-align: center;">Borderland · SRM DBUG Labs</p>
-</div>`;
+  const body = `
+    <div style="text-align:center;padding:4px 0 6px;">
+      ${label('Payment not verified')}
+      <div style="font-family:${C.display};font-size:38px;line-height:1.05;text-transform:uppercase;color:${C.ink};margin-top:6px;">We couldn&rsquo;t match your payment</div>
+      <p style="margin:12px 0 0;color:#4a423b;">Team <strong>${esc(d.teamId)}</strong> &middot; ${esc(d.teamName)}</p>
+    </div>
+    <div style="margin:18px 0;padding:14px 16px;border-left:4px solid ${C.red};background:#fbf6ec;border-radius:6px;">
+      ${label('Reason')}
+      <div style="margin-top:4px;color:${C.ink};">${esc(d.reason)}</div>
+    </div>
+    <p style="color:#4a423b;">No need to register again &mdash; just send the correct <strong>12-digit UPI transaction ID</strong> (not the T-number or order ID) using the button below.</p>
+    <div style="text-align:center;margin:22px 0 10px;">${button(d.resubmitLink, 'Re-submit your UTR')}</div>
+    ${d.contactEmail ? `<p style="margin:10px 0 0;font-size:13px;color:${C.muted};text-align:center;">Think this is a mistake? Write to <a href="mailto:${esc(d.contactEmail)}" style="color:${C.red};">${esc(d.contactEmail)}</a>.</p>` : ''}`;
+  const html = emailLayout({ preheader: `Action needed for ${d.teamId}: we couldn't verify your payment.`, bodyHtml: body });
 
   return { subject, html, text };
 }
