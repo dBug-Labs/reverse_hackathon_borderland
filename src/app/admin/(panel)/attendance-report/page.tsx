@@ -4,7 +4,7 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { RefreshCw, Search } from 'lucide-react';
 import { api } from '@/components/portal/api';
-import { SUIT, fmtTime } from '@/components/portal/theme';
+import { fmtTime } from '@/components/portal/theme';
 import type { Pagination, RegistrationDTO } from '@/components/portal/types';
 import { Banner, Button, Empty, LoadingBlock, Meter, PageTitle, Panel, SectionLabel, StatTile, cx, inputCls } from '@/components/portal/ui';
 
@@ -87,9 +87,9 @@ export default function AttendanceReportPage() {
   return (
     <>
       <PageTitle
-        kicker="Sector 03 // Gate report"
+        kicker="Gate report"
         title="Attendance"
-        subtitle="Read-only. Volunteers mark attendance at the check-in terminal (/attendance)."
+        subtitle="Read-only. Volunteers mark attendance at the check-in desk (/attendance)."
         actions={
           <Button onClick={load} loading={loading}>
             {!loading && <RefreshCw className="h-3.5 w-3.5" />} Refresh
@@ -97,7 +97,7 @@ export default function AttendanceReportPage() {
         }
       />
 
-      <div className="mb-6 inline-flex rounded border border-neutral-800 bg-neutral-950/60 p-1" role="tablist" aria-label="Day">
+      <div className="mb-6 inline-flex rounded-full border border-neutral-800 bg-[#0d0d10] p-1" role="tablist" aria-label="Day">
         {[1, 2].map((d) => (
           <button
             key={d}
@@ -105,11 +105,11 @@ export default function AttendanceReportPage() {
             aria-selected={day === d}
             onClick={() => setDay(d as 1 | 2)}
             className={cx(
-              'rounded px-5 py-2 font-mono text-xs font-bold uppercase tracking-widest transition-all',
-              day === d ? 'bg-red-600 text-white shadow-[0_0_15px_rgba(220,38,38,0.4)]' : 'text-neutral-400 hover:text-white'
+              'rounded-full px-5 py-2 font-label text-sm font-bold transition-colors',
+              day === d ? 'bg-[var(--paper)] text-[var(--ink)]' : 'text-neutral-400 hover:text-white'
             )}
           >
-            Day 0{d}
+            Day {d}
           </button>
         ))}
       </div>
@@ -120,23 +120,23 @@ export default function AttendanceReportPage() {
       {data && (
         <div className="space-y-6">
           <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
-            <StatTile label="Teams in" value={`${data.teamsIn}/${data.rows.length}`} symbol="♣" glow={SUIT.clubs.glow} sub={`${data.rows.length ? Math.round((data.teamsIn / data.rows.length) * 100) : 0}% of confirmed`} />
-            <StatTile label="Players in" value={`${data.playersIn}/${data.totalPlayers}`} symbol="♠" glow={SUIT.spades.glow} />
-            <StatTile label="Partial teams" value={data.partial} symbol="♦" glow={SUIT.diamonds.glow} sub="Some players missing" />
-            <StatTile label="No-shows" value={data.rows.length - data.teamsIn} symbol="♥" glow={SUIT.hearts.glow} sub="Not marked yet" />
+            <StatTile label="Teams in" value={`${data.teamsIn}/${data.rows.length}`} symbol="♣" sub={`${data.rows.length ? Math.round((data.teamsIn / data.rows.length) * 100) : 0}% of confirmed`} />
+            <StatTile label="Players in" value={`${data.playersIn}/${data.totalPlayers}`} symbol="♠" />
+            <StatTile label="Partial teams" value={data.partial} symbol="♦" sub="Some players missing" />
+            <StatTile label="No-shows" value={data.rows.length - data.teamsIn} symbol="♥" sub="Not marked yet" />
           </div>
 
           <div className="grid gap-6 lg:grid-cols-3">
             <Panel className="lg:col-span-1" hud>
               <SectionLabel>Arrivals (per 30 min)</SectionLabel>
               {data.arrivals.length === 0 ? (
-                <p className="font-mono text-xs text-neutral-500">Nobody marked for Day {day} yet.</p>
+                <p className="font-label text-sm text-neutral-500">Nobody marked for Day {day} yet.</p>
               ) : (
                 <div className="space-y-2.5">
                   {data.arrivals.map(([slot, n]) => (
-                    <div key={slot} className="grid grid-cols-[52px_1fr_28px] items-center gap-3 font-mono text-xs">
+                    <div key={slot} className="grid grid-cols-[52px_1fr_28px] items-center gap-3 font-label text-sm">
                       <span className="text-neutral-400">{slot}</span>
-                      <Meter value={n} max={Math.max(...data.arrivals.map((a) => a[1]))} color={SUIT.clubs.glow} />
+                      <Meter value={n} max={Math.max(...data.arrivals.map((a) => a[1]))} color="#34d399" />
                       <span className="text-right text-white">{n}</span>
                     </div>
                   ))}
@@ -158,7 +158,7 @@ export default function AttendanceReportPage() {
                     <button
                       key={k}
                       onClick={() => setShow(k)}
-                      className={cx('rounded border px-2.5 py-1 font-mono text-[11px] uppercase', show === k ? 'border-red-600 bg-neutral-900 text-white' : 'border-neutral-800 text-neutral-400 hover:text-white')}
+                      className={cx('rounded-full border px-3.5 py-1.5 font-label text-sm font-semibold transition-colors', show === k ? 'border-[var(--paper)] bg-[var(--paper)] text-[var(--ink)]' : 'border-neutral-800 text-neutral-400 hover:border-neutral-600 hover:text-white')}
                     >
                       {l}
                     </button>
@@ -175,7 +175,7 @@ export default function AttendanceReportPage() {
               ) : (
                 <div className="max-h-[560px] overflow-y-auto">
                   <table className="w-full text-left text-sm">
-                    <thead className="sticky top-0 bg-[#0e0e14] font-mono text-[10px] uppercase tracking-widest text-neutral-500">
+                    <thead className="sticky top-0 bg-[#0d0d10] font-label text-[11px] font-bold uppercase tracking-[0.16em] text-neutral-500">
                       <tr>
                         <th className="px-3 py-2">Team</th>
                         <th className="px-3 py-2">Present</th>
@@ -186,7 +186,7 @@ export default function AttendanceReportPage() {
                       {visible.map(({ t, e, present, state }) => (
                         <tr key={t._id} className="border-t border-neutral-900">
                           <td className="px-3 py-2.5">
-                            <Link href={`/admin/registrations/${t.teamId}`} className="font-mono font-bold text-red-400 hover:text-red-300">
+                            <Link href={`/admin/registrations/${t.teamId}`} className="font-poster text-lg uppercase leading-none tracking-wide text-[#f5eee1] transition-colors hover:text-[#ff8a8a]">
                               {t.teamId}
                             </Link>
                             <div className="text-xs text-neutral-400">{t.teamName}</div>
@@ -194,21 +194,21 @@ export default function AttendanceReportPage() {
                           <td className="px-3 py-2.5">
                             <span
                               className={cx(
-                                'rounded border px-2 py-0.5 font-mono text-xs',
-                                state === 'PRESENT' && 'border-emerald-600/60 text-emerald-300',
-                                state === 'PARTIAL' && 'border-amber-600/60 text-amber-300',
-                                state === 'ABSENT' && 'border-red-800 text-red-400'
+                                'rounded-lg border px-2 py-0.5 font-label text-sm',
+                                state === 'PRESENT' && 'border-emerald-600/35 text-emerald-200',
+                                state === 'PARTIAL' && 'border-amber-500/35 text-amber-200',
+                                state === 'ABSENT' && 'border-[var(--card-red)] text-[#ff8a8a]'
                               )}
                             >
                               {present}/{t.players.length}
                             </span>
                             {state === 'PARTIAL' && e && (
-                              <div className="mt-1 font-mono text-[10px] text-neutral-500">
+                              <div className="mt-1 font-label text-[11px] text-neutral-500">
                                 Missing: {t.players.filter((p) => !e.playersPresent.includes(p.slot)).map((p) => p.fullName.split(' ')[0]).join(', ')}
                               </div>
                             )}
                           </td>
-                          <td className="px-3 py-2.5 font-mono text-xs text-neutral-400">{e ? `${fmtTime(e.markedAt)} · ${e.markedBy}` : '—'}</td>
+                          <td className="px-3 py-2.5 font-label text-sm text-neutral-400">{e ? `${fmtTime(e.markedAt)} · ${e.markedBy}` : '—'}</td>
                         </tr>
                       ))}
                     </tbody>

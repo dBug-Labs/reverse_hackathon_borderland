@@ -93,16 +93,16 @@ export default function RegistrationsPage() {
   return (
     <>
       <PageTitle
-        kicker="Sector 01 // Player groups"
-        title="Registrations"
+        kicker="Every registration"
+        title="All teams"
         subtitle={pg ? `${pg.total} team${pg.total === 1 ? '' : 's'} in this view` : 'Loading…'}
         actions={
           <a
             href={exportHref}
             download
-            className="inline-flex items-center gap-2 rounded border border-neutral-700 bg-neutral-900 px-4 py-2.5 font-mono text-xs font-bold uppercase tracking-wider text-neutral-200 hover:bg-neutral-800 hover:text-white"
+            className="inline-flex items-center gap-2 rounded-lg border border-neutral-800 bg-[#141417] px-4 py-2.5 font-label text-sm font-semibold text-neutral-200 transition-colors hover:border-neutral-600 hover:text-white"
           >
-            <Download className="h-3.5 w-3.5" /> Export CSV
+            <Download className="h-4 w-4" /> Export CSV
           </a>
         }
       />
@@ -122,11 +122,11 @@ export default function RegistrationsPage() {
                 setPage(1);
               }}
               className={cx(
-                'flex shrink-0 items-center gap-2 rounded border px-3 py-2 font-mono text-xs uppercase tracking-wider transition-all',
-                active ? 'border-red-600 bg-neutral-900 text-white shadow-[0_0_15px_rgba(220,38,38,0.25)]' : 'border-neutral-800 bg-neutral-950/50 text-neutral-400 hover:text-white'
+                'flex shrink-0 items-center gap-2 rounded-full border px-4 py-2 font-label text-sm font-semibold transition-colors',
+                active ? 'border-[var(--paper)] bg-[var(--paper)] text-[var(--ink)]' : 'border-neutral-800 text-neutral-400 hover:border-neutral-600 hover:text-white'
               )}
             >
-              {m && <span style={{ color: m.glow }}>{m.symbol}</span>}
+              {m && <span className={m.symbol === '♥' || m.symbol === '♦' ? 'text-[var(--card-red)]' : ''}>{m.symbol}</span>}
               {v.label}
             </button>
           );
@@ -146,8 +146,8 @@ export default function RegistrationsPage() {
             className={`${inputCls()} pl-10`}
           />
         </div>
-        <label className="flex cursor-pointer items-center gap-2 font-mono text-xs text-neutral-400">
-          <input type="checkbox" checked={showDeleted} onChange={(e) => { setShowDeleted(e.target.checked); setPage(1); }} className="h-4 w-4 accent-red-600" />
+        <label className="flex cursor-pointer items-center gap-2 font-label text-sm text-neutral-400">
+          <input type="checkbox" checked={showDeleted} onChange={(e) => { setShowDeleted(e.target.checked); setPage(1); }} className="h-4 w-4 accent-[var(--card-red)]" />
           Include deleted
         </label>
       </div>
@@ -159,9 +159,9 @@ export default function RegistrationsPage() {
       {rows && rows.length > 0 && (
         <>
           {/* Desktop table */}
-          <div className="hidden overflow-hidden rounded-lg border border-neutral-800 bg-[#0e0e14]/85 backdrop-blur-md md:block">
+          <div className="hidden overflow-hidden rounded-2xl border border-neutral-800 bg-[#0d0d10] md:block">
             <table className="w-full text-left text-sm">
-              <thead className="border-b border-neutral-800 bg-neutral-950/60 font-mono text-[10px] uppercase tracking-widest text-neutral-500">
+              <thead className="border-b border-neutral-800 bg-[#141417] font-label text-[11px] font-bold uppercase tracking-[0.16em] text-neutral-500">
                 <tr>
                   <th className="px-4 py-3">Team ID</th>
                   <th className="px-4 py-3">Team</th>
@@ -175,23 +175,23 @@ export default function RegistrationsPage() {
                 {rows.map((r) => {
                   const leader = r.players.find((p) => p.isLeader) ?? r.players[0];
                   return (
-                    <tr key={r._id} className={cx('group border-b border-neutral-900 transition-colors last:border-0 hover:bg-red-950/10', r.deletedAt && 'opacity-50')}>
+                    <tr key={r._id} className={cx('group border-b border-neutral-900 transition-colors last:border-0 hover:bg-white/[0.03]', r.deletedAt && 'opacity-50')}>
                       <td className="px-4 py-3">
-                        <Link href={`/admin/registrations/${r.teamId}`} className="font-mono text-sm font-bold text-red-400 group-hover:text-red-300">
+                        <Link href={`/admin/registrations/${r.teamId}`} className="font-poster text-xl uppercase leading-none tracking-wide text-[#f5eee1] transition-colors group-hover:text-[#ff8a8a]">
                           {r.teamId}
                         </Link>
                       </td>
                       <td className="px-4 py-3">
                         <Link href={`/admin/registrations/${r.teamId}`} className="block">
                           <div className="font-semibold text-white">{r.teamName}</div>
-                          <div className="font-mono text-[11px] text-neutral-500">
+                          <div className="font-label text-xs text-neutral-500">
                             {r.players.length} players{r.deletedAt && ' · deleted'}
                           </div>
                         </Link>
                       </td>
                       <td className="px-4 py-3">
                         <div className="text-neutral-200">{leader?.fullName}</div>
-                        <div className="font-mono text-[11px] text-neutral-500">{leader?.regNo}</div>
+                        <div className="font-label text-xs text-neutral-500">{leader?.regNo}</div>
                       </td>
                       <td className="px-4 py-3">
                         <StatusBadge status={r.status} />
@@ -199,7 +199,7 @@ export default function RegistrationsPage() {
                       <td className="px-4 py-3">
                         <DayChips reg={r} />
                       </td>
-                      <td className="px-4 py-3 text-right font-mono text-xs text-neutral-400">{timeAgo(r.createdAt)}</td>
+                      <td className="px-4 py-3 text-right font-label text-sm text-neutral-400">{timeAgo(r.createdAt)}</td>
                     </tr>
                   );
                 })}
@@ -215,23 +215,23 @@ export default function RegistrationsPage() {
                 <Link
                   key={r._id}
                   href={`/admin/registrations/${r.teamId}`}
-                  className={cx('block rounded-lg border border-neutral-800 bg-[#0e0e14]/85 p-4', r.deletedAt && 'opacity-50')}
+                  className={cx('block rounded-2xl border border-neutral-800 bg-[#0d0d10] p-4 transition-colors hover:border-neutral-600', r.deletedAt && 'opacity-50')}
                 >
                   <div className="flex items-start justify-between gap-3">
                     <div>
-                      <div className="font-mono text-sm font-bold text-red-400">{r.teamId}</div>
+                      <div className="font-poster text-xl uppercase leading-none tracking-wide text-[#f5eee1]">{r.teamId}</div>
                       <div className="font-semibold text-white">{r.teamName}</div>
                     </div>
                     <StatusBadge status={r.status} />
                   </div>
-                  <div className="mt-2 flex items-center justify-between font-mono text-[11px] text-neutral-500">
+                  <div className="mt-2 flex items-center justify-between font-label text-xs text-neutral-500">
                     <span>
                       {leader?.fullName} · {r.players.length}P
                     </span>
                     <span>{timeAgo(r.createdAt)}</span>
                   </div>
                   {r.deletedAt && (
-                    <div className="mt-2 flex items-center gap-1 font-mono text-[11px] text-red-400">
+                    <div className="mt-2 flex items-center gap-1 font-label text-xs text-[#ff8a8a]">
                       <Trash2 className="h-3 w-3" /> deleted
                     </div>
                   )}
@@ -241,7 +241,7 @@ export default function RegistrationsPage() {
           </div>
 
           {pg && pg.totalPages > 1 && (
-            <div className="mt-5 flex items-center justify-between font-mono text-xs text-neutral-400">
+            <div className="mt-5 flex items-center justify-between font-label text-sm text-neutral-400">
               <span>
                 Page {pg.page} of {pg.totalPages}
               </span>
@@ -262,7 +262,7 @@ export default function RegistrationsPage() {
 }
 
 function DayChips({ reg }: { reg: RegistrationDTO }) {
-  if (reg.status !== 'CONFIRMED') return <span className="font-mono text-xs text-neutral-700">—</span>;
+  if (reg.status !== 'CONFIRMED') return <span className="font-label text-sm text-neutral-700">—</span>;
   return (
     <div className="flex gap-1.5">
       {[1, 2].map((d) => {
@@ -272,8 +272,8 @@ function DayChips({ reg }: { reg: RegistrationDTO }) {
             key={d}
             title={e ? `Day ${d}: ${e.playersPresent.length}/${reg.players.length} present` : `Day ${d}: not marked`}
             className={cx(
-              'rounded border px-1.5 py-0.5 font-mono text-[10px]',
-              e ? 'border-emerald-600/60 bg-emerald-950/40 text-emerald-300' : 'border-neutral-800 text-neutral-600'
+              'rounded-lg border px-1.5 py-0.5 font-label text-[11px]',
+              e ? 'border-emerald-600/35 bg-emerald-500/10 text-emerald-200' : 'border-neutral-800 text-neutral-600'
             )}
           >
             D{d} {e ? `${e.playersPresent.length}/${reg.players.length}` : '·'}

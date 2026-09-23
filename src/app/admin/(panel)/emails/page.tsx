@@ -10,16 +10,16 @@ import { Banner, Button, Empty, LoadingBlock, PageTitle, cx } from '@/components
 type St = 'ALL' | EmailJobDTO['status'];
 const TABS: Array<{ id: St; label: string; tone: string }> = [
   { id: 'ALL', label: 'All', tone: '' },
-  { id: 'QUEUED', label: 'Queued', tone: 'text-sky-300' },
-  { id: 'SENDING', label: 'Sending', tone: 'text-amber-300' },
-  { id: 'SENT', label: 'Sent', tone: 'text-emerald-300' },
-  { id: 'FAILED', label: 'Failed', tone: 'text-red-300' },
+  { id: 'QUEUED', label: 'Queued', tone: 'text-neutral-200' },
+  { id: 'SENDING', label: 'Sending', tone: 'text-amber-200' },
+  { id: 'SENT', label: 'Sent', tone: 'text-emerald-200' },
+  { id: 'FAILED', label: 'Failed', tone: 'text-[#ff8a8a]' },
 ];
 const PILL: Record<EmailJobDTO['status'], string> = {
-  QUEUED: 'border-sky-600/50 bg-sky-950/40 text-sky-300',
-  SENDING: 'border-amber-600/50 bg-amber-950/40 text-amber-300',
-  SENT: 'border-emerald-600/50 bg-emerald-950/40 text-emerald-300',
-  FAILED: 'border-red-600/60 bg-red-950/50 text-red-300',
+  QUEUED: 'border-neutral-700 bg-neutral-800/70 text-neutral-200',
+  SENDING: 'border-amber-500/35 bg-amber-500/10 text-amber-200',
+  SENT: 'border-emerald-600/35 bg-emerald-500/10 text-emerald-200',
+  FAILED: 'border-[var(--card-red)]/60 bg-[var(--card-red)]/10 text-[#ff8a8a]',
 };
 const LIMIT = 30;
 
@@ -72,7 +72,7 @@ export default function EmailsPage() {
   return (
     <>
       <PageTitle
-        kicker="Sector 04 // Transmissions"
+        kicker="Transmissions"
         title="Email Outbox"
         subtitle="Every email the platform sends goes through this queue. Failed ones can be retried."
         actions={
@@ -91,8 +91,10 @@ export default function EmailsPage() {
               setPage(1);
             }}
             className={cx(
-              'shrink-0 rounded border px-3 py-2 font-mono text-xs uppercase tracking-wider',
-              status === t.id ? 'border-red-600 bg-neutral-900 text-white shadow-[0_0_15px_rgba(220,38,38,0.25)]' : cx('border-neutral-800 bg-neutral-950/50 hover:text-white', t.tone || 'text-neutral-400')
+              'shrink-0 rounded-full border px-4 py-2 font-label text-sm font-semibold transition-colors',
+              status === t.id
+                ? 'border-[var(--paper)] bg-[var(--paper)] text-[var(--ink)]'
+                : cx('border-neutral-800 hover:border-neutral-600 hover:text-white', t.tone || 'text-neutral-400')
             )}
           >
             {t.label}
@@ -110,9 +112,9 @@ export default function EmailsPage() {
       {jobs && jobs.length === 0 && <Empty title="Outbox empty">No emails in this state.</Empty>}
 
       {jobs && jobs.length > 0 && (
-        <div className="overflow-x-auto rounded-lg border border-neutral-800 bg-[#0e0e14]/85 backdrop-blur-md">
+        <div className="overflow-x-auto rounded-2xl border border-neutral-800 bg-[#0d0d10]">
           <table className="w-full min-w-[760px] text-left text-sm">
-            <thead className="border-b border-neutral-800 bg-neutral-950/60 font-mono text-[10px] uppercase tracking-widest text-neutral-500">
+            <thead className="border-b border-neutral-800 bg-[#141417] font-label text-[11px] font-bold uppercase tracking-[0.16em] text-neutral-500">
               <tr>
                 <th className="px-4 py-3">Template</th>
                 <th className="px-4 py-3">To</th>
@@ -125,17 +127,17 @@ export default function EmailsPage() {
             <tbody>
               {jobs.map((j) => (
                 <tr key={j._id} className="border-b border-neutral-900 align-top last:border-0">
-                  <td className="px-4 py-3 font-mono text-xs font-bold text-white">{j.template}</td>
-                  <td className="px-4 py-3 font-mono text-xs text-neutral-300">
+                  <td className="px-4 py-3 font-label text-sm font-bold text-white">{j.template}</td>
+                  <td className="px-4 py-3 font-label text-sm text-neutral-300">
                     {(Array.isArray(j.to) ? j.to : [j.to]).join(', ')}
                     {j.cc && j.cc.length > 0 && <div className="text-neutral-500">cc {j.cc.length}</div>}
                   </td>
                   <td className="px-4 py-3">
-                    <span className={cx('rounded border px-2 py-0.5 font-mono text-[10px] uppercase', PILL[j.status])}>{j.status}</span>
-                    {j.lastError && <div className="mt-1.5 max-w-[260px] break-words font-mono text-[11px] text-red-400">{j.lastError.slice(0, 140)}</div>}
+                    <span className={cx('rounded-full border px-2.5 py-0.5 font-label text-xs font-semibold', PILL[j.status])}>{j.status}</span>
+                    {j.lastError && <div className="mt-1.5 max-w-[260px] break-words font-label text-xs text-[#ff8a8a]">{j.lastError.slice(0, 140)}</div>}
                   </td>
-                  <td className="px-4 py-3 font-mono text-xs text-neutral-400">{j.attempts}</td>
-                  <td className="px-4 py-3 font-mono text-xs text-neutral-400">
+                  <td className="px-4 py-3 font-label text-sm text-neutral-400">{j.attempts}</td>
+                  <td className="px-4 py-3 font-label text-sm text-neutral-400">
                     {j.sentAt ? `Sent ${fmtDateTime(j.sentAt)}` : j.status === 'FAILED' ? `Queued ${fmtDateTime(j.createdAt)}` : `Next ${fmtDateTime(j.nextAttemptAt)}`}
                   </td>
                   <td className="px-4 py-3 text-right">
@@ -153,7 +155,7 @@ export default function EmailsPage() {
       )}
 
       {pages > 1 && (
-        <div className="mt-5 flex items-center justify-between font-mono text-xs text-neutral-400">
+        <div className="mt-5 flex items-center justify-between font-label text-sm text-neutral-400">
           <span>
             Page {page} of {pages} · {total} emails
           </span>

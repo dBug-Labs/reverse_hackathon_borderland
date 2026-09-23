@@ -7,13 +7,13 @@ import { Turnstile, type TurnstileInstance } from '@marsidev/react-turnstile';
 import { ArrowLeft, Eye, EyeOff, Lock, User } from 'lucide-react';
 import { playAccessGranted, playHudClick } from '@/utils/sound';
 import { post, saveActorName, type Area } from './api';
-import { Banner, Button, CityBackdrop, Field, Kicker, inputCls } from './ui';
+import { Banner, Button, CityBackdrop, Field, Wordmark, inputCls } from './ui';
 
 const TURNSTILE_SITE_KEY = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY ?? '';
 
 const COPY: Record<Area, { kicker: string; title: string; sub: string; nameLabel: string; namePh: string; suit: string; cta: string; home: string }> = {
   admin: {
-    kicker: 'GAME MASTER CONSOLE',
+    kicker: 'Game master console',
     title: 'Game Master Access',
     sub: 'Restricted area. Every action you take is logged under your name.',
     nameLabel: 'Your name',
@@ -23,7 +23,7 @@ const COPY: Record<Area, { kicker: string; title: string; sub: string; nameLabel
     home: '/admin',
   },
   attendance: {
-    kicker: 'CHECK-IN TERMINAL',
+    kicker: 'Check-in desk',
     title: 'Gate Keeper Access',
     sub: 'Scan Entry Visas and mark players present for Day 1 and Day 2.',
     nameLabel: 'Volunteer name',
@@ -90,38 +90,52 @@ export function LoginScreen({ area }: { area: Area }) {
     <div className="relative min-h-screen overflow-hidden bg-[#08080a] text-[#ededed] selection:bg-red-600/30">
       <CityBackdrop />
 
-      <div className="relative z-10 mx-auto flex min-h-screen max-w-md flex-col justify-center px-4 py-10">
-        <Link href="/" className="mb-8 inline-flex items-center gap-2 self-start font-mono text-xs text-neutral-400 transition-colors hover:text-white">
-          <ArrowLeft className="h-4 w-4 text-red-500" />
-          RETURN TO BASE
+      <header className="relative z-10 mx-auto flex h-16 max-w-lg items-center justify-between px-4">
+        <Wordmark />
+        <Link
+          href="/"
+          onClick={() => playHudClick()}
+          className="inline-flex items-center gap-1.5 font-label text-sm font-semibold text-neutral-300 transition-colors hover:text-white"
+        >
+          <ArrowLeft className="h-4 w-4" />
+          Back to site
         </Link>
+      </header>
 
-        <div className="mb-6 text-center">
-          <Kicker>{c.kicker}</Kicker>
-          <div className="mt-6 font-display text-6xl font-black leading-none text-red-500 drop-shadow-[0_0_25px_rgba(239,68,68,0.6)]" aria-hidden>
-            {c.suit}
+      <div className="relative z-10 mx-auto flex min-h-[calc(100vh-4rem)] max-w-lg flex-col justify-center px-4 pb-12 pt-4">
+        <div className="mb-8 flex items-center justify-between gap-6">
+          <div className="min-w-0">
+            <p className="font-caps text-xs uppercase tracking-[0.3em] text-[var(--card-red)] sm:text-sm">{c.kicker}</p>
+            <h1 className="mt-3 font-poster text-5xl uppercase leading-[0.95] text-[#f5eee1] sm:text-6xl">{c.title}</h1>
+            <p className="mt-3 font-label text-[15px] leading-relaxed text-neutral-400">{c.sub}</p>
           </div>
-          <h1 className="glow-red mt-3 font-display text-3xl font-black uppercase tracking-tight text-white sm:text-4xl">{c.title}</h1>
-          <p className="mx-auto mt-2 max-w-sm font-mono text-xs leading-relaxed text-neutral-400">{c.sub}</p>
+          {/* A single playing card, as on the landing hero */}
+          <div aria-hidden className="float-card hidden shrink-0 sm:block">
+            <div className="paper-card w-20 rotate-6 rounded-xl p-1.5">
+              <div className="flex aspect-[5/7] flex-col rounded-lg border border-[var(--card-red)]/45 p-1.5">
+                <span className={`text-xs leading-none ${c.suit === '♦' ? 'text-[var(--card-red)]' : 'text-[var(--ink)]'}`}>{c.suit}</span>
+                <span className={`flex flex-1 items-center justify-center text-3xl leading-none ${c.suit === '♦' ? 'text-[var(--card-red)]' : 'text-[var(--ink)]'}`}>
+                  {c.suit}
+                </span>
+              </div>
+            </div>
+          </div>
         </div>
 
-        <form
-          onSubmit={submit}
-          className="hud-corner relative space-y-5 rounded-xl border-2 border-red-600/60 bg-[#0b0c12]/90 p-6 shadow-[0_0_60px_rgba(220,38,38,0.25)] backdrop-blur-md sm:p-7"
-        >
+        <form onSubmit={submit} className="relative space-y-5 rounded-2xl border border-neutral-800 bg-[#0d0d10]/95 p-5 shadow-2xl shadow-black/60 backdrop-blur-sm sm:p-7">
           {error && <Banner onClose={() => setError(null)}>{error}</Banner>}
-          {granted && <Banner tone="success">ACCESS GRANTED — loading…</Banner>}
+          {granted && <Banner tone="success">Signed in — opening…</Banner>}
 
           <Field label={c.nameLabel} htmlFor="login-name" hint="Shown in the audit log next to everything you do.">
             <div className="relative">
-              <User className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-neutral-500" />
+              <User className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-neutral-500" />
               <input
                 id="login-name"
                 autoComplete="name"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 placeholder={c.namePh}
-                className={`${inputCls()} pl-10`}
+                className={`${inputCls()} pl-11`}
                 maxLength={40}
               />
             </div>
@@ -129,20 +143,20 @@ export function LoginScreen({ area }: { area: Area }) {
 
           <Field label="Password" htmlFor="login-pass">
             <div className="relative">
-              <Lock className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-neutral-500" />
+              <Lock className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-neutral-500" />
               <input
                 id="login-pass"
                 type={show ? 'text' : 'password'}
                 autoComplete="current-password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className={`${inputCls(!!error && error === ERRORS.INVALID_PASSWORD)} pl-10 pr-11`}
+                className={`${inputCls(!!error && error === ERRORS.INVALID_PASSWORD)} pl-11 pr-11`}
               />
               <button
                 type="button"
                 onClick={() => setShow((s) => !s)}
                 aria-label={show ? 'Hide password' : 'Show password'}
-                className="absolute right-2 top-1/2 -translate-y-1/2 rounded p-1.5 text-neutral-500 hover:text-white"
+                className="absolute right-2 top-1/2 -translate-y-1/2 rounded-md p-1.5 text-neutral-500 hover:text-white"
               >
                 {show ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
               </button>
@@ -159,13 +173,11 @@ export function LoginScreen({ area }: { area: Area }) {
           />
 
           <Button type="submit" variant="primary" size="lg" className="w-full" loading={busy} disabled={!token || granted}>
-            {busy ? 'VERIFYING…' : c.cta}
+            {busy ? 'Checking…' : c.cta}
           </Button>
         </form>
 
-        <p className="mt-6 text-center font-mono text-[10px] uppercase tracking-widest text-neutral-600">
-          Borderland Protocol · SRM DBUG Labs
-        </p>
+        <p className="mt-6 text-center font-label text-sm text-neutral-600">Hackback · dBug Labs × SRM IST</p>
       </div>
     </div>
   );

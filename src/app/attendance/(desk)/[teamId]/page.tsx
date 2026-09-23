@@ -11,6 +11,14 @@ import { STATUS_META, fmtTime } from '@/components/portal/theme';
 import type { AttendanceTeamCardDTO } from '@/components/portal/types';
 import { Banner, Button, LoadingBlock, Panel, cx } from '@/components/portal/ui';
 
+
+// Same suit order as the /register player cards.
+const SLOT_SUITS = [
+  { symbol: '♠', red: false },
+  { symbol: '♥', red: true },
+  { symbol: '♦', red: true },
+  { symbol: '♣', red: false },
+];
 export default function AttendanceTeamPage() {
   const { teamId: raw } = useParams<{ teamId: string }>();
   const teamId = decodeURIComponent(raw).toUpperCase();
@@ -98,18 +106,18 @@ export default function AttendanceTeamPage() {
   if (notFound)
     return (
       <div className="py-10 text-center">
-        <AlertOctagon className="mx-auto h-16 w-16 text-red-500" />
-        <h1 className="glow-red mt-4 font-display text-3xl font-black uppercase text-white">Unknown team</h1>
-        <p className="mt-2 font-mono text-sm text-neutral-400">
+        <AlertOctagon className="mx-auto h-16 w-16 text-[var(--card-red)]" />
+        <h1 className="mt-4 font-poster text-5xl uppercase leading-none text-[#f5eee1]">Unknown team</h1>
+        <p className="mt-2 font-label text-[15px] text-neutral-400">
           No team with code <b className="text-white">{teamId}</b>. Check the Visa, or search by a player’s register number.
         </p>
-        <Link href="/attendance" className="mt-6 inline-flex items-center gap-2 rounded border border-red-500 bg-red-600 px-6 py-3 font-mono text-sm font-bold uppercase tracking-wider text-white">
-          <ScanLine className="h-4 w-4" /> Back to scanner
+        <Link href="/attendance" className="mt-6 inline-flex items-center gap-2 rounded-lg bg-[var(--card-red)] px-7 py-3.5 font-poster text-xl uppercase tracking-wide text-white shadow-lg shadow-black/40 transition hover:brightness-110">
+          <ScanLine className="h-5 w-5" /> Back to scanner
         </Link>
       </div>
     );
 
-  if (!team) return error ? <Banner>{error}</Banner> : <LoadingBlock label="LOOKING UP TEAM…" />;
+  if (!team) return error ? <Banner>{error}</Banner> : <LoadingBlock label="Looking up team…" />;
 
   const confirmed = team.status === 'CONFIRMED';
   const meta = STATUS_META[team.status];
@@ -118,24 +126,24 @@ export default function AttendanceTeamPage() {
 
   return (
     <>
-      <Link href="/attendance" className="mb-4 inline-flex min-h-[44px] items-center gap-2 font-mono text-xs text-neutral-400 hover:text-white">
-        <ArrowLeft className="h-4 w-4 text-red-500" /> SCANNER
+      <Link href="/attendance" className="mb-4 inline-flex min-h-[44px] items-center gap-1.5 font-label text-sm font-semibold text-neutral-300 hover:text-white">
+        <ArrowLeft className="h-4 w-4" /> Scanner
       </Link>
 
       {/* Verdict banner */}
       <div
         className={cx(
-          'mb-5 flex items-center gap-4 rounded-xl border-2 p-5',
-          confirmed ? 'border-emerald-500 bg-emerald-950/50 shadow-[0_0_40px_rgba(16,185,129,0.25)]' : 'border-red-500 bg-red-950/60 shadow-[0_0_40px_rgba(239,68,68,0.3)]'
+          'mb-6 flex items-center gap-4 rounded-2xl border-2 p-5',
+          confirmed ? 'border-emerald-500/60 bg-emerald-500/10' : 'border-[var(--card-red)] bg-[var(--card-red)]/15'
         )}
         role="status"
       >
-        {confirmed ? <ShieldCheck className="h-12 w-12 shrink-0 text-emerald-400" /> : <AlertOctagon className="h-12 w-12 shrink-0 text-red-400" />}
+        {confirmed ? <ShieldCheck className="h-12 w-12 shrink-0 text-emerald-400" /> : <AlertOctagon className="h-12 w-12 shrink-0 text-[#ff8a8a]" />}
         <div>
-          <div className={cx('font-display text-2xl font-black uppercase leading-tight', confirmed ? 'text-emerald-300' : 'text-red-300')}>
+          <div className={cx('font-poster text-3xl uppercase leading-none', confirmed ? 'text-emerald-200' : 'text-[#ff8a8a]')}>
             {confirmed ? 'Confirmed — clear to enter' : 'Not confirmed — do not admit'}
           </div>
-          <div className="mt-1 font-mono text-xs text-neutral-300">
+          <div className="mt-1.5 font-label text-[15px] text-neutral-300">
             {confirmed ? 'Check every SRM ID card against the names below.' : `Status: ${meta.label}. Send the team to the help desk.`}
           </div>
         </div>
@@ -143,19 +151,17 @@ export default function AttendanceTeamPage() {
 
       {/* Team header */}
       <div className="mb-5 text-center">
-        <div className="font-display text-5xl font-black tracking-tight text-white sm:text-6xl" style={{ textShadow: `0 0 30px ${meta.glow}66` }}>
-          {team.teamId}
-        </div>
-        <div className="mt-1 text-lg font-semibold text-neutral-200">{team.teamName}</div>
+        <div className="font-poster text-7xl uppercase leading-none text-[#f5eee1]">{team.teamId}</div>
+        <div className="mt-2 font-poster text-2xl uppercase leading-none text-neutral-300">{team.teamName}</div>
         {other && (
-          <div className="mt-2 font-mono text-[11px] text-neutral-500">
+          <div className="mt-2.5 font-label text-sm text-neutral-500">
             Day {other.day}: {other.playersPresent.length}/{team.players.length} present at {fmtTime(other.markedAt)}
           </div>
         )}
       </div>
 
       {entry && (
-        <div className="mb-4 flex items-start gap-3 rounded border border-amber-600/60 bg-amber-950/30 p-3.5 font-mono text-sm text-amber-200">
+        <div className="mb-4 flex items-start gap-3 rounded-xl border border-amber-500/35 bg-amber-500/10 p-3.5 font-label text-[15px] text-amber-200">
           <Clock className="mt-0.5 h-4 w-4 shrink-0" />
           <div>
             Already marked for Day {day} at <b>{fmtTime(entry.markedAt)}</b> by <b>{entry.markedBy}</b> — {entry.playersPresent.length}/{team.players.length} present.
@@ -167,9 +173,9 @@ export default function AttendanceTeamPage() {
       {error && <Banner onClose={() => setError(null)}>{error}</Banner>}
 
       <Panel hud className="mb-5">
-        <div className="mb-3 flex items-center justify-between font-mono text-[10px] uppercase tracking-widest text-neutral-500">
-          <span>Players · Day {day}</span>
-          <span>Tap to toggle</span>
+        <div className="mb-4 flex items-end justify-between border-b border-neutral-800 pb-3">
+          <span className="font-poster text-2xl uppercase leading-none text-[#f5eee1]">Players · Day {day}</span>
+          <span className="font-label text-sm text-neutral-500">Tap to toggle</span>
         </div>
         <div className="space-y-2">
           {team.players.map((p) => {
@@ -184,23 +190,26 @@ export default function AttendanceTeamPage() {
                 disabled={!confirmed || locked}
                 onClick={() => toggle(p.slot)}
                 className={cx(
-                  'flex min-h-[68px] w-full items-center gap-4 rounded-lg border-2 px-4 py-3 text-left transition-all',
-                  on ? 'border-emerald-600/80 bg-emerald-950/40' : 'border-neutral-800 bg-neutral-950/60',
+                  'relative flex min-h-[68px] w-full items-center gap-4 overflow-hidden rounded-xl border-2 px-4 py-3 text-left transition-colors',
+                  on ? 'border-emerald-500/60 bg-emerald-500/10' : 'border-neutral-800 bg-[#141417] hover:border-neutral-600',
                   !confirmed && 'opacity-50',
                   locked && 'cursor-default'
                 )}
               >
-                <span className={cx('flex h-8 w-8 shrink-0 items-center justify-center rounded border-2', on ? 'border-emerald-400 bg-emerald-500 text-black' : 'border-neutral-600')}>
+                <span className={cx('flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border-2', on ? 'border-emerald-400 bg-emerald-500 text-black' : 'border-neutral-600')}>
                   {on && <Check className="h-5 w-5" strokeWidth={3} />}
                 </span>
                 <span className="min-w-0 flex-1">
                   <span className="flex items-center gap-2">
-                    <span className="truncate text-base font-semibold text-white">{p.fullName}</span>
-                    {p.isLeader && <span className="rounded border border-red-700 px-1.5 font-mono text-[10px] text-red-300">LEADER</span>}
+                    <span className={cx('text-base leading-none', SLOT_SUITS[(p.slot - 1) % 4].red ? 'text-[var(--card-red)]' : 'text-[#f5eee1]')} aria-hidden>
+                      {SLOT_SUITS[(p.slot - 1) % 4].symbol}
+                    </span>
+                    <span className="truncate font-label text-base font-semibold text-white">{p.fullName}</span>
+                    {p.isLeader && <span className="shrink-0 rounded-full bg-[var(--paper)] px-2 py-0.5 font-label text-[11px] font-bold text-[var(--ink)]">Leader</span>}
                   </span>
-                  <span className="mt-0.5 block font-mono text-sm tracking-wider text-neutral-300">{p.regNo}</span>
+                  <span className="mt-1 block font-label text-sm tracking-wider text-neutral-400">{p.regNo}</span>
                 </span>
-                {locked && <span className="font-mono text-[10px] text-emerald-300">IN · {fmtTime(entry?.markedAt)}</span>}
+                {locked && <span className="shrink-0 font-label text-xs font-semibold text-emerald-200">In · {fmtTime(entry?.markedAt)}</span>}
               </button>
             );
           })}
@@ -211,7 +220,7 @@ export default function AttendanceTeamPage() {
         <Button
           variant="success"
           size="lg"
-          className="min-h-[60px] w-full text-base"
+          className="min-h-[60px] w-full text-2xl"
           onClick={mark}
           loading={saving}
           disabled={!confirmed || newCount === 0 || !!done}
@@ -221,23 +230,31 @@ export default function AttendanceTeamPage() {
         </Button>
       </div>
 
-      {/* Success overlay */}
+      {/* Success overlay — the Visa card is dealt face up, like the hero answer cards */}
       {done && (
-        <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-black/90 p-6 text-center backdrop-blur-md">
-          <div className="font-display text-7xl text-emerald-400 drop-shadow-[0_0_30px_rgba(16,185,129,0.8)]">♣</div>
-          <h2 className="mt-4 font-display text-4xl font-black uppercase text-white" style={{ textShadow: '0 0 30px rgba(16,185,129,0.6)' }}>
-            Access granted
-          </h2>
-          <p className="mt-2 font-mono text-lg text-emerald-300">
-            {team.teamId} · {done.count}/{done.total} players · Day {day}
-          </p>
+        <div className="backdrop-in fixed inset-0 z-50 flex flex-col items-center justify-center bg-black/85 p-6 text-center backdrop-blur-sm">
+          <div className="card-pop paper-card w-full max-w-xs rounded-2xl p-2 text-[var(--ink)]">
+            <div className="relative rounded-xl border border-[var(--card-red)]/45 px-6 py-8">
+              <span aria-hidden className="absolute left-2.5 top-2 text-base leading-none">♣</span>
+              <span aria-hidden className="absolute bottom-2 right-2.5 rotate-180 text-base leading-none">♣</span>
+              <div className="text-6xl leading-none" aria-hidden>
+                ♣
+              </div>
+              <p className="mt-4 font-label text-[11px] font-bold uppercase tracking-[0.16em] text-[var(--card-red)]">Day {day} · checked in</p>
+              <h2 className="mt-1.5 font-poster text-5xl uppercase leading-none">Access granted</h2>
+              <p className="mt-3 font-poster text-2xl uppercase leading-none">{team.teamId}</p>
+              <p className="mt-1.5 font-label text-sm text-[var(--ink)]/60">
+                {done.count}/{done.total} players present
+              </p>
+            </div>
+          </div>
           <Link
             href="/attendance"
-            className="mt-8 inline-flex min-h-[56px] items-center gap-2 rounded border border-red-500 bg-red-600 px-8 font-mono text-sm font-bold uppercase tracking-wider text-white shadow-[0_0_25px_rgba(220,38,38,0.5)]"
+            className="mt-8 inline-flex min-h-[56px] items-center gap-2 rounded-lg bg-[var(--card-red)] px-8 font-poster text-xl uppercase tracking-wide text-white shadow-lg shadow-black/40 transition hover:brightness-110"
           >
             <ScanLine className="h-5 w-5" /> Scan next team ({Math.max(0, countdown)})
           </Link>
-          <button onClick={() => { setDone(null); load(); }} className="mt-4 font-mono text-xs text-neutral-400 underline hover:text-white">
+          <button onClick={() => { setDone(null); load(); }} className="mt-4 font-label text-sm text-neutral-400 underline underline-offset-4 hover:text-white">
             Stay on this team
           </button>
         </div>

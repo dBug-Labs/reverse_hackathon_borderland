@@ -8,9 +8,9 @@ import { playHudClick, playRiskAlarm } from '@/utils/sound';
 import { api } from '@/components/portal/api';
 import { useDesk, readRecent, type RecentMark } from '@/components/portal/AttendanceShell';
 import { QrScanner } from '@/components/portal/QrScanner';
-import { SUIT, TEAM_CODE_RE, fmtTime, normaliseTeamCode } from '@/components/portal/theme';
+import { TEAM_CODE_RE, fmtTime, normaliseTeamCode } from '@/components/portal/theme';
 import type { AttendanceTeamCardDTO } from '@/components/portal/types';
-import { Banner, Button, Meter, Panel, SectionLabel, StatusBadge, cx, inputCls } from '@/components/portal/ui';
+import { Banner, Button, Panel, SectionLabel, StatusBadge, cx, inputCls } from '@/components/portal/ui';
 
 export default function AttendanceDesk() {
   const router = useRouter();
@@ -73,31 +73,40 @@ export default function AttendanceDesk() {
 
   return (
     <div className="space-y-5">
-      {/* Live counter */}
-      <Panel hud className="overflow-hidden">
-        <div className="flex items-end justify-between gap-4">
-          <div>
-            <div className="font-mono text-[10px] uppercase tracking-[0.3em] text-emerald-400">Day 0{day} · teams checked in</div>
-            <div className="mt-1 font-display text-5xl font-black text-white" style={{ textShadow: `0 0 24px ${SUIT.clubs.glow}55` }}>
-              {counter ? counter.teamsPresent : '—'}
-              <span className="text-2xl text-neutral-500"> / {counter ? counter.totalConfirmed : '—'}</span>
+      {/* Live counter — a playing card, like the landing page info strip */}
+      <div className="paper-card rounded-2xl p-2 text-[var(--ink)]">
+        <div className="relative rounded-xl border border-[var(--card-red)]/45 px-5 py-5">
+          <span aria-hidden className="absolute right-2.5 top-2 text-sm leading-none">♣</span>
+          <span aria-hidden className="absolute bottom-2 left-2.5 rotate-180 text-sm leading-none">♣</span>
+          <div className="flex items-end justify-between gap-4">
+            <div>
+              <div className="font-label text-[11px] font-bold uppercase tracking-[0.16em] text-[var(--card-red)]">Day {day} · checked in</div>
+              <div className="mt-1.5 font-poster text-6xl leading-none">
+                {counter ? counter.teamsPresent : '—'}
+                <span className="text-3xl text-[var(--ink)]/40"> / {counter ? counter.totalConfirmed : '—'}</span>
+              </div>
+            </div>
+            <div className="pb-1 pr-3 text-right">
+              <div className="font-poster text-3xl leading-none">
+                {counter && counter.totalConfirmed > 0 ? `${Math.round((counter.teamsPresent / counter.totalConfirmed) * 100)}%` : ''}
+              </div>
+              <div className="mt-1 font-label text-xs text-[var(--ink)]/55">Updates every 15s</div>
             </div>
           </div>
-          <div className="pb-2 text-right font-mono text-xs text-neutral-400">
-            {counter && counter.totalConfirmed > 0 ? `${Math.round((counter.teamsPresent / counter.totalConfirmed) * 100)}%` : ''}
-            <div className="text-[10px] text-neutral-600">auto 15s</div>
+          <div className="mt-4 h-2 w-full overflow-hidden rounded-full bg-[var(--ink)]/10">
+            <div
+              className="h-full rounded-full bg-[var(--card-red)] transition-all duration-500"
+              style={{ width: `${counter && counter.totalConfirmed > 0 ? Math.min(100, Math.round((counter.teamsPresent / counter.totalConfirmed) * 100)) : 0}%` }}
+            />
           </div>
         </div>
-        <div className="mt-4">
-          <Meter value={counter?.teamsPresent ?? 0} max={counter?.totalConfirmed ?? 0} color={SUIT.clubs.glow} />
-        </div>
-      </Panel>
+      </div>
 
       {error && <Banner onClose={() => setError(null)}>{error}</Banner>}
 
       {/* Scanner */}
       <Panel>
-        <SectionLabel icon={<ScanLine className="h-4 w-4" />}>Scan Entry Visa</SectionLabel>
+        <SectionLabel icon={<ScanLine className="h-4 w-4" />}>Scan the Entry Visa</SectionLabel>
         <QrScanner onCode={onScan} />
       </Panel>
 
@@ -123,17 +132,17 @@ export default function AttendanceDesk() {
 
         {results && (
           <div className="mt-4 space-y-2">
-            {results.length === 0 && <p className="font-mono text-xs text-neutral-500">No team found. Check the spelling or try another player’s register number.</p>}
+            {results.length === 0 && <p className="font-label text-sm text-neutral-500">No team found. Check the spelling or try another player’s register number.</p>}
             {results.map((t) => (
               <button
                 key={t.teamId}
                 onClick={() => openTeam(t.teamId)}
-                className="flex w-full items-center justify-between gap-3 rounded-lg border border-neutral-800 bg-neutral-950/60 p-4 text-left transition-colors hover:border-red-700"
+                className="flex w-full items-center justify-between gap-3 rounded-xl border border-neutral-800 bg-[#141417] p-4 text-left transition-colors hover:border-neutral-600"
               >
                 <div>
-                  <div className="font-mono text-base font-bold text-red-400">{t.teamId}</div>
-                  <div className="text-sm text-white">{t.teamName}</div>
-                  <div className="mt-1 font-mono text-[11px] text-neutral-500">{t.players.map((p) => p.fullName.split(' ')[0]).join(' · ')}</div>
+                  <div className="font-poster text-2xl uppercase leading-none tracking-wide text-[#f5eee1]">{t.teamId}</div>
+                  <div className="mt-1 font-label text-[15px] font-semibold text-white">{t.teamName}</div>
+                  <div className="mt-1 font-label text-xs text-neutral-500">{t.players.map((p) => p.fullName.split(' ')[0]).join(' · ')}</div>
                 </div>
                 <div className="flex flex-col items-end gap-2">
                   <StatusBadge status={t.status} />
@@ -149,14 +158,14 @@ export default function AttendanceDesk() {
       {recentToday.length > 0 && (
         <Panel>
           <SectionLabel>Marked on this device · Day {day}</SectionLabel>
-          <ul className="divide-y divide-neutral-900">
+          <ul className="divide-y divide-neutral-800/70">
             {recentToday.map((m) => (
               <li key={m.teamId + m.day}>
-                <Link href={`/attendance/${m.teamId}`} className="flex items-center justify-between py-2.5 font-mono text-sm hover:text-white">
+                <Link href={`/attendance/${m.teamId}`} className="flex items-center justify-between py-2.5 font-label text-[15px] hover:text-white">
                   <span>
-                    <span className="font-bold text-red-400">{m.teamId}</span> <span className="text-neutral-300">{m.teamName}</span>
+                    <span className="font-poster text-lg uppercase tracking-wide text-[#f5eee1]">{m.teamId}</span> <span className="text-neutral-300">{m.teamName}</span>
                   </span>
-                  <span className="text-xs text-emerald-300">
+                  <span className="text-xs text-emerald-200">
                     {m.count}/{m.total} · {fmtTime(m.at)}
                   </span>
                 </Link>

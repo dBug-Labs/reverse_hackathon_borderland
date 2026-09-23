@@ -1,20 +1,23 @@
 import type { RegistrationStatus, ReconcileResult } from './types';
 
 /**
- * Portal theme tokens — same language as the public site
- * (homepage-redesign hero + /register): near-black #08080a, red-600 CTAs with glow,
- * Cinzel display type, JetBrains mono labels, HUD corners, and the four suit glow colours.
+ * Portal theme tokens — same poster language as the public site (landing + /register):
+ * near-black #08080a, Anton poster headings in cream, Cinzel caps eyebrows in card red,
+ * Plus Jakarta labels, aged playing-card paper, and a playing-card suit palette
+ * (♠ ♣ cream, ♥ ♦ card red).
  */
 
-// Background art for the login screens. Swap to '/images/inverted_city_bg.jpg'
-// once the homepage-redesign hero + images are merged into main.
-export const PORTAL_BG = '/images/dystopian_city_inverted_hero.jpg';
+// Background art (same image the /register pages use).
+export const PORTAL_BG = '/images/inverted_city_bg.jpg';
+
+export const CREAM = '#f5eee1';
+export const CARD_RED = '#b3202a';
 
 export const SUIT = {
-  spades: { symbol: '♠', glow: '#38bdf8' }, // sky
-  diamonds: { symbol: '♦', glow: '#f59e0b' }, // amber
-  clubs: { symbol: '♣', glow: '#10b981' }, // emerald
-  hearts: { symbol: '♥', glow: '#ef4444' }, // red
+  spades: { symbol: '♠', glow: CREAM },
+  diamonds: { symbol: '♦', glow: CARD_RED },
+  clubs: { symbol: '♣', glow: CREAM },
+  hearts: { symbol: '♥', glow: CARD_RED },
 } as const;
 
 interface StatusMeta {
@@ -30,58 +33,58 @@ export const STATUS_META: Record<RegistrationStatus, StatusMeta> = {
   PAYMENT_PENDING: {
     label: 'Payment pending',
     symbol: '♠',
-    glow: SUIT.spades.glow,
-    text: 'text-sky-300',
-    bg: 'bg-sky-950/40',
-    border: 'border-sky-500/40',
+    glow: '#a3a3a3',
+    text: 'text-neutral-200',
+    bg: 'bg-neutral-800/70',
+    border: 'border-neutral-700',
   },
   UNDER_REVIEW: {
     label: 'Under review',
     symbol: '♦',
-    glow: SUIT.diamonds.glow,
-    text: 'text-amber-300',
-    bg: 'bg-amber-950/40',
-    border: 'border-amber-500/40',
+    glow: '#e0a93b',
+    text: 'text-amber-200',
+    bg: 'bg-amber-500/10',
+    border: 'border-amber-500/35',
   },
   CONFIRMED: {
     label: 'Confirmed',
     symbol: '♣',
-    glow: SUIT.clubs.glow,
-    text: 'text-emerald-300',
-    bg: 'bg-emerald-950/40',
-    border: 'border-emerald-500/40',
+    glow: '#34d399',
+    text: 'text-emerald-200',
+    bg: 'bg-emerald-500/10',
+    border: 'border-emerald-500/35',
   },
   REJECTED: {
     label: 'Rejected',
     symbol: '♥',
-    glow: SUIT.hearts.glow,
-    text: 'text-red-300',
-    bg: 'bg-red-950/50',
-    border: 'border-red-500/50',
+    glow: '#e5484d',
+    text: 'text-[#ff8a8a]',
+    bg: 'bg-[var(--card-red)]/15',
+    border: 'border-[var(--card-red)]/60',
   },
   CANCELLED: {
     label: 'Cancelled',
     symbol: '✕',
     glow: '#737373',
-    text: 'text-neutral-300',
+    text: 'text-neutral-400',
     bg: 'bg-neutral-900',
-    border: 'border-neutral-700',
+    border: 'border-neutral-800',
   },
   EXPIRED: {
     label: 'Expired',
     symbol: '○',
     glow: '#737373',
-    text: 'text-neutral-400',
+    text: 'text-neutral-500',
     bg: 'bg-neutral-900',
-    border: 'border-neutral-700',
+    border: 'border-neutral-800',
   },
 };
 
 export const RECONCILE_META: Record<ReconcileResult, { label: string; text: string; bg: string; border: string }> = {
-  MATCHED: { label: 'Matched', text: 'text-emerald-300', bg: 'bg-emerald-950/40', border: 'border-emerald-500/40' },
-  AMOUNT_MISMATCH: { label: 'Amount mismatch', text: 'text-amber-300', bg: 'bg-amber-950/40', border: 'border-amber-500/40' },
-  PROBABLE: { label: 'Probable', text: 'text-sky-300', bg: 'bg-sky-950/40', border: 'border-sky-500/40' },
-  NOT_FOUND: { label: 'Not found', text: 'text-red-300', bg: 'bg-red-950/50', border: 'border-red-500/50' },
+  MATCHED: { label: 'Matched', text: 'text-emerald-200', bg: 'bg-emerald-500/10', border: 'border-emerald-500/35' },
+  AMOUNT_MISMATCH: { label: 'Amount mismatch', text: 'text-amber-200', bg: 'bg-amber-500/10', border: 'border-amber-500/35' },
+  PROBABLE: { label: 'Probable', text: 'text-neutral-200', bg: 'bg-neutral-800/70', border: 'border-neutral-700' },
+  NOT_FOUND: { label: 'Not found', text: 'text-[#ff8a8a]', bg: 'bg-[var(--card-red)]/15', border: 'border-[var(--card-red)]/60' },
 };
 
 export const REJECT_REASONS = [

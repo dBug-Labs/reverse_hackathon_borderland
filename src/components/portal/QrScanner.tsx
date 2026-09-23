@@ -109,7 +109,7 @@ export function QrScanner({ onCode, autoStart = false }: { onCode: (text: string
 
   return (
     <div>
-      <div className="relative aspect-square w-full overflow-hidden rounded-lg border border-neutral-800 bg-black sm:aspect-[4/3]">
+      <div className="relative aspect-square w-full overflow-hidden rounded-xl border border-neutral-800 bg-black sm:aspect-[4/3]">
         <video ref={videoRef} playsInline muted className={`h-full w-full object-cover ${live ? '' : 'hidden'}`} />
         <canvas ref={canvasRef} className="hidden" />
 
@@ -117,9 +117,9 @@ export function QrScanner({ onCode, autoStart = false }: { onCode: (text: string
           <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
             <div className="relative h-2/3 w-2/3 max-w-[280px] rounded-lg border border-white/10">
               {['left-0 top-0 border-l-2 border-t-2', 'right-0 top-0 border-r-2 border-t-2', 'bottom-0 left-0 border-b-2 border-l-2', 'bottom-0 right-0 border-b-2 border-r-2'].map((p) => (
-                <span key={p} className={`absolute h-7 w-7 border-red-500 ${p}`} />
+                <span key={p} className={`absolute h-7 w-7 border-[var(--paper)] ${p}`} />
               ))}
-              <span className="absolute inset-x-2 top-1/2 h-0.5 animate-pulse bg-red-500/80 shadow-[0_0_12px_rgba(239,68,68,0.9)]" />
+              <span className="absolute inset-x-2 top-1/2 h-0.5 animate-pulse bg-[var(--card-red)]/80" />
             </div>
           </div>
         )}
@@ -127,7 +127,7 @@ export function QrScanner({ onCode, autoStart = false }: { onCode: (text: string
         {!live && (
           <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 p-6 text-center">
             <ScanLine className="h-12 w-12 text-neutral-700" />
-            <p className="max-w-xs font-mono text-xs leading-relaxed text-neutral-400">
+            <p className="max-w-xs font-label text-sm leading-relaxed text-neutral-400">
               {state === 'denied' && 'Camera permission was blocked. Allow camera access in the browser settings, or search by Team ID below.'}
               {state === 'unsupported' && 'This browser cannot open the camera. Use the search box below.'}
               {state === 'error' && 'Could not start the camera. Try again, or search by Team ID below.'}
@@ -142,10 +142,10 @@ export function QrScanner({ onCode, autoStart = false }: { onCode: (text: string
         )}
       </div>
       {live && (
-        <div className="mt-3 flex items-center justify-between font-mono text-[11px] text-neutral-500">
+        <div className="mt-3 flex items-center justify-between font-label text-sm text-neutral-500">
           <span className="flex items-center gap-2">
             <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-400" />
-            {state === 'starting' ? 'STARTING CAMERA…' : 'SCANNING — HOLD STEADY'}
+            {state === 'starting' ? 'Starting camera…' : 'Scanning — hold steady'}
           </span>
           <Button variant="subtle" size="sm" onClick={stop}>
             <CameraOff className="h-3.5 w-3.5" /> Stop

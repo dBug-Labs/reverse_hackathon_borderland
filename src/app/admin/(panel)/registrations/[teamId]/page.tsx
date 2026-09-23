@@ -51,6 +51,14 @@ function validatePlayers(players: PlayerDTO[], teamName: string) {
   return e;
 }
 
+
+// Same suit order as the /register player cards.
+const PLAYER_SUITS = [
+  { symbol: '♠', red: false },
+  { symbol: '♥', red: true },
+  { symbol: '♦', red: true },
+  { symbol: '♣', red: false },
+];
 export default function TeamDetailPage() {
   const { teamId } = useParams<{ teamId: string }>();
   const [reg, setReg] = useState<RegistrationDTO | null>(null);
@@ -195,8 +203,8 @@ export default function TeamDetailPage() {
 
   return (
     <>
-      <Link href="/admin/registrations" className="mb-5 inline-flex items-center gap-2 font-mono text-xs text-neutral-400 hover:text-white">
-        <ArrowLeft className="h-4 w-4 text-red-500" /> ALL REGISTRATIONS
+      <Link href="/admin/registrations" className="mb-5 inline-flex items-center gap-1.5 font-label text-sm font-semibold text-neutral-300 hover:text-white">
+        <ArrowLeft className="h-4 w-4" /> All registrations
       </Link>
 
       {error && <Banner onClose={() => setError(null)}>{error}</Banner>}
@@ -216,26 +224,26 @@ export default function TeamDetailPage() {
                 {reg.visa && (
                   <span
                     className={cx(
-                      'rounded border px-2 py-1 font-mono text-[10px] uppercase tracking-wider',
-                      reg.visa.status === 'VALID' ? 'border-emerald-600/60 text-emerald-300' : 'border-red-600/60 text-red-300'
+                      'rounded-full border px-3 py-1 font-label text-sm font-semibold',
+                      reg.visa.status === 'VALID' ? 'border-emerald-500/35 bg-emerald-500/10 text-emerald-200' : 'border-[var(--card-red)]/60 bg-[var(--card-red)]/10 text-[#ff8a8a]'
                     )}
                   >
                     Visa {reg.visa.status}
                   </span>
                 )}
-                {deleted && <span className="rounded border border-red-700 bg-red-950/50 px-2 py-1 font-mono text-[10px] uppercase text-red-300">Deleted</span>}
+                {deleted && <span className="rounded-full border border-[var(--card-red)] bg-[var(--card-red)]/10 px-3 py-1 font-label text-sm font-semibold text-[#ff8a8a]">Deleted</span>}
               </div>
-              <h1 className="font-display text-4xl font-black uppercase tracking-tight text-white sm:text-5xl" style={{ textShadow: `0 0 28px ${meta.glow}55` }}>
+              <h1 className="mt-3 font-poster text-6xl uppercase leading-none text-[#f5eee1] sm:text-7xl">
                 {reg.teamId}
               </h1>
-              <p className="mt-1 text-lg font-semibold text-neutral-200">{reg.teamName}</p>
-              <p className="mt-1 font-mono text-xs text-neutral-500">
+              <p className="mt-2 font-poster text-2xl uppercase leading-none text-neutral-300 sm:text-3xl">{reg.teamName}</p>
+              <p className="mt-2.5 font-label text-sm text-neutral-500">
                 Registered {fmtDateTime(reg.createdAt)} · updated {fmtDateTime(reg.updatedAt)}
               </p>
             </div>
             {can.approve && (
-              <p className="font-mono text-[11px] text-neutral-500">
-                Shortcuts: <kbd className="rounded border border-neutral-700 px-1.5">A</kbd> approve · <kbd className="rounded border border-neutral-700 px-1.5">R</kbd> reject
+              <p className="font-label text-xs text-neutral-500">
+                Shortcuts: <kbd className="rounded-md border border-neutral-700 bg-[#141417] px-1.5 font-label">A</kbd> approve · <kbd className="rounded-md border border-neutral-700 bg-[#141417] px-1.5 font-label">R</kbd> reject
               </p>
             )}
           </div>
@@ -276,10 +284,22 @@ export default function TeamDetailPage() {
 
                 <div className="grid gap-3 sm:grid-cols-2">
                   {(editing ? draftPlayers : reg.players).map((p, i) => (
-                    <div key={p.slot} className={cx('rounded-lg border bg-neutral-950/50 p-4', p.isLeader ? 'border-red-800/70' : 'border-neutral-800')}>
-                      <div className="mb-3 flex items-center justify-between border-b border-neutral-800 pb-2">
-                        <span className="font-mono text-xs font-bold uppercase tracking-wider text-neutral-300">Player 0{p.slot}</span>
-                        {p.isLeader && <span className="rounded border border-red-700 bg-red-950/50 px-1.5 py-0.5 font-mono text-[10px] text-red-300">LEADER</span>}
+                    <div key={p.slot} className="relative overflow-hidden rounded-xl border border-neutral-800 bg-[#141417] p-4">
+                      <span
+                        aria-hidden
+                        className={cx(
+                          'pointer-events-none absolute -right-2 -top-5 text-[88px] leading-none opacity-[0.07]',
+                          PLAYER_SUITS[(p.slot - 1) % 4].red ? 'text-[var(--card-red)]' : 'text-white'
+                        )}
+                      >
+                        {PLAYER_SUITS[(p.slot - 1) % 4].symbol}
+                      </span>
+                      <div className="relative mb-3 flex items-center gap-2.5 border-b border-neutral-800 pb-3">
+                        <span className={cx('text-xl leading-none', PLAYER_SUITS[(p.slot - 1) % 4].red ? 'text-[var(--card-red)]' : 'text-[#f5eee1]')}>
+                          {PLAYER_SUITS[(p.slot - 1) % 4].symbol}
+                        </span>
+                        <span className="font-heading text-base font-bold text-neutral-100">Player {p.slot}</span>
+                        {p.isLeader && <span className="rounded-full bg-[var(--paper)] px-2.5 py-0.5 font-label text-xs font-bold text-[var(--ink)]">Team leader</span>}
                       </div>
                       {editing ? (
                         <div className="space-y-3">
@@ -350,20 +370,20 @@ export default function TeamDetailPage() {
               <Panel>
                 <SectionLabel icon={<History className="h-4 w-4" />}>Timeline</SectionLabel>
                 {logs.length === 0 ? (
-                  <p className="font-mono text-xs text-neutral-500">No admin or volunteer actions yet.</p>
+                  <p className="font-label text-sm text-neutral-500">No admin or volunteer actions yet.</p>
                 ) : (
                   <ol className="relative space-y-4 border-l border-neutral-800 pl-5">
                     {logs.map((l) => (
                       <li key={l._id} className="relative">
-                        <span className={cx('absolute -left-[25px] top-1 h-2.5 w-2.5 rounded-full border-2 border-[#0e0e14]', l.scope === 'attendance' ? 'bg-emerald-500' : 'bg-red-500')} />
-                        <div className="font-mono text-xs text-white">
+                        <span className={cx('absolute -left-[25px] top-1 h-2.5 w-2.5 rounded-full border-2 border-[#0e0e14]', l.scope === 'attendance' ? 'bg-emerald-500' : 'bg-[var(--card-red)]')} />
+                        <div className="font-label text-sm text-white">
                           {l.action.replace(/_/g, ' ')} <span className="text-neutral-500">by</span> {l.actorName}
                         </div>
-                        <div className="font-mono text-[11px] text-neutral-500">
+                        <div className="font-label text-xs text-neutral-500">
                           {fmtDateTime(l.createdAt)} · {l.scope}
                         </div>
                         {l.after && Object.keys(l.after).length > 0 && (
-                          <div className="mt-1 break-words font-mono text-[11px] text-neutral-400">{summarise(l.after)}</div>
+                          <div className="mt-1 break-words font-label text-xs text-neutral-400">{summarise(l.after)}</div>
                         )}
                       </li>
                     ))}
@@ -374,7 +394,7 @@ export default function TeamDetailPage() {
 
             {/* ── Right column ── */}
             <div className="space-y-6">
-              <Panel hud className="border-red-900/60">
+              <Panel hud className="border-[var(--card-red)]/60">
                 <SectionLabel icon={<ShieldCheck className="h-4 w-4" />}>Decision</SectionLabel>
                 <div className="space-y-2">
                   {can.approve && (
@@ -393,7 +413,7 @@ export default function TeamDetailPage() {
                     </Button>
                   )}
                   {!can.approve && !can.reject && !can.undo && (
-                    <p className="rounded border border-neutral-800 bg-neutral-950/60 p-3 font-mono text-xs text-neutral-400">
+                    <p className="rounded-lg border border-neutral-800 bg-[#141417] p-3 font-label text-sm text-neutral-400">
                       {reg.status === 'PAYMENT_PENDING' && 'Waiting for the leader to submit a UTR.'}
                       {reg.status === 'CONFIRMED' && `Approved by ${reg.verifiedBy || '—'} · ${fmtDateTime(reg.verifiedAt)}`}
                       {reg.status === 'CANCELLED' && `Cancelled: ${reg.cancelReason || '—'}`}
@@ -412,7 +432,7 @@ export default function TeamDetailPage() {
                         <RotateCcw className="h-3.5 w-3.5" /> Restore
                       </Button>
                     ) : (
-                      <Button size="sm" variant="subtle" className="flex-1 hover:text-red-300" onClick={() => setDialog('delete')}>
+                      <Button size="sm" variant="subtle" className="flex-1 hover:text-[#ff8a8a]" onClick={() => setDialog('delete')}>
                         <Trash2 className="h-3.5 w-3.5" /> Delete
                       </Button>
                     )}
@@ -423,13 +443,13 @@ export default function TeamDetailPage() {
               <Panel>
                 <SectionLabel icon={<CreditCard className="h-4 w-4" />}>Payment</SectionLabel>
                 {!current ? (
-                  <p className="font-mono text-xs text-neutral-500">No UTR submitted yet.</p>
+                  <p className="font-label text-sm text-neutral-500">No UTR submitted yet.</p>
                 ) : (
                   <>
-                    <div className="rounded-lg border border-neutral-800 bg-neutral-950/60 p-4">
-                      <div className="font-mono text-[10px] uppercase tracking-widest text-neutral-500">UTR</div>
+                    <div className="rounded-lg border border-neutral-800 bg-[#141417] p-4">
+                      <div className="font-label text-[11px] font-bold uppercase tracking-[0.16em] text-neutral-500">UTR</div>
                       <div className="mt-1 flex items-center justify-between gap-2">
-                        <span className="font-mono text-xl font-bold tracking-wider text-white">{current.utr}</span>
+                        <span className="font-label text-xl font-bold tracking-wider text-white">{current.utr}</span>
                         <CopyBtn text={current.utr} />
                       </div>
                       <dl className="mt-3 space-y-1.5 text-sm">
@@ -439,21 +459,21 @@ export default function TeamDetailPage() {
                         <Row k="Attempt" v={current.status} />
                       </dl>
                       {current.reconcileResult && (
-                        <div className={cx('mt-3 inline-block rounded border px-2 py-1 font-mono text-[10px] uppercase', RECONCILE_META[current.reconcileResult].text, RECONCILE_META[current.reconcileResult].bg, RECONCILE_META[current.reconcileResult].border)}>
+                        <div className={cx('mt-3 inline-block rounded-full border px-2.5 py-0.5 font-label text-xs font-semibold', RECONCILE_META[current.reconcileResult].text, RECONCILE_META[current.reconcileResult].bg, RECONCILE_META[current.reconcileResult].border)}>
                           Bank: {RECONCILE_META[current.reconcileResult].label}
                         </div>
                       )}
-                      {current.rejectReason && <p className="mt-3 font-mono text-xs text-red-300">Rejected: {current.rejectReason}</p>}
+                      {current.rejectReason && <p className="mt-3 font-label text-sm text-[#ff8a8a]">Rejected: {current.rejectReason}</p>}
                     </div>
                     {payments.length > 1 && (
                       <div className="mt-4">
-                        <div className="mb-2 font-mono text-[10px] uppercase tracking-widest text-neutral-500">Earlier attempts</div>
+                        <div className="mb-2 font-label text-[11px] font-bold uppercase tracking-[0.16em] text-neutral-500">Earlier attempts</div>
                         <ul className="space-y-2">
                           {payments.slice(1).map((p) => (
-                            <li key={p._id} className="rounded border border-neutral-800 px-3 py-2 font-mono text-xs">
+                            <li key={p._id} className="rounded-lg border border-neutral-800 px-3 py-2 font-label text-sm">
                               <div className="flex justify-between">
                                 <span className="text-neutral-300">{p.utr}</span>
-                                <span className={p.status === 'REJECTED' ? 'text-red-400' : 'text-neutral-400'}>{p.status}</span>
+                                <span className={p.status === 'REJECTED' ? 'text-[#ff8a8a]' : 'text-neutral-400'}>{p.status}</span>
                               </div>
                               {p.rejectReason && <div className="mt-1 text-neutral-500">{p.rejectReason}</div>}
                             </li>
@@ -463,7 +483,7 @@ export default function TeamDetailPage() {
                     )}
                   </>
                 )}
-                {reg.rejectCount > 0 && <p className="mt-3 font-mono text-[11px] text-neutral-500">Rejected {reg.rejectCount}× so far</p>}
+                {reg.rejectCount > 0 && <p className="mt-3 font-label text-xs text-neutral-500">Rejected {reg.rejectCount}× so far</p>}
               </Panel>
 
               <Panel>
@@ -471,11 +491,11 @@ export default function TeamDetailPage() {
                 {[1, 2].map((d) => {
                   const e = reg.attendance?.find((a) => a.day === d);
                   return (
-                    <div key={d} className="mb-3 rounded border border-neutral-800 bg-neutral-950/50 p-3 last:mb-0">
-                      <div className="flex items-center justify-between font-mono text-xs">
-                        <span className="uppercase tracking-wider text-neutral-300">Day {d}</span>
+                    <div key={d} className="mb-3 rounded-lg border border-neutral-800 bg-[#141417] p-3 last:mb-0">
+                      <div className="flex items-center justify-between font-label text-sm">
+                        <span className="font-semibold text-neutral-300">Day {d}</span>
                         {e ? (
-                          <span className="text-emerald-300">
+                          <span className="text-emerald-200">
                             ✓ {fmtTime(e.markedAt)} · {e.markedBy}
                           </span>
                         ) : (
@@ -488,8 +508,8 @@ export default function TeamDetailPage() {
                             <span
                               key={p.slot}
                               className={cx(
-                                'rounded border px-1.5 py-0.5 font-mono text-[10px]',
-                                e.playersPresent.includes(p.slot) ? 'border-emerald-700 text-emerald-300' : 'border-red-900 text-red-400 line-through'
+                                'rounded-lg border px-1.5 py-0.5 font-label text-[11px]',
+                                e.playersPresent.includes(p.slot) ? 'border-emerald-700 text-emerald-200' : 'border-[var(--card-red)] text-[#ff8a8a] line-through'
                               )}
                             >
                               {p.fullName.split(' ')[0]}
@@ -500,7 +520,7 @@ export default function TeamDetailPage() {
                     </div>
                   );
                 })}
-                <p className="mt-3 font-mono text-[11px] text-neutral-500">Read-only. Volunteers mark attendance at /attendance.</p>
+                <p className="mt-3 font-label text-xs text-neutral-500">Read-only. Volunteers mark attendance at /attendance.</p>
               </Panel>
 
               <Panel>
@@ -533,9 +553,9 @@ export default function TeamDetailPage() {
             }
           >
             <p>
-              Only approve if UTR <b className="font-mono text-white">{current?.utr}</b> for <b className="text-white">{current ? inr(current.amount) : '—'}</b> is on the bank statement.
+              Only approve if UTR <b className="font-label text-white">{current?.utr}</b> for <b className="text-white">{current ? inr(current.amount) : '—'}</b> is on the bank statement.
             </p>
-            <p className="font-mono text-xs text-neutral-500">This confirms {reg.teamId}, issues the Entry Visa and emails the team.</p>
+            <p className="font-label text-sm text-neutral-500">This confirms {reg.teamId}, issues the Entry Visa and emails the team.</p>
           </Modal>
 
           <Modal
@@ -558,11 +578,11 @@ export default function TeamDetailPage() {
               </>
             }
           >
-            <p className="font-mono text-xs text-neutral-400">The leader sees this reason and can submit a new UTR.</p>
+            <p className="font-label text-sm text-neutral-400">The leader sees this reason and can submit a new UTR.</p>
             <div className="space-y-2" role="radiogroup" aria-label="Reject reason">
               {[...REJECT_REASONS, 'OTHER'].map((r) => (
-                <label key={r} className={cx('flex cursor-pointer items-center gap-3 rounded border px-3 py-2.5 text-sm', reason === r ? 'border-red-600 bg-red-950/30 text-white' : 'border-neutral-800 text-neutral-300')}>
-                  <input type="radio" name="reason" checked={reason === r} onChange={() => setReason(r)} className="accent-red-600" />
+                <label key={r} className={cx('flex cursor-pointer items-center gap-3 rounded-lg border px-3 py-2.5 text-sm', reason === r ? 'border-[var(--card-red)] bg-[var(--card-red)]/10 text-white' : 'border-neutral-800 text-neutral-300')}>
+                  <input type="radio" name="reason" checked={reason === r} onChange={() => setReason(r)} className="accent-[var(--card-red)]" />
                   {r === 'OTHER' ? 'Other…' : r}
                 </label>
               ))}
@@ -619,8 +639,8 @@ export default function TeamDetailPage() {
 function Row({ k, v, copy }: { k: string; v?: string; copy?: boolean }) {
   return (
     <div className="flex items-center justify-between gap-3">
-      <dt className="shrink-0 font-mono text-[11px] uppercase tracking-wider text-neutral-500">{k}</dt>
-      <dd className="flex min-w-0 items-center gap-1.5 truncate font-mono text-xs text-neutral-200">
+      <dt className="shrink-0 font-label text-[11px] font-bold uppercase tracking-[0.16em] text-neutral-500">{k}</dt>
+      <dd className="flex min-w-0 items-center gap-1.5 truncate font-label text-sm text-neutral-200">
         <span className="truncate">{v || '—'}</span>
         {copy && v && <CopyBtn text={v} small />}
       </dd>

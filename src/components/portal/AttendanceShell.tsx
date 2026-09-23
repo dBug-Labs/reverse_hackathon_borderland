@@ -1,12 +1,11 @@
 'use client';
 
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { LogOut } from 'lucide-react';
 import { playHudClick } from '@/utils/sound';
 import { api, clearActorName, post, readActorName } from './api';
-import { GridBackdrop, cx } from './ui';
+import { GridBackdrop, Wordmark, cx } from './ui';
 
 interface DeskCtx {
   day: 1 | 2;
@@ -62,23 +61,21 @@ export function AttendanceShell({ children }: { children: React.ReactNode }) {
 
   return (
     <Ctx.Provider value={{ day, setDay, name }}>
-      <div className="relative min-h-screen bg-[#08080a] text-[#ededed] selection:bg-red-600/30">
+      <div className="relative min-h-screen overflow-x-clip bg-[#08080a] text-[#ededed] selection:bg-red-600/30">
         <GridBackdrop />
 
-        <header className="sticky top-0 z-30 border-b border-neutral-800 bg-[#0b0b10]/95 backdrop-blur-md">
+        <header className="sticky top-0 z-30 border-b border-neutral-800/80 bg-[#08080a]/90 backdrop-blur-md">
           <div className="mx-auto flex max-w-3xl items-center justify-between gap-3 px-4 py-3">
-            <Link href="/attendance" className="min-w-0">
-              <div className="font-display text-lg font-black uppercase leading-none text-white">
-                Check-in<span className="text-red-500">.</span>
+            <div className="min-w-0">
+              <Wordmark href="/attendance" className="text-xl" />
+              <div className="mt-1 flex items-center gap-1.5 truncate font-label text-xs font-semibold text-neutral-500">
+                <span className="inline-block h-1.5 w-1.5 shrink-0 rounded-full bg-emerald-400" />
+                Check-in · {name || 'Volunteer'}
               </div>
-              <div className="mt-1 truncate font-mono text-[10px] uppercase tracking-widest text-neutral-500">
-                <span className="mr-1.5 inline-block h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-400" />
-                {name || 'Volunteer'}
-              </div>
-            </Link>
+            </div>
 
             <div className="flex items-center gap-2">
-              <div className="flex rounded border border-neutral-800 bg-neutral-950/70 p-1" role="tablist" aria-label="Event day">
+              <div className="flex rounded-full border border-neutral-800 bg-[#0d0d10] p-1" role="tablist" aria-label="Event day">
                 {[1, 2].map((d) => (
                   <button
                     key={d}
@@ -86,15 +83,15 @@ export function AttendanceShell({ children }: { children: React.ReactNode }) {
                     aria-selected={day === d}
                     onClick={() => setDay(d as 1 | 2)}
                     className={cx(
-                      'min-h-[40px] rounded px-3 font-mono text-xs font-bold uppercase tracking-widest transition-all sm:px-4',
-                      day === d ? 'bg-red-600 text-white shadow-[0_0_15px_rgba(220,38,38,0.45)]' : 'text-neutral-400 hover:text-white'
+                      'min-h-[40px] rounded-full px-3.5 font-label text-sm font-bold transition-colors sm:px-4',
+                      day === d ? 'bg-[var(--paper)] text-[var(--ink)]' : 'text-neutral-400 hover:text-white'
                     )}
                   >
                     Day {d}
                   </button>
                 ))}
               </div>
-              <button onClick={logout} aria-label="Log out" className="flex h-[48px] w-[44px] items-center justify-center rounded border border-neutral-800 text-neutral-400 hover:border-red-700 hover:text-red-300">
+              <button onClick={logout} aria-label="Log out" className="flex h-[48px] w-[44px] items-center justify-center rounded-lg border border-neutral-800 bg-[#141417] text-neutral-400 hover:border-[var(--card-red)]/70 hover:text-[#ff8a8a]">
                 <LogOut className="h-4 w-4" />
               </button>
             </div>

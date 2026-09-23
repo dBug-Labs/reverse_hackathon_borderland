@@ -46,7 +46,7 @@ export default function AuditPage() {
 
   return (
     <>
-      <PageTitle kicker="Sector 05 // Black box" title="Audit Log" subtitle="Who did what, and when. Nothing here can be edited or deleted." />
+      <PageTitle kicker="Black box" title="Audit Log" subtitle="Who did what, and when. Nothing here can be edited or deleted." />
 
       <div className="mb-5 flex flex-col gap-3 sm:flex-row">
         <select value={action} onChange={(e) => { setAction(e.target.value); setPage(1); }} aria-label="Filter by action" className={`${inputCls()} sm:w-56`}>
@@ -67,9 +67,9 @@ export default function AuditPage() {
       {logs && logs.length === 0 && <Empty title="No entries" />}
 
       {logs && logs.length > 0 && (
-        <div className="overflow-x-auto rounded-lg border border-neutral-800 bg-[#0e0e14]/85 backdrop-blur-md">
+        <div className="overflow-x-auto rounded-2xl border border-neutral-800 bg-[#0d0d10]">
           <table className="w-full min-w-[720px] text-left text-sm">
-            <thead className="border-b border-neutral-800 bg-neutral-950/60 font-mono text-[10px] uppercase tracking-widest text-neutral-500">
+            <thead className="border-b border-neutral-800 bg-[#141417] font-label text-[11px] font-bold uppercase tracking-[0.16em] text-neutral-500">
               <tr>
                 <th className="px-4 py-3">When</th>
                 <th className="px-4 py-3">Who</th>
@@ -81,29 +81,29 @@ export default function AuditPage() {
             <tbody>
               {logs.map((l) => (
                 <tr key={l._id} className="border-b border-neutral-900 align-top last:border-0">
-                  <td className="whitespace-nowrap px-4 py-3 font-mono text-xs text-neutral-400">{fmtDateTime(l.createdAt)}</td>
+                  <td className="whitespace-nowrap px-4 py-3 font-label text-sm text-neutral-400">{fmtDateTime(l.createdAt)}</td>
                   <td className="px-4 py-3">
-                    <div className="font-mono text-xs text-white">{l.actorName}</div>
+                    <div className="font-label text-sm text-white">{l.actorName}</div>
                     <span
                       className={cx(
-                        'mt-1 inline-block rounded border px-1.5 py-0.5 font-mono text-[10px] uppercase',
-                        l.scope === 'admin' ? 'border-red-700/60 text-red-300' : 'border-emerald-700/60 text-emerald-300'
+                        'mt-1 inline-block rounded-full border px-2.5 py-0.5 font-label text-xs font-semibold',
+                        l.scope === 'admin' ? 'border-[var(--card-red)]/60 text-[#ff8a8a]' : 'border-emerald-600/35 text-emerald-200'
                       )}
                     >
                       {l.scope}
                     </span>
                   </td>
-                  <td className="px-4 py-3 font-mono text-xs font-bold text-neutral-200">{l.action.replace(/_/g, ' ')}</td>
-                  <td className="px-4 py-3 font-mono text-xs">
+                  <td className="px-4 py-3 font-label text-sm font-bold text-neutral-200">{l.action.replace(/_/g, ' ')}</td>
+                  <td className="px-4 py-3 font-label text-sm">
                     {/^[A-Z]+-\d+$/.test(l.targetId) ? (
-                      <Link href={`/admin/registrations/${l.targetId}`} className="font-bold text-red-400 hover:text-red-300">
+                      <Link href={`/admin/registrations/${l.targetId}`} className="font-poster text-lg uppercase leading-none tracking-wide text-[#f5eee1] transition-colors hover:text-[#ff8a8a]">
                         {l.targetId}
                       </Link>
                     ) : (
                       <span className="text-neutral-400">{l.targetId}</span>
                     )}
                   </td>
-                  <td className="max-w-[360px] px-4 py-3 font-mono text-[11px] text-neutral-500">
+                  <td className="max-w-[360px] px-4 py-3 font-label text-xs text-neutral-500">
                     {[l.before && `before ${JSON.stringify(l.before)}`, l.after && `after ${JSON.stringify(l.after)}`].filter(Boolean).join(' → ').slice(0, 260) || '—'}
                   </td>
                 </tr>
@@ -114,7 +114,7 @@ export default function AuditPage() {
       )}
 
       {pg && pg.totalPages > 1 && (
-        <div className="mt-5 flex items-center justify-between font-mono text-xs text-neutral-400">
+        <div className="mt-5 flex items-center justify-between font-label text-sm text-neutral-400">
           <span>
             Page {pg.page} of {pg.totalPages}
           </span>
