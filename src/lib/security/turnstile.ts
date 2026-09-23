@@ -20,6 +20,8 @@ interface SiteverifyResponse {
   action?: string;
   'error-codes'?: string[];
   challenge_ts?: string;
+  // Set by Cloudflare when the secret is one of its public test keys (local dev only)
+  metadata?: { result_with_testing_key?: boolean };
 }
 
 export async function verifyTurnstileToken(
@@ -56,8 +58,11 @@ export async function verifyTurnstileToken(
   }
 
   // Check hostname — prevents token reuse across different domains
+  // Cloudflare's test keys always answer with hostname "example.com", so skip the
+  // check for them; production uses a real secret and never gets a test result.
   const allowedHost = new URL(env.APP_URL).hostname;
   if (
+    !result.metadata?.result_with_testing_key &&
     result.hostname &&
     result.hostname !== allowedHost &&
     result.hostname !== 'localhost' &&
