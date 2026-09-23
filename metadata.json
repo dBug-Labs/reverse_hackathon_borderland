@@ -1,0 +1,6 @@
+{
+  "name": "BORDERLAND PROTOCOL — Reverse Hackathon",
+  "description": "Enter the Borderland. A 2-Day Reverse Hackathon where Player Groups uncover the secret purpose, architecture, and flaws of unknown products.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
