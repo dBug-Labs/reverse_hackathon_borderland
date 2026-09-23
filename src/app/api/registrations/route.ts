@@ -3,7 +3,7 @@ import { after } from 'next/server';
 import { teamSchema } from '@/lib/validation/team';
 import { verifyTurnstileToken } from '@/lib/security/turnstile';
 import { checkRateLimit, hashIp, getClientIp, logAbuse } from '@/lib/security/rateLimit';
-import { signMagicLink } from '@/lib/security/magicLink';
+import { signMagicLink, signMagicToken } from '@/lib/security/magicLink';
 import {
   createTeam,
   getActiveEvent,
@@ -133,12 +133,16 @@ export async function POST(req: NextRequest) {
     // 7. Idempotency key — return first result if duplicate
     const existing = await findByIdempotencyKey(input.idempotencyKey);
     if (existing) {
+      // Re-sign the pay token: only the original client knows the idempotency key,
+      // and without a token the retried form can't submit Step 2.
+      const replayExpiresAt = new Date(event.registrationClosesAt.getTime() + 2 * 24 * 60 * 60 * 1000);
+      const replayToken = await signMagicToken(existing.teamId, 'pay', replayExpiresAt);
       return NextResponse.json(
         {
           ok: true,
           data: {
             teamId: existing.teamId,
-            resumeToken: '', // can't regenerate without storing it — user uses email link
+            resumeToken: replayToken,
             upi: {
               id: event.upiId,
               payeeName: event.payeeName,

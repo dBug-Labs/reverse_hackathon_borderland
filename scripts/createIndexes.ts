@@ -11,11 +11,12 @@ import { MongoClient } from 'mongodb';
 import { readFileSync, existsSync } from 'fs';
 import { resolve } from 'path';
 
-// Auto-load .env.local if present
+// Auto-load .env.local, then .env, if MONGODB_URI isn't already exported
 if (!process.env.MONGODB_URI) {
-  const envPath = resolve(process.cwd(), '.env.local');
-  if (existsSync(envPath)) {
-    const lines = readFileSync(envPath, 'utf8').split('\n');
+  for (const envFile of ['.env.local', '.env']) {
+    const envPath = resolve(process.cwd(), envFile);
+    if (!existsSync(envPath)) continue;
+    const lines = readFileSync(envPath, 'utf8').split(/\r?\n/);
     for (const line of lines) {
       const trimmed = line.trim();
       if (!trimmed || trimmed.startsWith('#')) continue;
@@ -36,7 +37,7 @@ if (!process.env.MONGODB_URI) {
 
 const MONGODB_URI = process.env.MONGODB_URI;
 if (!MONGODB_URI) {
-  console.error('❌ MONGODB_URI not set. Add it to .env.local or export it.');
+  console.error('❌ MONGODB_URI not set. Add it to .env / .env.local or export it.');
   process.exit(1);
 }
 
@@ -49,43 +50,42 @@ async function createIndexes() {
   // ── registrations ─────────────────────────────────────────────
   const reg = db.collection('registrations');
 
+  // Plain unique indexes (no partial filter): soft-deleted teams keep their
+  // entries so deleted spam still blocks the same email / reg no / phone.
+  // Atlas also rejects `$exists: false` inside partialFilterExpression.
+
   await reg.createIndex({ teamId: 1 }, { unique: true, name: 'idx_teamId' });
   console.log('✅ registrations.teamId (unique)');
 
   await reg.createIndex({ teamNameLower: 1 }, {
     unique: true,
-    partialFilterExpression: { deletedAt: { $exists: false } },
     name: 'idx_teamNameLower',
   });
-  console.log('✅ registrations.teamNameLower (unique, partial)');
+  console.log('✅ registrations.teamNameLower (unique)');
 
   await reg.createIndex({ leaderEmail: 1 }, {
     unique: true,
-    partialFilterExpression: { deletedAt: { $exists: false } },
     name: 'idx_leaderEmail',
   });
-  console.log('✅ registrations.leaderEmail (unique, partial)');
+  console.log('✅ registrations.leaderEmail (unique)');
 
   await reg.createIndex({ leaderPhone: 1 }, {
     unique: true,
-    partialFilterExpression: { deletedAt: { $exists: false } },
     name: 'idx_leaderPhone',
   });
-  console.log('✅ registrations.leaderPhone (unique, partial)');
+  console.log('✅ registrations.leaderPhone (unique)');
 
   await reg.createIndex({ 'players.email': 1 }, {
     unique: true,
-    partialFilterExpression: { deletedAt: { $exists: false } },
     name: 'idx_playersEmail',
   });
-  console.log('✅ registrations.players.email (unique, partial)');
+  console.log('✅ registrations.players.email (unique)');
 
   await reg.createIndex({ 'players.regNo': 1 }, {
     unique: true,
-    partialFilterExpression: { deletedAt: { $exists: false } },
     name: 'idx_playersRegNo',
   });
-  console.log('✅ registrations.players.regNo (unique, partial)');
+  console.log('✅ registrations.players.regNo (unique)');
 
   await reg.createIndex({ idempotencyKey: 1 }, {
     unique: true,

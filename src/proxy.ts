@@ -35,7 +35,8 @@ export async function proxy(req: NextRequest) {
   // ── Admin area guard ────────────────────────────────────────────
   if (
     (pathname.startsWith('/admin') || pathname.startsWith('/api/admin')) &&
-    !pathname.startsWith('/admin/login')
+    !pathname.startsWith('/admin/login') &&
+    !pathname.startsWith('/api/admin/login')
   ) {
     const token = req.cookies.get('bnd_admin')?.value;
     const scope = await getScope(token, secret);
@@ -54,7 +55,8 @@ export async function proxy(req: NextRequest) {
   // ── Attendance area guard ───────────────────────────────────────
   if (
     (pathname.startsWith('/attendance') || pathname.startsWith('/api/attendance')) &&
-    !pathname.startsWith('/attendance/login')
+    !pathname.startsWith('/attendance/login') &&
+    !pathname.startsWith('/api/attendance/login')
   ) {
     const token = req.cookies.get('bnd_attendance')?.value;
     const scope = await getScope(token, secret);

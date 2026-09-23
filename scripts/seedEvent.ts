@@ -11,11 +11,12 @@ import { MongoClient } from 'mongodb';
 import { readFileSync, existsSync } from 'fs';
 import { resolve } from 'path';
 
-// Auto-load .env.local if present
+// Auto-load .env.local, then .env, if MONGODB_URI isn't already exported
 if (!process.env.MONGODB_URI) {
-  const envPath = resolve(process.cwd(), '.env.local');
-  if (existsSync(envPath)) {
-    const lines = readFileSync(envPath, 'utf8').split('\n');
+  for (const envFile of ['.env.local', '.env']) {
+    const envPath = resolve(process.cwd(), envFile);
+    if (!existsSync(envPath)) continue;
+    const lines = readFileSync(envPath, 'utf8').split(/\r?\n/);
     for (const line of lines) {
       const trimmed = line.trim();
       if (!trimmed || trimmed.startsWith('#')) continue;
@@ -36,7 +37,7 @@ if (!process.env.MONGODB_URI) {
 
 const MONGODB_URI = process.env.MONGODB_URI;
 if (!MONGODB_URI) {
-  console.error('❌ MONGODB_URI not set. Add it to .env.local or export it.');
+  console.error('❌ MONGODB_URI not set. Add it to .env / .env.local or export it.');
   process.exit(1);
 }
 
