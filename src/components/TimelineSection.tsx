@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import { Clock, Shield, Sparkles, AlertCircle, ChevronRight, Award } from 'lucide-react';
 import { playHudClick } from '../utils/sound';
 
 export const TimelineSection: React.FC = () => {
@@ -137,133 +136,75 @@ export const TimelineSection: React.FC = () => {
     },
   ];
 
+  const schedule = activeDay === 'day1' ? day1Schedule : day2Schedule;
+
   return (
-    <section id="timeline" className="py-20 bg-[#09090d] relative border-t border-neutral-900">
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
-        
-        {/* Section Header */}
-        <div className="flex flex-col sm:flex-row sm:items-end justify-between mb-10 pb-4 border-b border-neutral-800">
+    <section id="timeline" className="py-20 sm:py-24 bg-[#08080a] border-t border-neutral-900">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6">
+        <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-6">
           <div>
-            <div className="text-xs font-mono tracking-widest text-red-500 uppercase mb-1">
-              CHRONOLOGY
-            </div>
-            <h2 className="text-3xl sm:text-4xl font-display font-bold text-white tracking-tight">
-              GAME TIMELINE
+            <p className="font-caps text-xs sm:text-sm uppercase tracking-[0.3em] text-[var(--card-red)]">
+              Schedule
+            </p>
+            <h2 className="font-poster uppercase text-5xl sm:text-6xl text-[#f5eee1] leading-none mt-3">
+              Hour by hour
             </h2>
           </div>
 
-          {/* Interactive Day Switcher Buttons */}
-          <div className="mt-4 sm:mt-0 flex items-center p-1 bg-neutral-900 border border-neutral-800 rounded-lg">
-            <button
-              onClick={() => {
-                playHudClick();
-                setActiveDay('day1');
-              }}
-              className={`px-4 py-2 text-xs font-mono font-semibold rounded transition-colors ${
-                activeDay === 'day1'
-                  ? 'bg-neutral-800 text-white shadow-sm'
-                  : 'text-neutral-400 hover:text-white'
-              }`}
-            >
-              DAY 01 · TRAINING DAY
-            </button>
-            <button
-              onClick={() => {
-                playHudClick();
-                setActiveDay('day2');
-              }}
-              className={`px-4 py-2 text-xs font-mono font-semibold rounded transition-colors ${
-                activeDay === 'day2'
-                  ? 'bg-red-600 text-white shadow-[0_0_12px_rgba(220,38,38,0.5)]'
-                  : 'text-neutral-400 hover:text-white'
-              }`}
-            >
-              DAY 02 · GAME DAY
-            </button>
+          <div role="tablist" aria-label="Choose a day" className="inline-flex p-1 rounded-lg bg-neutral-900 border border-neutral-800 self-start sm:self-auto">
+            {(
+              [
+                ['day1', 'Day 1 · 5 Oct'],
+                ['day2', 'Day 2 · 6 Oct'],
+              ] as const
+            ).map(([key, label]) => (
+              <button
+                key={key}
+                role="tab"
+                aria-selected={activeDay === key}
+                onClick={() => {
+                  playHudClick();
+                  setActiveDay(key);
+                }}
+                className={`px-4 py-2 rounded-md text-sm font-label font-semibold transition-colors ${
+                  activeDay === key ? 'bg-[var(--paper)] text-[var(--ink)]' : 'text-neutral-400 hover:text-white'
+                }`}
+              >
+                {label}
+              </button>
+            ))}
           </div>
         </div>
 
-        {/* Schedule Presentation */}
-        {activeDay === 'day1' ? (
-          <div className="space-y-4 animate-in fade-in duration-300">
-            <div className="p-3 bg-neutral-900/40 border border-neutral-800 rounded text-xs font-mono text-cyan-400 flex items-center justify-between">
-              <span>DAY 01 OBJECTIVE: ZERO-COMPETITION SANDBOX & TECHNIQUE MASTERY</span>
-              <span>09:00 — 17:00</span>
-            </div>
+        <p className="mt-6 text-neutral-400">
+          {activeDay === 'day1'
+            ? 'Training day — no scores, no pressure. 9 AM to 5 PM.'
+            : 'Game day — all four suit games, then the final duel. 9 AM to 5 PM.'}
+        </p>
 
-            <div className="relative pl-6 sm:pl-8 border-l-2 border-neutral-800 space-y-6 my-6">
-              {day1Schedule.map((item, idx) => (
-                <div key={idx} className="relative group">
-                  {/* Timeline node */}
-                  <div className="absolute -left-[31px] sm:-left-[39px] top-1.5 w-3.5 h-3.5 rounded-full bg-neutral-900 border-2 border-neutral-600 group-hover:border-cyan-400 group-hover:scale-125 transition-all" />
-                  
-                  <div className="bg-[#0e0e15] border border-neutral-800/80 rounded-lg p-5 group-hover:border-neutral-700 transition-colors">
-                    <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
-                      <div className="flex items-center gap-2">
-                        <span className="font-mono text-xs font-bold text-cyan-400 bg-cyan-950/40 px-2 py-0.5 rounded border border-cyan-800/30">
-                          {item.time}
-                        </span>
-                        <span className="text-xs font-mono text-neutral-400">({item.duration})</span>
-                      </div>
-                      <span className="text-[11px] font-mono text-neutral-500 bg-neutral-900 px-2 py-0.5 rounded">
-                        {item.format}
-                      </span>
-                    </div>
-
-                    <h4 className="text-base font-heading font-bold text-white mb-2">
-                      {item.title}
-                    </h4>
-                    <p className="text-xs sm:text-sm text-neutral-300 font-sans leading-relaxed">
-                      {item.desc}
-                    </p>
-                  </div>
+        <ol className="mt-8 border-t border-neutral-800">
+          {schedule.map((item, idx) => (
+            <li key={idx} className="grid sm:grid-cols-[11rem_1fr] gap-x-8 gap-y-1 py-6 border-b border-neutral-800">
+              <div className="font-label">
+                <div className="text-neutral-100 font-bold tabular-nums">{item.time.replace(' — ', '–')}</div>
+                <div className="text-sm text-neutral-500 lowercase first-letter:uppercase">
+                  {'duration' in item && item.duration ? item.duration : item.badge}
                 </div>
-              ))}
-            </div>
-          </div>
-        ) : (
-          <div className="space-y-4 animate-in fade-in duration-300">
-            <div className="p-3 bg-red-950/30 border border-red-800/40 rounded text-xs font-mono text-red-400 flex items-center justify-between">
-              <span>DAY 02 OBJECTIVE: BORDERLAND ARENA · ALL 4 SUITS LIVE</span>
-              <span>09:00 — 17:00</span>
-            </div>
-
-            <div className="relative pl-6 sm:pl-8 border-l-2 border-red-900/60 space-y-6 my-6">
-              {day2Schedule.map((item, idx) => (
-                <div key={idx} className="relative group">
-                  {/* Timeline node */}
-                  <div className="absolute -left-[31px] sm:-left-[39px] top-1.5 w-3.5 h-3.5 rounded-full bg-neutral-950 border-2 border-red-500 group-hover:bg-red-600 group-hover:scale-125 transition-all shadow-[0_0_8px_rgba(239,68,68,0.5)]" />
-                  
-                  <div className="bg-[#120c0e] border border-neutral-800/80 rounded-lg p-5 group-hover:border-red-600/50 transition-colors">
-                    <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
-                      <div className="flex items-center gap-2">
-                        <span className="font-mono text-xs font-bold text-red-400 bg-red-950/50 px-2 py-0.5 rounded border border-red-800/40">
-                          {item.time}
-                        </span>
-                        {item.suit && (
-                          <span className="text-lg font-display text-red-500 font-black">
-                            {item.suit}
-                          </span>
-                        )}
-                      </div>
-                      <span className="text-[11px] font-mono text-red-400 font-semibold bg-red-950/40 border border-red-900/40 px-2 py-0.5 rounded">
-                        {item.badge}
-                      </span>
-                    </div>
-
-                    <h4 className="text-base font-heading font-bold text-white mb-2">
-                      {item.title}
-                    </h4>
-                    <p className="text-xs sm:text-sm text-neutral-300 font-sans leading-relaxed">
-                      {item.desc}
-                    </p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
+              </div>
+              <div>
+                <h3 className="font-heading text-lg font-bold text-neutral-100 flex items-center gap-2">
+                  {'suit' in item && item.suit && (
+                    <span className={item.suit === '♦' || item.suit === '♥' ? 'text-[var(--card-red)]' : 'text-neutral-300'}>
+                      {item.suit}
+                    </span>
+                  )}
+                  {item.title}
+                </h3>
+                <p className="mt-1.5 text-neutral-400 leading-relaxed">{item.desc}</p>
+              </div>
+            </li>
+          ))}
+        </ol>
       </div>
     </section>
   );

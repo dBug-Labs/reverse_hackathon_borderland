@@ -1,147 +1,98 @@
 import React from 'react';
-import { ArrowDown, CheckCircle2, Flame, Award, Shield, AlertTriangle } from 'lucide-react';
-import { playHudHover } from '../utils/sound';
+
+const DAY_1 = [
+  { title: 'Welcome', desc: 'Opening ceremony and how the two days work' },
+  { title: 'Reverse engineering', desc: 'Inspection techniques and a DevTools demo' },
+  { title: 'Product thinking', desc: 'Thinking like a founder, not just a coder' },
+  { title: 'Practice round', desc: 'A no-stakes trial on a sample product' },
+  { title: 'Day 2 briefing', desc: 'Visa rules and the game reveal' },
+];
+
+const DAY_2 = [
+  { title: 'Check-in', desc: 'Each team starts with 3 Visa Points' },
+  { title: 'Mystery product', desc: 'The sealed product is unveiled, no brief' },
+  { title: '♠ The Sprint', desc: '75 min rapid observation race' },
+  { title: 'Difficulty choice', desc: 'Standard or High Risk (1.5× points)' },
+  { title: '♦ The Deduction', desc: '90 min deep dive into the architecture' },
+  { title: 'Twist card', desc: 'A mid-game curveball, revealed at lunch' },
+  { title: '♣ The Trading Floor', desc: '75 min of alliances and trading intel' },
+  { title: '♥ The Trial', desc: '60 min defence before the Game Masters' },
+  { title: 'The final duel', desc: 'Top 2 teams, head-to-head rapid fire' },
+  { title: 'Survivors', desc: 'Winners crowned and prizes awarded' },
+];
+
+const suitRed = (title: string) => title.startsWith('♦') || title.startsWith('♥');
 
 export const EventWorkflow: React.FC = () => {
-  const day1Flow = [
-    { step: '01', title: 'WELCOME', desc: 'Opening Ceremony & Borderland Lore' },
-    { step: '02', title: 'REVERSE ENGINEERING', desc: 'Inspection techniques & devtools demo' },
-    { step: '03', title: 'PRODUCT THINKING', desc: 'Thinking like a founder, not just a coder' },
-    { step: '04', title: 'PRACTICE ROUND', desc: 'Safe sandbox trial on sample product' },
-    { step: '05', title: 'DAY 2 BRIEFING', desc: 'Visa system rules & Game reveals' },
-  ];
-
-  const day2Flow = [
-    { step: '01', title: 'CHECK-IN', desc: '3 Visa Points issued per group' },
-    { step: '02', title: 'MYSTERY PRODUCT', desc: 'Sealed product unveiled with no prompt' },
-    { step: '03', title: '♠ THE SPRINT', desc: '75 min rapid observation race' },
-    { step: '04', title: 'DIFFICULTY CHOICE', desc: 'Standard vs High Risk (1.5× pts)' },
-    { step: '05', title: '♦ THE DEDUCTION', desc: '90 min deep architectural dissection' },
-    { step: '06', title: 'TWIST CARD', desc: 'Mid-game curveball revealed at lunch' },
-    { step: '07', title: '♣ TRADING FLOOR', desc: '75 min alliance & intel exchange' },
-    { step: '08', title: '♥ THE TRIAL', desc: '60 min defense before Game Masters' },
-    { step: '09', title: 'THE FINAL DUEL', desc: 'Top 2 teams head-to-head rapid-fire' },
-    { step: '10', title: 'SURVIVORS', desc: 'Ultimate Survivors crowned & prizes awarded' },
-  ];
-
   return (
-    <section id="workflow" className="py-20 bg-[#08080a] relative border-t border-neutral-900">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-        
-        {/* Section Header */}
-        <div className="text-center max-w-3xl mx-auto mb-16">
-          <div className="text-xs font-mono tracking-widest text-red-500 uppercase mb-2">
-            TWO-DAY ARCHITECTURE
-          </div>
-          <h2 className="text-3xl sm:text-4xl md:text-5xl font-display font-bold text-white tracking-tight mb-4">
-            HOW THE EVENT WORKS
+    <section id="workflow" className="py-20 sm:py-24 bg-[#08080a] border-t border-neutral-900">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6">
+        <div className="max-w-2xl">
+          <p className="font-caps text-xs sm:text-sm uppercase tracking-[0.3em] text-[var(--card-red)]">
+            Format
+          </p>
+          <h2 className="font-poster uppercase text-5xl sm:text-6xl text-[#f5eee1] leading-none mt-3">
+            How the two days work
           </h2>
-          <p className="text-xs sm:text-sm text-neutral-400 font-sans max-w-xl mx-auto">
-            Day 1 sharpens your weapons in a zero-penalty training sandbox. Day 2 drops your Player Group into the live Borderland arena where every decision modifies your Visa score.
+          <p className="mt-4 text-neutral-400 text-base sm:text-lg leading-relaxed">
+            Day 1 is training with nothing at stake. Day 2 is the game: four rounds, one mystery
+            product, and every decision moves your Visa Points.
           </p>
         </div>
 
-        {/* 2-Day Side-by-Side Workflow */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-          
-          {/* Day 1: Training Day (5 columns) */}
-          <div 
-            onMouseEnter={() => playHudHover()}
-            className="lg:col-span-5 bg-[#0d0d14] border border-neutral-800 rounded-lg p-6 sm:p-8 hud-corner flex flex-col justify-between"
-          >
-            <div>
-              <div className="flex items-center justify-between pb-3 border-b border-neutral-800 mb-6">
-                <div>
-                  <span className="text-xs font-mono text-neutral-500 tracking-widest block">PHASE 01</span>
-                  <h3 className="text-2xl font-display font-bold text-neutral-100">DAY 01</h3>
-                </div>
-                <span className="text-xs font-mono text-cyan-400 bg-cyan-950/30 px-2.5 py-1 rounded border border-cyan-800/40">
-                  TRAINING DAY
-                </span>
-              </div>
-              
-              <p className="text-xs text-neutral-400 font-sans mb-6">
-                Zero competition. Pure capability building. Teams learn modern reverse-engineering methodologies, product teardown tactics, and calibrate their teamwork.
-              </p>
-
-              {/* Day 1 Steps */}
-              <div className="space-y-3">
-                {day1Flow.map((item, idx) => (
-                  <div key={item.step} className="flex items-start gap-3 p-3 bg-neutral-900/60 rounded border border-neutral-800/80">
-                    <span className="font-mono text-xs font-bold text-cyan-400 bg-cyan-950/40 px-2 py-0.5 rounded border border-cyan-800/30 shrink-0">
-                      {item.step}
-                    </span>
-                    <div>
-                      <div className="font-heading font-semibold text-xs text-white uppercase tracking-wider">
-                        {item.title}
-                      </div>
-                      <div className="text-[11px] text-neutral-400 font-sans">
-                        {item.desc}
-                      </div>
-                    </div>
+        <div className="mt-12 grid lg:grid-cols-12 gap-6 items-start">
+          {/* Day 1 */}
+          <div className="lg:col-span-5 rounded-2xl border border-neutral-800 bg-[#0e0e11] p-6 sm:p-8">
+            <p className="font-label text-xs font-bold uppercase tracking-[0.16em] text-neutral-500">Day 1 · 5 Oct</p>
+            <h3 className="font-poster uppercase text-3xl text-neutral-100 mt-1">Training day</h3>
+            <p className="mt-3 text-neutral-400 leading-relaxed">
+              No competition. Learn how to take a product apart, think about who it&apos;s for, and
+              get your team working together.
+            </p>
+            <ol className="mt-6 space-y-4">
+              {DAY_1.map((item, i) => (
+                <li key={item.title} className="flex gap-4">
+                  <span className="font-label text-sm font-bold text-neutral-500 w-5 shrink-0 pt-0.5">{i + 1}</span>
+                  <div>
+                    <div className="font-heading font-bold text-neutral-100">{item.title}</div>
+                    <div className="text-sm text-neutral-400">{item.desc}</div>
                   </div>
-                ))}
-              </div>
-            </div>
-
-            <div className="mt-8 pt-4 border-t border-neutral-800 text-[11px] font-mono text-neutral-500 flex items-center justify-between">
-              <span>STATUS: SAFE HAVEN</span>
-              <span>NO VISA RISK</span>
-            </div>
+                </li>
+              ))}
+            </ol>
           </div>
 
-          {/* Day 2: Game Day (7 columns) */}
-          <div 
-            onMouseEnter={() => playHudHover()}
-            className="lg:col-span-7 bg-gradient-to-b from-[#180d0f] to-[#0d090b] border-2 border-red-600/70 rounded-lg p-6 sm:p-8 hud-corner glow-red-box flex flex-col justify-between"
-          >
-            <div>
-              <div className="flex items-center justify-between pb-3 border-b border-red-900/50 mb-6">
-                <div>
-                  <span className="text-xs font-mono text-red-500 tracking-widest block font-bold">PHASE 02</span>
-                  <h3 className="text-2xl font-display font-bold text-white">DAY 02</h3>
-                </div>
-                <span className="text-xs font-mono text-red-400 bg-red-950/60 px-2.5 py-1 rounded border border-red-600/60 font-bold flex items-center gap-1.5 animate-pulse">
-                  <Flame className="w-3.5 h-3.5 text-red-500" />
-                  GAME DAY
-                </span>
-              </div>
-
-              <p className="text-xs text-neutral-300 font-sans mb-6">
-                The gates seal. All 4 suit games trigger in sequence. Performance directly controls your Visa count. Reach 0 Visa Points, and you face elimination.
+          {/* Day 2 — the poster card */}
+          <div className="lg:col-span-7 paper-card rounded-2xl p-2.5">
+            <div className="rounded-xl border border-[var(--card-red)]/45 p-6 sm:p-8">
+              <p className="font-label text-xs font-bold uppercase tracking-[0.16em] text-[var(--card-red)]">
+                Day 2 · 6 Oct
               </p>
-
-              {/* Day 2 Steps Flow in 2-column on wider screens */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                {day2Flow.map((item) => (
-                  <div
-                    key={item.step}
-                    className="flex items-start gap-2.5 p-2.5 bg-neutral-950/70 rounded border border-red-900/30 hover:border-red-600/50 transition-colors"
-                  >
-                    <span className="font-mono text-[11px] font-bold text-red-400 bg-red-950/50 px-1.5 py-0.5 rounded border border-red-800/40 shrink-0">
-                      {item.step}
+              <h3 className="font-poster uppercase text-3xl mt-1">Game day</h3>
+              <p className="mt-3 text-[var(--ink)]/75 leading-relaxed">
+                The four suit games run back to back. Your score decides your Visa Points — hit zero
+                and you&apos;re out.
+              </p>
+              <ol className="mt-6 grid sm:grid-cols-2 gap-x-8 gap-y-4">
+                {DAY_2.map((item, i) => (
+                  <li key={item.title} className="flex gap-4">
+                    <span className="font-label text-sm font-bold text-[var(--ink)]/45 w-5 shrink-0 pt-0.5">
+                      {i + 1}
                     </span>
                     <div>
-                      <div className="font-heading font-semibold text-xs text-white uppercase tracking-wider">
+                      <div
+                        className={`font-heading font-bold ${suitRed(item.title) ? 'text-[var(--card-red)]' : 'text-[var(--ink)]'}`}
+                      >
                         {item.title}
                       </div>
-                      <div className="text-[11px] text-neutral-400 font-sans line-clamp-1">
-                        {item.desc}
-                      </div>
+                      <div className="text-sm text-[var(--ink)]/65">{item.desc}</div>
                     </div>
-                  </div>
+                  </li>
                 ))}
-              </div>
-            </div>
-
-            <div className="mt-8 pt-4 border-t border-red-900/40 text-[11px] font-mono text-red-400/90 flex items-center justify-between">
-              <span>STATUS: HIGH THREAT</span>
-              <span>LIVE LEADERBOARD TRACKING</span>
+              </ol>
             </div>
           </div>
-
         </div>
-
       </div>
     </section>
   );

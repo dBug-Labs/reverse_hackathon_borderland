@@ -53,7 +53,7 @@ export const FaqSection: React.FC = () => {
     },
     {
       q: 'What is the team size and who is eligible to register?',
-      a: 'Player Groups must consist of 2 to 4 Players. Students across all colleges, departments, and years are eligible. We recommend assembling a balanced squad featuring an Engineer, Detective, Strategist, and Communicator.',
+      a: 'Teams have 2 to 4 members, and every member must be a current SRM student with an SRM email (@srmist.edu.in) and register number. Any department or year can join. Entry is ₹199 per team, paid by UPI when you register.',
     },
   ];
 
@@ -63,58 +63,45 @@ export const FaqSection: React.FC = () => {
   };
 
   return (
-    <section id="faq" className="py-20 bg-[#09090d] relative border-t border-neutral-900">
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-        
-        {/* Section Header */}
-        <div className="text-center mb-16">
-          <div className="text-xs font-mono tracking-widest text-red-500 uppercase mb-2">
-            INTELLIGENCE CLEARANCE
-          </div>
-          <h2 className="text-3xl sm:text-4xl font-display font-bold text-white tracking-tight mb-3">
-            FREQUENTLY ASKED QUESTIONS
+    <section id="faq" className="py-20 sm:py-24 bg-[#08080a] border-t border-neutral-900">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 grid lg:grid-cols-12 gap-10">
+        <div className="lg:col-span-4">
+          <p className="font-caps text-xs sm:text-sm uppercase tracking-[0.3em] text-[var(--card-red)]">FAQ</p>
+          <h2 className="font-poster uppercase text-5xl sm:text-6xl text-[#f5eee1] leading-none mt-3">
+            Before you play
           </h2>
-          <p className="text-xs sm:text-sm text-neutral-400 font-sans">
-            Everything you need to know before entering the Borderland gates.
+          <p className="mt-4 text-neutral-400 leading-relaxed">
+            Still unsure? Mail{' '}
+            <a href="mailto:borderland@dbuglabs.org" className="text-neutral-200 underline underline-offset-4">
+              borderland@dbuglabs.org
+            </a>
+            .
           </p>
         </div>
 
-        {/* Accordion Container */}
-        <div className="space-y-3">
+        <div className="lg:col-span-8 border-t border-neutral-800">
           {faqs.map((faq, idx) => {
             const isOpen = openIndex === idx;
             return (
-              <div
-                key={idx}
-                className="bg-[#0c0d13] border border-neutral-800 rounded-lg overflow-hidden transition-colors hover:border-neutral-700"
-              >
+              <div key={idx} className="border-b border-neutral-800">
                 <button
                   onClick={() => toggle(idx)}
-                  className="w-full py-4 px-5 text-left flex items-center justify-between gap-4 font-heading font-semibold text-sm sm:text-base text-neutral-200 hover:text-white"
+                  aria-expanded={isOpen}
+                  className="w-full py-5 text-left flex items-start justify-between gap-6 font-heading font-bold text-base sm:text-lg text-neutral-100 hover:text-white"
                 >
-                  <span className="flex items-center gap-3">
-                    <span className="font-mono text-xs text-red-500 font-bold shrink-0">
-                      {`Q${String(idx + 1).padStart(2, '0')}`}
-                    </span>
-                    <span>{faq.q}</span>
-                  </span>
+                  <span>{faq.q}</span>
                   <ChevronDown
-                    className={`w-4 h-4 text-neutral-400 shrink-0 transition-transform duration-200 ${
-                      isOpen ? 'rotate-180 text-red-400' : ''
+                    className={`w-5 h-5 mt-0.5 text-neutral-500 shrink-0 transition-transform duration-200 ${
+                      isOpen ? 'rotate-180' : ''
                     }`}
                   />
                 </button>
 
-                {isOpen && (
-                  <div className="px-5 pb-5 pt-1 text-xs sm:text-sm text-neutral-300 font-sans leading-relaxed border-t border-neutral-800/60 bg-neutral-950/40 animate-in fade-in duration-150">
-                    {faq.a}
-                  </div>
-                )}
+                {isOpen && <p className="pb-6 -mt-1 pr-10 text-neutral-400 leading-relaxed">{faq.a}</p>}
               </div>
             );
           })}
         </div>
-
       </div>
     </section>
   );

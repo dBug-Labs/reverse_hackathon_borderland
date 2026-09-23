@@ -20,7 +20,6 @@ export default function App() {
   const router = useRouter();
   const [isPassOpen, setIsPassOpen] = useState(false);
   const [registeredData, setRegisteredData] = useState<TeamRegistration | null>(null);
-  const [registeredCount] = useState<number>(164);
 
   // Check for existing registration in localStorage on mount
   useEffect(() => {
@@ -38,13 +37,6 @@ export default function App() {
   // Registration lives on its own page (/register) — every CTA routes there.
   const openRegister = () => router.push('/register');
 
-  const scrollToWorkflow = () => {
-    const el = document.getElementById('workflow') || document.getElementById('timeline') || document.getElementById('concept');
-    if (el) {
-      el.scrollIntoView({ behavior: 'smooth' });
-    }
-  };
-
   return (
     <div className="min-h-screen bg-[#08080a] text-[#ededed] font-sans relative selection:bg-red-600/30 selection:text-red-200">
       
@@ -56,12 +48,8 @@ export default function App() {
       />
 
       <main>
-        {/* 1. Hero Section (HACKBACK, Inverted City, 4 Flying Cars Popups) */}
-        <Hero
-          onOpenRegister={openRegister}
-          onScrollToGames={scrollToWorkflow}
-          registeredCount={registeredCount}
-        />
+        {/* 1. Hero (poster) + the four games */}
+        <Hero onOpenRegister={openRegister} />
 
         {/* 2. Reverse Hackathon Core Philosophy & Inquiries */}
         <ConceptSection />
@@ -93,12 +81,10 @@ export default function App() {
       />
 
       {/* Mobile Sticky Quick CTA Bar */}
-      <div className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-[#08080a]/95 border-t border-neutral-800 p-2.5 backdrop-blur-md flex items-center justify-between gap-3">
-        <div className="flex items-center gap-2 pl-2">
-          <span className="w-2 h-2 rounded-full bg-red-600 animate-ping" />
-          <span className="text-[11px] font-mono text-neutral-300">
-            {registeredData ? 'VISA ISSUED' : 'GATE OPEN'}
-          </span>
+      <div className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-[#08080a]/95 border-t border-neutral-800 px-4 py-2.5 backdrop-blur-md flex items-center justify-between gap-3">
+        <div className="font-label leading-tight">
+          <div className="text-sm font-bold text-neutral-100">5 & 6 Oct · TP2 712</div>
+          <div className="text-xs text-neutral-400">₹199 per team · 2–4 members</div>
         </div>
 
         {registeredData ? (
@@ -107,10 +93,10 @@ export default function App() {
               playHudClick();
               setIsPassOpen(true);
             }}
-            className="flex items-center gap-1.5 px-4 py-2 text-xs font-mono font-bold text-emerald-300 bg-emerald-950/70 border border-emerald-500/50 rounded"
+            className="flex items-center gap-1.5 px-4 py-2 text-sm font-label font-bold text-emerald-300 bg-emerald-950/70 border border-emerald-500/50 rounded-md"
           >
-            <ShieldCheck className="w-3.5 h-3.5" />
-            <span>MY VISA PASS</span>
+            <ShieldCheck className="w-4 h-4" />
+            <span>My Visa</span>
           </button>
         ) : (
           <button
@@ -118,9 +104,9 @@ export default function App() {
               playHudClick();
               openRegister();
             }}
-            className="px-5 py-2 text-xs font-mono font-bold text-white bg-red-600 rounded border border-red-500 shadow-[0_0_12px_rgba(220,38,38,0.5)]"
+            className="px-5 py-2.5 text-sm font-label font-bold text-white bg-[var(--card-red)] rounded-md"
           >
-            ENTER THE BORDERLAND
+            Register
           </button>
         )}
       </div>

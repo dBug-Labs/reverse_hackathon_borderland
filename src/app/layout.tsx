@@ -1,6 +1,13 @@
 import type { Metadata, Viewport } from 'next';
-import { Cinzel, JetBrains_Mono, Plus_Jakarta_Sans, Syne } from 'next/font/google';
+import { Anton, Cinzel, JetBrains_Mono, Plus_Jakarta_Sans } from 'next/font/google';
 import './globals.css';
+
+// Poster display face (the HACKBACK wordmark)
+const anton = Anton({
+  subsets: ['latin'],
+  weight: '400',
+  variable: '--font-anton',
+});
 
 const cinzel = Cinzel({
   subsets: ['latin'],
@@ -20,11 +27,6 @@ const plusJakartaSans = Plus_Jakarta_Sans({
   variable: '--font-plus-jakarta-sans',
 });
 
-const syne = Syne({
-  subsets: ['latin'],
-  weight: ['700', '800'],
-  variable: '--font-syne',
-});
 
 const title = 'HACKBACK — Reverse Hackathon';
 const description =
@@ -45,7 +47,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
   return (
     <html
       lang="en"
-      className={`dark ${cinzel.variable} ${jetbrainsMono.variable} ${plusJakartaSans.variable} ${syne.variable}`}
+      className={`dark ${anton.variable} ${cinzel.variable} ${jetbrainsMono.variable} ${plusJakartaSans.variable}`}
     >
       <body className="bg-[#08080a] text-[#ededed] antialiased selection:bg-red-600/30 selection:text-red-200">
         {children}
