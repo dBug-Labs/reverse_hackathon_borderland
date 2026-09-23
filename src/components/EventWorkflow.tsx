@@ -25,7 +25,7 @@ export const EventWorkflow: React.FC = () => {
   ];
 
   return (
-    <section className="py-20 bg-[#08080a] relative border-t border-neutral-900">
+    <section id="workflow" className="py-20 bg-[#08080a] relative border-t border-neutral-900">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         
         {/* Section Header */}

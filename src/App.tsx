@@ -5,13 +5,8 @@ import { TeamRegistration } from './types/borderland';
 import { Navbar } from './components/Navbar';
 import { Hero } from './components/Hero';
 import { ConceptSection } from './components/ConceptSection';
-import { FourGamesSection } from './components/FourGamesSection';
 import { EventWorkflow } from './components/EventWorkflow';
 import { TimelineSection } from './components/TimelineSection';
-import { VisaSection } from './components/VisaSection';
-import { RiskRewardSection } from './components/RiskRewardSection';
-import { LeaderboardSection } from './components/LeaderboardSection';
-import { ArchetypesSection } from './components/ArchetypesSection';
 import { RulesSection } from './components/RulesSection';
 import { FaqSection } from './components/FaqSection';
 import { PartnersSection } from './components/PartnersSection';
@@ -19,7 +14,7 @@ import { Footer } from './components/Footer';
 import { RegistrationModal } from './components/RegistrationModal';
 import { EntryPassModal } from './components/EntryPassModal';
 import { playHudClick } from './utils/sound';
-import { ShieldCheck, Flame } from 'lucide-react';
+import { ShieldCheck } from 'lucide-react';
 
 export default function App() {
   const [isRegisterOpen, setIsRegisterOpen] = useState(false);
@@ -47,8 +42,8 @@ export default function App() {
     setIsPassOpen(true);
   };
 
-  const scrollToGames = () => {
-    const el = document.getElementById('games');
+  const scrollToWorkflow = () => {
+    const el = document.getElementById('workflow') || document.getElementById('timeline') || document.getElementById('concept');
     if (el) {
       el.scrollIntoView({ behavior: 'smooth' });
     }
@@ -65,44 +60,29 @@ export default function App() {
       />
 
       <main>
-        {/* 1. Hero Section */}
+        {/* 1. Hero Section (HACKBACK, Inverted City, 4 Flying Cars Popups) */}
         <Hero
           onOpenRegister={() => setIsRegisterOpen(true)}
-          onScrollToGames={scrollToGames}
+          onScrollToGames={scrollToWorkflow}
           registeredCount={registeredCount}
         />
 
-        {/* 2. "What Is This?" Reverse Hackathon Concept */}
+        {/* 2. Reverse Hackathon Core Philosophy & Inquiries */}
         <ConceptSection />
 
-        {/* 3. The Four Games Section (♠, ♦, ♣, ♥) */}
-        <FourGamesSection />
-
-        {/* 4. How The Event Works (Two-Day Workflow Diagram) */}
+        {/* 3. How The Event Works (Two-Day Workflow Diagram) */}
         <EventWorkflow />
 
-        {/* 5. Day 1 & Day 2 Schedule Timelines */}
+        {/* 4. Day 1 & Day 2 Schedule Timelines */}
         <TimelineSection />
 
-        {/* 6. Player Visa System & Interactive Simulator */}
-        <VisaSection />
-
-        {/* 7. Risk & Reward (Standard vs High Risk) */}
-        <RiskRewardSection />
-
-        {/* 8. Live Borderland Leaderboard Preview */}
-        <LeaderboardSection />
-
-        {/* 9. "Who Should Enter?" Team Archetypes */}
-        <ArchetypesSection />
-
-        {/* 10. Rules Section (Borderland Protocol) */}
+        {/* 5. Rules Section (Borderland Protocol) */}
         <RulesSection />
 
-        {/* 11. FAQ Intel Section */}
+        {/* 6. FAQ Intel Section */}
         <FaqSection />
 
-        {/* 12. Organizers & Sponsors */}
+        {/* 7. Organizers & Sponsors */}
         <PartnersSection />
       </main>
 
@@ -123,7 +103,7 @@ export default function App() {
         registration={registeredData}
       />
 
-      {/* Mobile Sticky Quick CTA Bar (strictly within the 15% mobile viewport cap) */}
+      {/* Mobile Sticky Quick CTA Bar */}
       <div className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-[#08080a]/95 border-t border-neutral-800 p-2.5 backdrop-blur-md flex items-center justify-between gap-3">
         <div className="flex items-center gap-2 pl-2">
           <span className="w-2 h-2 rounded-full bg-red-600 animate-ping" />

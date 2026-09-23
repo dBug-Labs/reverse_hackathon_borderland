@@ -26,7 +26,7 @@ const syne = Syne({
   variable: '--font-syne',
 });
 
-const title = 'BORDERLAND PROTOCOL — Reverse Hackathon';
+const title = 'HACKBACK — Reverse Hackathon';
 const description =
   'Enter the Borderland. A 2-Day Reverse Hackathon where Player Groups uncover the secret purpose, architecture, and flaws of unknown products.';
 

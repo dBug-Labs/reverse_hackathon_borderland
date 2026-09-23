@@ -44,7 +44,7 @@ export const RulesSection: React.FC = () => {
             GOVERNING LAW
           </div>
           <h2 className="text-3xl sm:text-4xl md:text-5xl font-display font-bold text-white tracking-tight mb-4">
-            BORDERLAND PROTOCOL
+            HACKBACK
           </h2>
           <p className="text-xs sm:text-sm text-neutral-400 font-sans max-w-xl mx-auto">
             These four non-negotiable protocols govern every Player and every Game. Ignorance of the protocol is not an excuse.
