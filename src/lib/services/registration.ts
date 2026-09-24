@@ -4,6 +4,7 @@ import { getDb, getClient } from '@/lib/db';
 import { signMagicToken, signMagicLink } from '@/lib/security/magicLink';
 import type { Registration, Player, EventDoc } from '@/lib/types';
 import type { TeamInput, TeamDetailsInput, RegistrationSubmitInput } from '@/lib/validation/team';
+import { ENTRY_FEE } from '@/lib/fee';
 
 /**
  * Registration service — all business logic for creating and managing teams.
@@ -206,7 +207,8 @@ export async function restoreTeam(teamId: string): Promise<boolean> {
 
 export async function getActiveEvent(): Promise<EventDoc | null> {
   const db = await getDb();
-  return db.collection<EventDoc>('events').findOne({});
+  const event = await db.collection<EventDoc>('events').findOne({});
+  return event && { ...event, fee: ENTRY_FEE }; // fee lives in code, not the DB
 }
 
 // ── Capacity check ──────────────────────────────────────────────────────────

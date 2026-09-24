@@ -9,6 +9,7 @@ import { RegisterShell } from '@/components/RegisterShell';
 import { UpiQr } from '@/components/UpiQr';
 import { WhatsAppCommunityButton } from '@/components/WhatsAppButton';
 import { isSrmEmail, srmEmailMessage } from '@/lib/validation/email';
+import { ENTRY_FEE } from '@/lib/fee';
 
 const TURNSTILE_SITE_KEY = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY ?? '';
 const WHATSAPP_COMMUNITY_URL = process.env.NEXT_PUBLIC_WHATSAPP_COMMUNITY_URL ?? '';
@@ -74,7 +75,7 @@ export default function RegisterPage() {
 
   // Step 2 & 3 State
   const [teamId, setTeamId] = useState<string>('');
-  const [fee, setFee] = useState<number>(200);
+  const [fee, setFee] = useState<number>(ENTRY_FEE);
   const [upiId, setUpiId] = useState<string>('shauryaaojha@oksbi');
   const [payeeName, setPayeeName] = useState<string>('SRM DBUG Labs');
   const [utr, setUtr] = useState<string>('');
@@ -439,13 +440,13 @@ export default function RegisterPage() {
 
   return (
     <RegisterShell
-      eyebrow="Registration · ₹200 per team"
+      eyebrow={`Registration · ₹${ENTRY_FEE} per team`}
       title={currentStep === 3 ? 'Submission received' : currentStep === 2 ? 'Pay & submit' : 'Register your team'}
       subtitle={
         currentStep === 1
-          ? 'Teams of 2–4 SRM students. Build your hand, then pay ₹200 by UPI.'
+          ? `Teams of 2–4 SRM students. Build your hand, then pay ₹${ENTRY_FEE} by UPI.`
           : currentStep === 2
-          ? 'Pay ₹200 by UPI with your Team ID in the note, then submit the 12-digit UTR to register.'
+          ? `Pay ₹${ENTRY_FEE} by UPI with your Team ID in the note, then submit the 12-digit UTR to register.`
           : undefined
       }
       width="xl"
@@ -633,7 +634,7 @@ export default function RegisterPage() {
                   <Link href="/#protocol" className="text-[#f5eee1] underline underline-offset-4">
                     rules
                   </Link>
-                  . Our spot is confirmed only after the ₹200 UPI payment is verified.
+                  . Our spot is confirmed only after the ₹{ENTRY_FEE} UPI payment is verified.
                 </span>
               </label>
               <FieldError msg={errors.consent} />
@@ -1049,7 +1050,7 @@ function YourHand({ teamName, players }: { teamName: string; players: PlayerForm
           </div>
           <div>
             <dt className="font-label text-[10px] font-bold uppercase tracking-[0.16em] text-[var(--ink)]/55">Entry</dt>
-            <dd className="font-poster text-xl uppercase leading-none mt-1">₹200</dd>
+            <dd className="font-poster text-xl uppercase leading-none mt-1">₹{ENTRY_FEE}</dd>
           </div>
         </dl>
       </div>

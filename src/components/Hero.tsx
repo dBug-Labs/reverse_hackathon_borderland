@@ -4,6 +4,7 @@ import React, { useEffect, useState } from 'react';
 import { X, ArrowRight, ArrowDown, Clock } from 'lucide-react';
 import { playHudClick, playHudHover } from '../utils/sound';
 import { FloatingCards } from './FloatingCards';
+import { ENTRY_FEE } from '@/lib/fee';
 
 interface HeroProps {
   onOpenRegister: () => void;
@@ -125,7 +126,7 @@ const EVENT_FACTS = [
   { label: 'Date', value: '5 & 6 Oct', sub: '9 AM – 5 PM' },
   { label: 'Venue', value: 'TP2 712', sub: 'SRM IST' },
   { label: 'Team size', value: '2–4', sub: 'members' },
-  { label: 'Entry fee', value: '₹200', sub: 'per team' },
+  { label: 'Entry fee', value: `₹${ENTRY_FEE}`, sub: 'per team' },
 ];
 
 const suitColor = (red: boolean) => (red ? 'text-[var(--card-red)]' : 'text-[var(--ink)]');

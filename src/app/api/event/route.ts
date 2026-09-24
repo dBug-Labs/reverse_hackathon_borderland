@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getDb } from '@/lib/db';
+import { getActiveEvent } from '@/lib/services/registration';
 import type { EventDoc, EventState, SeatsHint } from '@/lib/types';
 
 /**
@@ -43,7 +44,7 @@ export async function GET(_req: NextRequest) {
   try {
     const db = await getDb();
 
-    const event = await db.collection<EventDoc>('events').findOne({});
+    const event = await getActiveEvent();
     if (!event) {
       return NextResponse.json(
         { ok: false, code: 'NOT_FOUND', message: 'No event configured' },

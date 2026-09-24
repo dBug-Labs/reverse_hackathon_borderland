@@ -10,6 +10,7 @@
 import { MongoClient } from 'mongodb';
 import { readFileSync, existsSync } from 'fs';
 import { resolve } from 'path';
+import { ENTRY_FEE } from '../src/lib/fee';
 
 // Auto-load .env.local, then .env, if MONGODB_URI isn't already exported
 if (!process.env.MONGODB_URI) {
@@ -58,7 +59,7 @@ async function seedEvent() {
     registrationClosesAt: new Date('2026-10-03T23:59:59+05:30'),
     forceClosed: false,
     capacity: 120,
-    fee: 200,
+    fee: ENTRY_FEE,
     teamSize: { min: 2, max: 4 },
     upiId: 'shauryaaojha@oksbi',
     payeeName: 'DBUG Labs',

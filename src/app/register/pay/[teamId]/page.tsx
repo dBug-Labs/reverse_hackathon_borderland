@@ -17,6 +17,7 @@ import { RegisterShell } from '@/components/RegisterShell';
 import { UpiQr } from '@/components/UpiQr';
 import { WhatsAppCommunityButton } from '@/components/WhatsAppButton';
 import { buildUpiIntent } from '@/lib/upi';
+import { ENTRY_FEE } from '@/lib/fee';
 
 const TURNSTILE_SITE_KEY = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY ?? '';
 const WHATSAPP_COMMUNITY_URL = process.env.NEXT_PUBLIC_WHATSAPP_COMMUNITY_URL ?? '';
@@ -27,7 +28,7 @@ export default function ResumePaymentPage() {
   // Signed pay token from the email link (/register/pay/DBG-472?t=...)
   const payToken = useSearchParams().get('t') ?? '';
 
-  const [fee, setFee] = useState(200);
+  const [fee, setFee] = useState(ENTRY_FEE);
   const [upiId, setUpiId] = useState('shauryaaojha@oksbi');
   const [payeeName, setPayeeName] = useState('SRM DBUG Labs');
   const [utr, setUtr] = useState('');

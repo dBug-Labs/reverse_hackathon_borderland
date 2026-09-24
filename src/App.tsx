@@ -15,6 +15,7 @@ import { Footer } from './components/Footer';
 import { EntryPassModal } from './components/EntryPassModal';
 import { playHudClick } from './utils/sound';
 import { ShieldCheck } from 'lucide-react';
+import { ENTRY_FEE } from '@/lib/fee';
 
 export default function App() {
   const router = useRouter();
@@ -84,7 +85,7 @@ export default function App() {
       <div className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-[#08080a]/95 border-t border-neutral-800 px-4 py-2.5 backdrop-blur-md flex items-center justify-between gap-3">
         <div className="font-label leading-tight">
           <div className="text-sm font-bold text-neutral-100">5 & 6 Oct · TP2 712</div>
-          <div className="text-xs text-neutral-400">₹200 per team · 2–4 members</div>
+          <div className="text-xs text-neutral-400">₹{ENTRY_FEE} per team · 2–4 members</div>
         </div>
 
         {registeredData ? (
