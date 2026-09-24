@@ -75,7 +75,14 @@ export async function POST(req: NextRequest) {
     const candidateTeamId = await pickCandidateTeamId(event);
     return NextResponse.json({
       ok: true,
-      data: { candidateTeamId, upi: upiDetails(event, candidateTeamId) },
+      data: {
+        candidateTeamId,
+        upi: upiDetails(event, candidateTeamId),
+        whatsappCommunityUrl:
+          process.env.NEXT_PUBLIC_WHATSAPP_COMMUNITY_URL ||
+          process.env.WHATSAPP_COMMUNITY_URL ||
+          '',
+      },
     });
   } catch (error) {
     console.error('POST /api/registrations/check error:', error);

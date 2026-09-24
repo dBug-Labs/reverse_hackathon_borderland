@@ -15,9 +15,11 @@ import {
 import { playHudClick, playAccessGranted } from '@/utils/sound';
 import { RegisterShell } from '@/components/RegisterShell';
 import { UpiQr } from '@/components/UpiQr';
+import { WhatsAppCommunityButton } from '@/components/WhatsAppButton';
 import { buildUpiIntent } from '@/lib/upi';
 
 const TURNSTILE_SITE_KEY = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY ?? '';
+const WHATSAPP_COMMUNITY_URL = process.env.NEXT_PUBLIC_WHATSAPP_COMMUNITY_URL ?? '';
 
 export default function ResumePaymentPage() {
   const params = useParams();
@@ -35,6 +37,7 @@ export default function ResumePaymentPage() {
   const [copiedTeamId, setCopiedTeamId] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isCompleted, setIsCompleted] = useState(false);
+  const [whatsappUrl, setWhatsappUrl] = useState(WHATSAPP_COMMUNITY_URL);
   const [errorMsg, setErrorMsg] = useState<string | null>(
     payToken ? null : 'This payment link is incomplete. Open the link from your registration email.'
   );
@@ -52,6 +55,9 @@ export default function ResumePaymentPage() {
         setFee(event.fee);
         setUpiId(event.upiId);
         setPayeeName(event.payeeName);
+        if (event.whatsappCommunityUrl) {
+          setWhatsappUrl(event.whatsappCommunityUrl);
+        }
         setEventLoaded(true);
       })
       .catch(() => {
@@ -340,12 +346,25 @@ export default function ResumePaymentPage() {
                 We&apos;ll check your UTR against our bank statement and email the team leader as soon as
                 it&apos;s verified. Your Entry Visa comes with that email.
               </p>
-              <Link
-                href="/"
-                className="mt-6 inline-flex items-center gap-2 px-6 py-3 bg-[var(--card-red)] hover:brightness-110 text-white font-label text-sm font-bold rounded-md"
-              >
-                Back to the site
-              </Link>
+              {whatsappUrl && (
+                <div className="mt-6 p-4 rounded-xl bg-[#25D366]/10 border border-[#25D366]/30 text-center max-w-md mx-auto">
+                  <p className="font-label text-xs uppercase tracking-widest text-[#15803d] font-bold mb-1">
+                    Official Participant Community
+                  </p>
+                  <p className="text-xs font-label text-[var(--ink)]/80 mb-3">
+                    Join the WhatsApp community for schedule announcements and coordinator support.
+                  </p>
+                  <WhatsAppCommunityButton href={whatsappUrl} className="w-full sm:w-auto" />
+                </div>
+              )}
+              <div className="mt-6">
+                <Link
+                  href="/"
+                  className="inline-flex items-center gap-2 px-6 py-3 bg-[var(--card-red)] hover:brightness-110 text-white font-label text-sm font-bold rounded-md"
+                >
+                  Back to the site
+                </Link>
+              </div>
             </div>
           </div>
         )}

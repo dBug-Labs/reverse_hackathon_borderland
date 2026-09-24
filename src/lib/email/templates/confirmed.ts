@@ -8,7 +8,7 @@
  * Data: teamId, teamName, players[], venue, day1Date, day2Date, statusLink
  */
 import QRCode from 'qrcode';
-import { C, button, emailLayout, esc, label, playersTable } from '../layout';
+import { C, button, whatsappButton, emailLayout, esc, label, playersTable } from '../layout';
 
 type Data = {
   teamId: string;
@@ -18,6 +18,7 @@ type Data = {
   day1Date: string;
   day2Date: string;
   statusLink?: string;
+  whatsappUrl?: string;
 };
 
 export async function attachments(data: Record<string, unknown>) {
@@ -33,6 +34,12 @@ export async function attachments(data: Record<string, unknown>) {
 
 export function render(data: Record<string, unknown>) {
   const d = data as Data;
+
+  const whatsappUrl =
+    (d.whatsappUrl as string | undefined) ||
+    process.env.NEXT_PUBLIC_WHATSAPP_COMMUNITY_URL ||
+    process.env.WHATSAPP_COMMUNITY_URL ||
+    '';
 
   const subject = `Payment verified — your Entry Visa for HACKBACK (${d.teamId})`;
 
@@ -52,7 +59,7 @@ Starting Visa Points: 03
 
 Show the attendance QR in this email at the check-in desk on both days.
 Every player must bring their SRM ID card.
-
+${whatsappUrl ? `\nJoin the official WhatsApp Community: ${whatsappUrl}\n` : ''}
 HACKBACK · dBug Labs`;
 
   const body = `
@@ -95,7 +102,10 @@ HACKBACK · dBug Labs`;
 
     <p style="margin:16px 0 0;color:#4a423b;"><strong style="color:${C.red};">At the desk:</strong> show this QR on Day 1 and Day 2. Every player must carry their <strong>SRM ID card</strong> &mdash; we check it against the names above.</p>
 
-    ${d.statusLink ? `<div style="text-align:center;margin:22px 0 10px;">${button(d.statusLink, 'View your status')}</div>` : ''}`;
+    <div style="text-align:center;margin:22px 0 10px;">
+      ${whatsappUrl ? `<div style="margin-bottom:12px;">${whatsappButton(whatsappUrl, 'Join WhatsApp Community')}</div>` : ''}
+      ${d.statusLink ? `<div>${button(d.statusLink, 'View your status')}</div>` : ''}
+    </div>`;
 
   return { subject, html: emailLayout({ preheader: `${d.teamId} is confirmed — your Entry Visa is inside.`, bodyHtml: body }), text };
 }

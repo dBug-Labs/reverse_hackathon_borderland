@@ -62,6 +62,7 @@ export async function POST(
           }),
           visaLink,
           statusLink,
+          whatsappUrl: process.env.NEXT_PUBLIC_WHATSAPP_COMMUNITY_URL || process.env.WHATSAPP_COMMUNITY_URL || '',
         },
         dedupeKey: `CONFIRMED:${teamId}:${team.currentPaymentId}`,
       });

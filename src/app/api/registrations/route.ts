@@ -167,7 +167,20 @@ export async function POST(req: NextRequest) {
       }
     });
 
-    return NextResponse.json({ ok: true, data: { teamId, status: 'UNDER_REVIEW' } }, { status: 201 });
+    return NextResponse.json(
+      {
+        ok: true,
+        data: {
+          teamId,
+          status: 'UNDER_REVIEW',
+          whatsappCommunityUrl:
+            process.env.NEXT_PUBLIC_WHATSAPP_COMMUNITY_URL ||
+            process.env.WHATSAPP_COMMUNITY_URL ||
+            '',
+        },
+      },
+      { status: 201 }
+    );
   } catch (error) {
     console.error('POST /api/registrations error:', error);
     return NextResponse.json(

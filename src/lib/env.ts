@@ -37,6 +37,8 @@ const envSchema = z
     // ── Config ─────────────────────────────────────────────────
     ALLOWED_EMAIL_DOMAIN: z.string().min(1).default('srmist.edu.in'),
     APP_URL: z.string().url('APP_URL must be a valid URL'),
+    NEXT_PUBLIC_WHATSAPP_COMMUNITY_URL: z.string().optional().default(''),
+    WHATSAPP_COMMUNITY_URL: z.string().optional().default(''),
   })
   .superRefine((env, ctx) => {
     if (env.ADMIN_PASSWORD === env.ATTENDANCE_PASSWORD) {

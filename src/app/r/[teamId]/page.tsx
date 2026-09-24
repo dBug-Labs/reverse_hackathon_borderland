@@ -4,6 +4,9 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useSearchParams } from 'next/navigation';
 import { Clock, CheckCircle2, XCircle, AlertTriangle } from 'lucide-react';
 import { RegisterShell } from '@/components/RegisterShell';
+import { WhatsAppCommunityButton } from '@/components/WhatsAppButton';
+
+const WHATSAPP_COMMUNITY_URL = process.env.NEXT_PUBLIC_WHATSAPP_COMMUNITY_URL ?? '';
 
 interface StatusData {
   teamId: string;
@@ -15,6 +18,7 @@ interface StatusData {
   canResubmit: boolean;
   hasVisa: boolean;
   createdAt?: string;
+  whatsappCommunityUrl?: string;
 }
 
 export default function RegistrationStatusPage() {
@@ -25,6 +29,7 @@ export default function RegistrationStatusPage() {
 
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState<StatusData | null>(null);
+  const [whatsappUrl, setWhatsappUrl] = useState(WHATSAPP_COMMUNITY_URL);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -40,6 +45,9 @@ export default function RegistrationStatusPage() {
       .then((json) => {
         if (json.ok) {
           setData(json.data);
+          if (json.data.whatsappCommunityUrl) {
+            setWhatsappUrl(json.data.whatsappCommunityUrl);
+          }
         } else {
           setError(json.message || 'Registration not found');
         }
@@ -139,6 +147,12 @@ export default function RegistrationStatusPage() {
                 <p className="text-sm font-label text-[var(--ink)]/70">
                   Use the payment link in your registration email to submit your UTR.
                 </p>
+              )}
+
+              {whatsappUrl && (
+                <div className="pt-2">
+                  <WhatsAppCommunityButton href={whatsappUrl} className="w-full" />
+                </div>
               )}
             </div>
           ) : null}

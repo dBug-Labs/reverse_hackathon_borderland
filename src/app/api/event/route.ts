@@ -88,6 +88,10 @@ export async function GET(_req: NextRequest) {
         seatsHint,
         confirmedCount,
         underReviewCount,
+        whatsappCommunityUrl:
+          process.env.NEXT_PUBLIC_WHATSAPP_COMMUNITY_URL ||
+          process.env.WHATSAPP_COMMUNITY_URL ||
+          '',
       },
     });
   } catch (error) {

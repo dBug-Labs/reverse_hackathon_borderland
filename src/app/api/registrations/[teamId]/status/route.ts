@@ -59,6 +59,10 @@ export async function GET(
         hasVisa: team.status === 'CONFIRMED',
         createdAt: team.createdAt,
         updatedAt: team.updatedAt,
+        whatsappCommunityUrl:
+          process.env.NEXT_PUBLIC_WHATSAPP_COMMUNITY_URL ||
+          process.env.WHATSAPP_COMMUNITY_URL ||
+          '',
       },
     });
   } catch (error) {

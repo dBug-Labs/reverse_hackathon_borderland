@@ -1,14 +1,16 @@
 'use client';
 
-import React, { useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { Turnstile, type TurnstileInstance } from '@marsidev/react-turnstile';
 import { ArrowRight, Check, AlertCircle, Copy, Clock } from 'lucide-react';
 import { playHudClick, playAccessGranted } from '@/utils/sound';
 import { RegisterShell } from '@/components/RegisterShell';
 import { UpiQr } from '@/components/UpiQr';
+import { WhatsAppCommunityButton } from '@/components/WhatsAppButton';
 
 const TURNSTILE_SITE_KEY = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY ?? '';
+const WHATSAPP_COMMUNITY_URL = process.env.NEXT_PUBLIC_WHATSAPP_COMMUNITY_URL ?? '';
 
 // The API names the player field `fullName`; this form calls it `name`.
 function toFormErrors(fields: Record<string, string>): Record<string, string> {
@@ -78,6 +80,19 @@ export default function RegisterPage() {
   const [confirmUtr, setConfirmUtr] = useState<string>('');
   const [payerName, setPayerName] = useState<string>('');
   const [paymentSuccessStatus, setPaymentSuccessStatus] = useState<string>('UNDER_REVIEW');
+  const [whatsappUrl, setWhatsappUrl] = useState<string>(WHATSAPP_COMMUNITY_URL);
+
+  useEffect(() => {
+    fetch('/api/event')
+      .then((res) => res.json())
+      .then((json) => {
+        if (!json.ok) return;
+        if (json.data?.whatsappCommunityUrl) {
+          setWhatsappUrl(json.data.whatsappCommunityUrl);
+        }
+      })
+      .catch(() => {});
+  }, []);
 
   // API plumbing: idempotency key + time-trap; Turnstile runs on the final submit
   const [idempotencyKey] = useState(() => crypto.randomUUID());
@@ -236,6 +251,9 @@ export default function RegisterPage() {
       setUpiId(result.upi.id);
       setPayeeName(result.upi.payeeName);
       setUpiQrString(result.upi.qrString);
+      if (result.whatsappCommunityUrl) {
+        setWhatsappUrl(result.whatsappCommunityUrl);
+      }
       setCurrentStep(2);
       window.scrollTo({ top: 0, behavior: 'smooth' });
     } catch {
@@ -303,6 +321,9 @@ export default function RegisterPage() {
       setTeamId(data.data.teamId); // final ID (the suggested one unless it was just taken)
       playAccessGranted();
       setPaymentSuccessStatus(data.data?.status || 'UNDER_REVIEW');
+      if (data.data?.whatsappCommunityUrl) {
+        setWhatsappUrl(data.data.whatsappCommunityUrl);
+      }
       setCurrentStep(3);
       window.scrollTo({ top: 0, behavior: 'smooth' });
     } catch {
@@ -748,6 +769,20 @@ export default function RegisterPage() {
               <dt className="text-[var(--ink)]/55">UTR</dt>
               <dd className="font-semibold text-right tabular-nums">{utr}</dd>
             </dl>
+
+            {whatsappUrl && (
+              <div className="mt-8 p-5 rounded-xl bg-[#25D366]/10 border border-[#25D366]/30 text-center">
+                <p className="font-label text-xs uppercase tracking-widest text-[#15803d] font-bold">
+                  Official Participant Community
+                </p>
+                <p className="mt-1.5 text-sm font-label text-[var(--ink)]/80 max-w-md mx-auto leading-relaxed">
+                  Join the WhatsApp community for round updates, game announcements, and organizer support.
+                </p>
+                <div className="mt-4">
+                  <WhatsAppCommunityButton href={whatsappUrl} className="w-full sm:w-auto" />
+                </div>
+              </div>
+            )}
 
             <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-3">
               <button

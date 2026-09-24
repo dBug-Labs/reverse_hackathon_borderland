@@ -36,6 +36,10 @@ export const label = (text: string) =>
 export const button = (href: string, text: string) =>
   `<a href="${esc(href)}" style="display:inline-block;background:${C.red};color:#ffffff;font-family:${C.body};font-size:15px;font-weight:700;text-decoration:none;padding:14px 28px;border-radius:8px;">${esc(text)}</a>`;
 
+/** WhatsApp call-to-action button */
+export const whatsappButton = (href: string, text = 'Join WhatsApp Community') =>
+  `<a href="${esc(href)}" target="_blank" rel="noopener noreferrer" style="display:inline-block;background:#25D366;color:#111b21;font-family:${C.body};font-size:15px;font-weight:700;text-decoration:none;padding:14px 28px;border-radius:8px;box-shadow:0 2px 6px rgba(0,0,0,0.15);">${esc(text)} &rarr;</a>`;
+
 export function emailLayout(opts: { preheader: string; bodyHtml: string }): string {
   const wordmark = `${appUrl()}/brand/hackback-wordmark.png`;
   const contacts = CONTACTS.map(
