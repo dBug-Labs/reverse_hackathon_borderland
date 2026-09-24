@@ -8,6 +8,7 @@ import { playHudClick, playAccessGranted } from '@/utils/sound';
 import { RegisterShell } from '@/components/RegisterShell';
 import { UpiQr } from '@/components/UpiQr';
 import { WhatsAppCommunityButton } from '@/components/WhatsAppButton';
+import { isSrmEmail, srmEmailMessage } from '@/lib/validation/email';
 
 const TURNSTILE_SITE_KEY = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY ?? '';
 const WHATSAPP_COMMUNITY_URL = process.env.NEXT_PUBLIC_WHATSAPP_COMMUNITY_URL ?? '';
@@ -73,7 +74,7 @@ export default function RegisterPage() {
 
   // Step 2 & 3 State
   const [teamId, setTeamId] = useState<string>('');
-  const [fee, setFee] = useState<number>(199);
+  const [fee, setFee] = useState<number>(200);
   const [upiId, setUpiId] = useState<string>('shauryaaojha@oksbi');
   const [payeeName, setPayeeName] = useState<string>('SRM DBUG Labs');
   const [utr, setUtr] = useState<string>('');
@@ -100,6 +101,15 @@ export default function RegisterPage() {
   const [upiQrString, setUpiQrString] = useState('');
   const [registerToken, setRegisterToken] = useState('');
   const registerTurnstile = useRef<TurnstileInstance | undefined>(undefined);
+
+  // Leader email OTP — must be verified before the payment step
+  const [otpOpen, setOtpOpen] = useState(false);
+  const [otpToken, setOtpToken] = useState('');
+  const [otpCode, setOtpCode] = useState('');
+  const [otpSending, setOtpSending] = useState(false);
+  const [leaderEmailToken, setLeaderEmailToken] = useState('');
+  const [verifiedEmail, setVerifiedEmail] = useState('');
+  const pendingCheck = useRef<any>(null);
 
   // Handle Team Size change
   const handleTeamSizeChange = (newSize: number) => {
@@ -128,6 +138,13 @@ export default function RegisterPage() {
     updated[index] = { ...updated[index], [field]: value };
     setPlayers(updated);
 
+    // Leader email changed → the OTP flow starts over
+    if (index === 0 && field === 'email') {
+      setOtpOpen(false);
+      setOtpToken('');
+      setOtpCode('');
+    }
+
     // Clear field-specific error if present
     const errKey = `players.${index}.${field}`;
     if (errors[errKey]) {
@@ -151,7 +168,6 @@ export default function RegisterPage() {
       newErrors.consent = 'You must accept the protocol rules to continue';
     }
 
-    const emailRegex = /^[a-z0-9._%+-]+@srmist\.edu\.in$/i;
     const regNoRegex = /^RA\d{13}$/i;
     const phoneRegex = /^[6-9]\d{9}$/;
 
@@ -164,8 +180,8 @@ export default function RegisterPage() {
       }
 
       const cleanEmail = p.email.trim().toLowerCase();
-      if (!emailRegex.test(cleanEmail)) {
-        newErrors[`players.${idx}.email`] = 'Must be an official @srmist.edu.in email';
+      if (!isSrmEmail(cleanEmail)) {
+        newErrors[`players.${idx}.email`] = srmEmailMessage();
       } else if (seenEmails.has(cleanEmail)) {
         newErrors[`players.${idx}.email`] = 'Duplicate email within the team';
       } else {
@@ -215,6 +231,7 @@ export default function RegisterPage() {
   // Step 1: check the team (nothing is saved, no Team ID is reserved)
   const handleStep1Submit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (otpOpen) return handleOtpSubmit(); // Enter in the code box
     playHudClick();
     setGlobalError(null);
 
@@ -243,24 +260,92 @@ export default function RegisterPage() {
         return;
       }
 
-      // Details look good — show the payment step with a suggested Team ID
-      const result = data.data;
-      playAccessGranted();
-      setTeamId(result.candidateTeamId);
-      setFee(result.upi.amount);
-      setUpiId(result.upi.id);
-      setPayeeName(result.upi.payeeName);
-      setUpiQrString(result.upi.qrString);
-      if (result.whatsappCommunityUrl) {
-        setWhatsappUrl(result.whatsappCommunityUrl);
+      // Details look good — the leader verifies their email, then pays
+      pendingCheck.current = data.data;
+      if (leaderEmailToken && verifiedEmail === players[0].email.trim().toLowerCase()) {
+        goToPayment();
+      } else {
+        await sendOtp();
       }
-      setCurrentStep(2);
-      window.scrollTo({ top: 0, behavior: 'smooth' });
     } catch {
       setGlobalError('Network communication failure. Please verify your connection.');
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  // Email the leader a 6-digit code
+  const sendOtp = async () => {
+    setOtpSending(true);
+    setGlobalError(null);
+    try {
+      const response = await fetch('/api/registrations/otp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: players[0].email.trim().toLowerCase(), website: honeypot }),
+      });
+      const data = await response.json();
+      if (!response.ok || !data.ok) {
+        if (data.fields) setErrors(toFormErrors(data.fields));
+        setGlobalError(data.message || "Couldn't send the verification code.");
+        return;
+      }
+      setOtpToken(data.data.otpToken);
+      setOtpCode('');
+      setOtpOpen(true);
+    } catch {
+      setGlobalError('Network communication failure. Please verify your connection.');
+    } finally {
+      setOtpSending(false);
+    }
+  };
+
+  const handleOtpSubmit = async () => {
+    playHudClick();
+    setGlobalError(null);
+    if (!/^\d{6}$/.test(otpCode.trim())) {
+      setErrors({ otp: 'Enter the 6-digit code from your email' });
+      return;
+    }
+    setIsSubmitting(true);
+    try {
+      const response = await fetch('/api/registrations/otp/verify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ otpToken, code: otpCode.trim() }),
+      });
+      const data = await response.json();
+      if (!response.ok || !data.ok) {
+        setErrors(data.fields || {});
+        setGlobalError(data.message || 'Verification failed.');
+        return;
+      }
+      setLeaderEmailToken(data.data.leaderEmailToken);
+      setVerifiedEmail(data.data.email);
+      setOtpOpen(false);
+      goToPayment();
+    } catch {
+      setGlobalError('Network communication failure. Please verify your connection.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  // Show the payment step with the suggested Team ID from the check
+  const goToPayment = () => {
+    const result = pendingCheck.current;
+    if (!result) return;
+    playAccessGranted();
+    setTeamId(result.candidateTeamId);
+    setFee(result.upi.amount);
+    setUpiId(result.upi.id);
+    setPayeeName(result.upi.payeeName);
+    setUpiQrString(result.upi.qrString);
+    if (result.whatsappCommunityUrl) {
+      setWhatsappUrl(result.whatsappCommunityUrl);
+    }
+    setCurrentStep(2);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   // Submit Step 2 (UTR Proof)
@@ -297,6 +382,7 @@ export default function RegisterPage() {
           payerUpi: payerName.trim() || undefined,
           turnstileToken: registerToken,
           idempotencyKey,
+          leaderEmailToken,
         }),
       });
 
@@ -309,6 +395,10 @@ export default function RegisterPage() {
         // Turnstile tokens are single-use — get a fresh one for the retry
         setRegisterToken('');
         registerTurnstile.current?.reset();
+        if (data.code === 'EMAIL_NOT_VERIFIED') {
+          setLeaderEmailToken('');
+          setVerifiedEmail('');
+        }
         // A problem with the team itself (e.g. a player registered meanwhile) → back to Step 1
         if (Object.keys(fields).some((k) => k.startsWith('players') || k === 'teamName')) {
           setCurrentStep(1);
@@ -349,13 +439,13 @@ export default function RegisterPage() {
 
   return (
     <RegisterShell
-      eyebrow="Registration · ₹199 per team"
+      eyebrow="Registration · ₹200 per team"
       title={currentStep === 3 ? 'Submission received' : currentStep === 2 ? 'Pay & submit' : 'Register your team'}
       subtitle={
         currentStep === 1
-          ? 'Teams of 2–4 SRM students. Build your hand, then pay ₹199 by UPI.'
+          ? 'Teams of 2–4 SRM students. Build your hand, then pay ₹200 by UPI.'
           : currentStep === 2
-          ? 'Pay ₹199 by UPI with your Team ID in the note, then submit the 12-digit UTR to register.'
+          ? 'Pay ₹200 by UPI with your Team ID in the note, then submit the 12-digit UTR to register.'
           : undefined
       }
       width="xl"
@@ -403,7 +493,8 @@ export default function RegisterPage() {
         <div className="grid lg:grid-cols-12 gap-10 lg:gap-12 items-start">
           <form onSubmit={handleStep1Submit} className="lg:col-span-7 space-y-14" noValidate>
             {/* Honeypot (hidden from people) */}
-            <div className="hidden" aria-hidden="true">
+            {/* Off-screen, not display:none — bots skip hidden inputs but fill these */}
+            <div aria-hidden="true" style={{ position: 'absolute', left: '-10000px', top: 'auto', width: 1, height: 1, overflow: 'hidden' }}>
               <label htmlFor="website">Website</label>
               <input id="website" type="text" name="website" value={honeypot} onChange={(e) => setHoneypot(e.target.value)} tabIndex={-1} autoComplete="off" />
             </div>
@@ -542,20 +633,65 @@ export default function RegisterPage() {
                   <Link href="/#protocol" className="text-[#f5eee1] underline underline-offset-4">
                     rules
                   </Link>
-                  . Our spot is confirmed only after the ₹199 UPI payment is verified.
+                  . Our spot is confirmed only after the ₹200 UPI payment is verified.
                 </span>
               </label>
               <FieldError msg={errors.consent} />
 
+              {otpOpen ? (
+                <div className="mt-6 rounded-xl border border-neutral-800 bg-[#0d0d10] p-4 sm:p-5">
+                  <p className="text-[15px] font-label text-neutral-300">
+                    We sent a 6-digit code to <span className="text-[#f5eee1] font-semibold">{players[0].email.trim().toLowerCase()}</span>. Enter it to verify the team leader&rsquo;s email.
+                  </p>
+                  <div className="mt-4 flex flex-col sm:flex-row gap-3">
+                    <input
+                      type="text"
+                      inputMode="numeric"
+                      autoComplete="one-time-code"
+                      maxLength={6}
+                      placeholder="123456"
+                      value={otpCode}
+                      onChange={(e) => {
+                        setOtpCode(e.target.value.replace(/\D/g, ''));
+                        if (errors.otp) setErrors((prev) => { const n = { ...prev }; delete n.otp; return n; });
+                      }}
+                      className={`${inputClass(errors.otp)} tracking-[0.4em] sm:max-w-[12rem]`}
+                    />
+                    <button
+                      type="button"
+                      onClick={handleOtpSubmit}
+                      disabled={isSubmitting}
+                      className="inline-flex items-center justify-center gap-3 rounded-lg bg-[var(--card-red)] px-6 py-3 font-poster uppercase text-xl tracking-wide text-white transition hover:brightness-110 disabled:bg-neutral-800 disabled:text-neutral-500"
+                    >
+                      {isSubmitting ? 'Verifying…' : 'Verify & pay'}
+                      {!isSubmitting && <ArrowRight className="w-5 h-5" />}
+                    </button>
+                  </div>
+                  <FieldError msg={errors.otp} />
+                  <button
+                    type="button"
+                    onClick={sendOtp}
+                    disabled={otpSending}
+                    className="mt-3 text-sm font-label text-neutral-400 underline underline-offset-4 hover:text-white disabled:text-neutral-600"
+                  >
+                    {otpSending ? 'Sending…' : "Didn't get it? Send a new code"}
+                  </button>
+                </div>
+              ) : (
               <button
                 type="submit"
-                disabled={isSubmitting}
+                disabled={isSubmitting || otpSending}
                 className="mt-6 w-full sm:w-auto inline-flex items-center justify-center gap-3 rounded-lg bg-[var(--card-red)] px-8 py-4 font-poster uppercase text-2xl tracking-wide text-white shadow-lg shadow-black/40 transition hover:brightness-110 disabled:bg-neutral-800 disabled:text-neutral-500 disabled:shadow-none"
               >
                 {isSubmitting ? (
                   <>
                     <span className="w-5 h-5 border-2 border-current border-t-transparent rounded-full animate-spin" />
                     Checking your team…
+                  </>
+                ) : otpSending ? (
+                  <>
+                    <span className="w-5 h-5 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                    Sending code…
                   </>
                 ) : (
                   <>
@@ -564,8 +700,9 @@ export default function RegisterPage() {
                   </>
                 )}
               </button>
+              )}
               <p className="mt-3 text-sm font-label text-neutral-500">
-                Nothing is saved yet — your team is registered when you submit the payment UTR.
+                Nothing is saved yet — the leader verifies their SRM email, then your team is registered when you submit the payment UTR.
               </p>
             </section>
           </form>
@@ -912,7 +1049,7 @@ function YourHand({ teamName, players }: { teamName: string; players: PlayerForm
           </div>
           <div>
             <dt className="font-label text-[10px] font-bold uppercase tracking-[0.16em] text-[var(--ink)]/55">Entry</dt>
-            <dd className="font-poster text-xl uppercase leading-none mt-1">₹199</dd>
+            <dd className="font-poster text-xl uppercase leading-none mt-1">₹200</dd>
           </div>
         </dl>
       </div>

@@ -7,6 +7,7 @@ import * as confirmed from './templates/confirmed';
 import * as rejected from './templates/rejected';
 import * as reminder from './templates/reminder';
 import * as yourLink from './templates/yourLink';
+import * as emailOtp from './templates/emailOtp';
 
 /**
  * Nodemailer transport (Gmail SMTP 465 SSL).
@@ -47,6 +48,7 @@ const templates: Record<string, {
   REJECTED: rejected,
   REMINDER: reminder,
   YOUR_LINK: yourLink,
+  EMAIL_OTP: emailOtp,
   EVENT_REMINDER: reminder, // reuse reminder template with different data
 };
 

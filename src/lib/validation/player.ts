@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { DEFAULT_EMAIL_DOMAIN, isSrmEmail, srmEmailMessage } from './email';
 
 /**
  * Zod schema for a single player in the team.
@@ -7,7 +8,7 @@ import { z } from 'zod';
  * The server NEVER trusts the browser — this schema runs on both sides.
  */
 
-const DEFAULT_DOMAIN = 'srmist.edu.in';
+const DEFAULT_DOMAIN = DEFAULT_EMAIL_DOMAIN;
 
 export function createPlayerSchema(allowedDomain: string = DEFAULT_DOMAIN) {
   return z.object({
@@ -27,10 +28,7 @@ export function createPlayerSchema(allowedDomain: string = DEFAULT_DOMAIN) {
       .trim()
       .toLowerCase()
       .email('Enter a valid email address')
-      .refine(
-        (e) => e.endsWith(`@${allowedDomain}`),
-        { message: `Use your SRM email (@${allowedDomain})` }
-      ),
+      .refine((e) => isSrmEmail(e, allowedDomain), { message: srmEmailMessage(allowedDomain) }),
 
     regNo: z
       .string()

@@ -5,6 +5,8 @@ import { getDb } from '@/lib/db';
 import { signMagicLink } from '@/lib/security/magicLink';
 import { getActiveEvent } from '@/lib/services/registration';
 import { enqueueEmail } from '@/lib/services/email';
+import { isSrmEmail, srmEmailMessage } from '@/lib/validation/email';
+import { getEnv } from '@/lib/env';
 import type { Registration } from '@/lib/types';
 
 /**
@@ -25,6 +27,15 @@ export async function POST(req: NextRequest) {
     if (!email) {
       return NextResponse.json(
         { ok: false, code: 'VALIDATION_ERROR', message: 'Enter your email' },
+        { status: 400 }
+      );
+    }
+
+    // Only SRM emails can be registered — reject anything else before touching the DB
+    const domain = getEnv().ALLOWED_EMAIL_DOMAIN;
+    if (!isSrmEmail(email, domain)) {
+      return NextResponse.json(
+        { ok: false, code: 'VALIDATION_ERROR', message: srmEmailMessage(domain) },
         { status: 400 }
       );
     }

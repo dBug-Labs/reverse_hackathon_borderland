@@ -4,6 +4,7 @@ import { registrationSubmitSchema } from '@/lib/validation/team';
 import { verifyTurnstileToken } from '@/lib/security/turnstile';
 import { checkRateLimit, hashIp, getClientIp, logAbuse } from '@/lib/security/rateLimit';
 import { signMagicLink } from '@/lib/security/magicLink';
+import { verifyLeaderEmailToken } from '@/lib/security/emailOtp';
 import {
   createTeamWithPayment,
   getActiveEvent,
@@ -25,7 +26,8 @@ import { enqueueEmail, processQueue } from '@/lib/services/email';
  * 1. Rate limit (5/10min + 20/day per IP)
  * 2. Honeypot (filled = fake success, save nothing)
  * 3. Time-trap (< 3s = reject)
- * 4. Zod validation (team + UTR)
+ * 4. Zod validation (team + UTR, strict SRM email format)
+ * 4b. Leader email verified by OTP (leaderEmailToken)
  * 5. Turnstile
  * 6. Event open + capacity, amount = fee
  * 7. Idempotency key (double-click returns the first result)
@@ -84,6 +86,21 @@ export async function POST(req: NextRequest) {
       );
     }
     const input = parsed.data;
+
+    // 4b. Leader email must have been verified by OTP before payment
+    const leaderEmail = input.players.find((p) => p.isLeader)!.email;
+    if (!(await verifyLeaderEmailToken(body.leaderEmailToken, leaderEmail))) {
+      await logAbuse(ipHashed, 'POST /api/registrations', 'leader_email_unverified');
+      return NextResponse.json(
+        {
+          ok: false,
+          code: 'EMAIL_NOT_VERIFIED',
+          message: "Verify the team leader's SRM email first.",
+          fields: { 'players.0.email': 'Verify this email with the code we send' },
+        },
+        { status: 403 }
+      );
+    }
 
     // 5. Turnstile
     const turnstile = await verifyTurnstileToken(input.turnstileToken, 'register');

@@ -52,7 +52,7 @@ const FAQS: FaqItem[] = [
   },
   {
     q: 'Who can register, and how big is a team?',
-    a: 'Teams have 2 to 4 members, and every member must be a current SRM student with an SRM email (@srmist.edu.in) and register number. Any department or year can join. Entry is ₹199 per team, paid by UPI when you register.',
+    a: 'Teams have 2 to 4 members, and every member must be a current SRM student with an SRM email (@srmist.edu.in) and register number. Any department or year can join. Entry is ₹200 per team, paid by UPI when you register.',
   },
 ];
 

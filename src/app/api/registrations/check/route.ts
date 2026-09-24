@@ -39,6 +39,15 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ ok: true, data: { candidateTeamId: 'DBG-000', fake: true } });
     }
 
+    // Time-trap — nobody fills a whole team in under 3 seconds
+    if (body._formOpenedAt && Date.now() - body._formOpenedAt < 3000) {
+      await logAbuse(ipHashed, 'POST /api/registrations/check', 'timetrap');
+      return NextResponse.json(
+        { ok: false, code: 'BOT_SUSPECTED', message: 'Please slow down and try again.' },
+        { status: 400 }
+      );
+    }
+
     const parsed = teamDetailsSchema.safeParse(body);
     if (!parsed.success) {
       const fields: Record<string, string> = {};
