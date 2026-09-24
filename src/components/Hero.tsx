@@ -138,8 +138,8 @@ const CornerIndex: React.FC<{ game: SuitGame; className?: string; size?: 'sm' | 
   size = 'sm',
 }) => (
   <div className={`flex flex-col items-center leading-none ${suitColor(game.red)} ${className}`}>
-    <span className={`font-poster ${size === 'lg' ? 'text-3xl' : 'text-xl sm:text-2xl'}`}>{game.cardRank}</span>
-    <span className={size === 'lg' ? 'text-2xl -mt-0.5' : 'text-base sm:text-lg -mt-0.5'}>{game.symbol}</span>
+    <span className={`font-poster ${size === 'lg' ? 'text-3xl' : 'text-lg sm:text-2xl'}`}>{game.cardRank}</span>
+    <span className={size === 'lg' ? 'text-2xl -mt-0.5' : 'text-sm sm:text-lg -mt-0.5'}>{game.symbol}</span>
   </div>
 );
 
@@ -156,18 +156,18 @@ const GameCard: React.FC<{ game: SuitGame; index: number; onOpen: () => void }> 
       onOpen();
     }}
     onMouseEnter={() => playHudHover()}
-    className="paper-card group relative w-full aspect-[5/7] rounded-xl p-2.5 sm:p-3 text-left transition-transform duration-200 hover:-translate-y-1.5 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[var(--card-red)]"
+    className="paper-card group relative w-full aspect-[5/6] sm:aspect-[5/7] rounded-xl p-1.5 sm:p-3 text-left transition-transform duration-200 hover:-translate-y-1.5 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[var(--card-red)]"
     aria-label={`${game.gameName}: read how game ${index + 1} works`}
   >
-    <div className="relative h-full rounded-lg border border-[var(--card-red)]/40 flex flex-col p-2 sm:p-3">
+    <div className="relative h-full rounded-lg border border-[var(--card-red)]/40 flex flex-col p-1.5 sm:p-3">
       <CornerIndex game={game} className="self-start" />
 
       <div className="flex-1 flex flex-col items-center justify-center text-center -mt-2">
-        <span className={`text-4xl sm:text-6xl leading-none ${suitColor(game.red)}`}>{game.symbol}</span>
-        <span className="mt-2 sm:mt-3 text-[10px] sm:text-[11px] font-label font-bold uppercase tracking-[0.18em] text-[var(--ink)]/55">
+        <span className={`text-3xl sm:text-6xl leading-none ${suitColor(game.red)}`}>{game.symbol}</span>
+        <span className="mt-1 sm:mt-3 text-[9px] sm:text-[11px] font-label font-bold uppercase tracking-[0.18em] text-[var(--ink)]/55">
           Game {index + 1}
         </span>
-        <span className="font-poster text-lg sm:text-2xl uppercase leading-[1.05] text-[var(--ink)] mt-0.5">
+        <span className="font-poster text-base sm:text-2xl uppercase leading-[1.05] text-[var(--ink)] mt-0.5">
           {game.gameName}
         </span>
         <span className="hidden sm:block text-xs font-label text-[var(--ink)]/65 mt-1">{game.role}</span>
@@ -394,7 +394,7 @@ export const Hero: React.FC<HeroProps> = ({ onOpenRegister }) => {
             </p>
           </div>
 
-          <div className="mt-10 grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+          <div className="mt-10 grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
             {ORDER.map((key, i) => (
               <GameCard key={key} game={GAMES[key]} index={i} onOpen={() => setOpenGame(key)} />
             ))}
