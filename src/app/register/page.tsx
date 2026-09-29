@@ -8,6 +8,8 @@ import { playHudClick, playAccessGranted } from '@/utils/sound';
 import { RegisterShell } from '@/components/RegisterShell';
 import { UpiQr } from '@/components/UpiQr';
 import { WhatsAppCommunityButton } from '@/components/WhatsAppButton';
+import { SlotsBanner, isSoldOut } from '@/components/SlotsBanner';
+import { useRegistrationData } from '@/lib/registrationData';
 import { isSrmEmail, srmEmailMessage } from '@/lib/validation/email';
 import { ENTRY_FEE } from '@/lib/fee';
 
@@ -45,6 +47,7 @@ export default function RegisterPage() {
   const [honeypot, setHoneypot] = useState(''); // Anti-bot honeypot
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [globalError, setGlobalError] = useState<string | null>(null);
+  const { data: regData, loading: regLoading } = useRegistrationData();
 
   const [players, setPlayers] = useState<PlayerFormState[]>([
     {
@@ -488,6 +491,9 @@ export default function RegisterPage() {
           <span>{globalError}</span>
         </div>
       )}
+
+      {/* Slots urgency banner */}
+      {currentStep === 1 && <SlotsBanner data={regData} loading={regLoading} />}
 
       {/* ─────────────────────────── STEP 1 ─────────────────────────── */}
       {currentStep === 1 && (
