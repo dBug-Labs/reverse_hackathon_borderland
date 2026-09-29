@@ -274,3 +274,26 @@
 .animate-float {
   animation: float 4s ease-in-out infinite;
 }
+
+/* ── Registration ticker (infinite scroll) ── */
+@keyframes ticker-scroll {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); }
+}
+.ticker-track {
+  animation: ticker-scroll 35s linear infinite;
+  will-change: transform;
+}
+.ticker-strip:hover .ticker-track {
+  animation-play-state: paused;
+}
+@media (prefers-reduced-motion: reduce) {
+  .ticker-track {
+    animation: none;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  .ticker-live-dot .animate-ping {
+    animation: none;
+  }
+}

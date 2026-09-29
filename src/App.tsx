@@ -13,6 +13,9 @@ import { FaqSection } from './components/FaqSection';
 import { PartnersSection } from './components/PartnersSection';
 import { Footer } from './components/Footer';
 import { EntryPassModal } from './components/EntryPassModal';
+import { RegistrationTicker } from './components/RegistrationTicker';
+import { UrgencyPopup } from './components/UrgencyPopup';
+import { useRegistrationData } from '@/lib/registrationData';
 import { playHudClick } from './utils/sound';
 import { ShieldCheck } from 'lucide-react';
 import { ENTRY_FEE } from '@/lib/fee';
@@ -21,6 +24,7 @@ export default function App() {
   const router = useRouter();
   const [isPassOpen, setIsPassOpen] = useState(false);
   const [registeredData, setRegisteredData] = useState<TeamRegistration | null>(null);
+  const { data: regData } = useRegistrationData();
 
   // Check for existing registration in localStorage on mount
   useEffect(() => {
@@ -52,6 +56,11 @@ export default function App() {
         {/* 1. Hero (poster) + the four games */}
         <Hero onOpenRegister={openRegister} />
 
+        {/* Live registration ticker */}
+        <div id="registration-ticker">
+          <RegistrationTicker data={regData} />
+        </div>
+
         {/* 2. Reverse Hackathon Core Philosophy & Inquiries */}
         <ConceptSection />
 
@@ -75,6 +84,9 @@ export default function App() {
       <Footer />
 
       {/* Digital Entry Pass / Visa Pass Modal */}
+      {/* Urgency popup — only on landing, never if already registered */}
+      {!registeredData && <UrgencyPopup data={regData} />}
+
       <EntryPassModal
         isOpen={isPassOpen}
         onClose={() => setIsPassOpen(false)}
