@@ -55,6 +55,10 @@ const FAQS: FaqItem[] = [
     q: 'Who can register, and how big is a team?',
     a: `Teams have 2 to 4 members, and every member must be a current SRM student with an SRM email (@srmist.edu.in) and register number. Any department or year can join. Entry is ₹${ENTRY_FEE} per team, paid by UPI when you register.`,
   },
+  {
+    q: 'What are the prizes and perks?',
+    a: 'Winners and top-performing teams receive cash prizes, official goodies, refreshments, and exclusive internship & learning opportunities provided by our official sponsors CyberThulir (cyberthulir.com) and HebeSec Technologies (hebesec.com).',
+  },
 ];
 
 export const FaqSection: React.FC = () => {

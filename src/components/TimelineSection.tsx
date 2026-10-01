@@ -125,7 +125,7 @@ export const TimelineSection: React.FC = () => {
       time: '4:45 – 5:00 PM',
       title: 'Closing Ceremony — Borderland Survivors',
       badge: 'Winners announced',
-      desc: 'The final leaderboard is locked, winners are announced and prizes are given out. The top team is crowned the "Ultimate Survivors" of the Borderland — then a group photo.',
+      desc: 'The final leaderboard is locked, winners are announced, and prizes & internship opportunities with CyberThulir are awarded. The top team is crowned the "Ultimate Survivors" of the Borderland — then a group photo.',
       suit: null,
     },
   ];
