@@ -74,7 +74,7 @@ export function emailLayout(opts: { preheader: string; bodyHtml: string }): stri
       </td></tr>
 
       <tr><td style="padding:24px 8px 0;font-family:${C.body};font-size:12px;line-height:1.7;color:#8a8076;text-align:center;">
-        HACKBACK · 5 &amp; 6 October, 9 AM – 5 PM · TP2 712, SRM IST<br>
+        HACKBACK · 5 &amp; 6 October · TP2 712, SRM IST<br>
         Questions? ${contacts}<br>
         <a href="mailto:${CONTACT_EMAIL}" style="color:#d9ccb2;">${CONTACT_EMAIL}</a> · Instagram <a href="https://www.instagram.com/dbuglabs/" style="color:#d9ccb2;">@dbuglabs</a><br>
         <span style="color:#5c544c;">dBug Labs · SRM Institute of Science and Technology</span>

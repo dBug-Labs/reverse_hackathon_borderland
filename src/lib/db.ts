@@ -52,7 +52,8 @@ function getClientPromise(): Promise<MongoClient> {
 
 export async function getDb(): Promise<Db> {
   const client = await getClientPromise();
-  return client.db('borderland');
+  // MONGODB_DB lets a local machine point at a test database (e.g. borderland_test).
+  return client.db(process.env.MONGODB_DB || 'borderland');
 }
 
 /**

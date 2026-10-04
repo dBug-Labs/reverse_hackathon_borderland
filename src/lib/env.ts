@@ -39,6 +39,8 @@ const envSchema = z
     APP_URL: z.string().url('APP_URL must be a valid URL'),
     NEXT_PUBLIC_WHATSAPP_COMMUNITY_URL: z.string().optional().default(''),
     WHATSAPP_COMMUNITY_URL: z.string().optional().default(''),
+    // Optional: GitHub token (no permissions needed) for repo checks; raises the rate limit
+    GITHUB_TOKEN: z.string().optional(),
   })
   .superRefine((env, ctx) => {
     if (env.ADMIN_PASSWORD === env.ATTENDANCE_PASSWORD) {

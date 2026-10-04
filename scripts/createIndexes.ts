@@ -44,7 +44,7 @@ if (!MONGODB_URI) {
 async function createIndexes() {
   const client = new MongoClient(MONGODB_URI!);
   await client.connect();
-  const db = client.db('borderland');
+  const db = client.db(process.env.MONGODB_DB || 'borderland');
   console.log('Connected to MongoDB. Creating indexes...\n');
 
   // ── registrations ─────────────────────────────────────────────
@@ -159,6 +159,21 @@ async function createIndexes() {
 
   await recon.createIndex({ createdAt: -1 }, { name: 'idx_created' });
   console.log('✅ reconcileBatches.createdAt');
+
+  // ── cardDrop + cardPrefs ──────────────────────────────────────
+  await db.collection('cardDrop').createIndex({ eventId: 1 }, { unique: true, name: 'idx_eventId' });
+  console.log('✅ cardDrop.eventId (unique)');
+
+  await db.collection('cardPrefs').createIndex({ eventId: 1, teamId: 1 }, { unique: true, name: 'idx_event_team' });
+  console.log('✅ cardPrefs.eventId+teamId (unique)');
+
+  // ── submissions ────────────────────────────────────────────────
+  await db.collection('submissions').createIndex({ eventId: 1, teamId: 1 }, { unique: true, name: 'idx_event_team' });
+  console.log('✅ submissions.eventId+teamId (unique)');
+  await db
+    .collection('submissions')
+    .createIndex({ eventId: 1, owner: 1, repo: 1 }, { name: 'idx_event_repo', collation: { locale: 'en', strength: 2 } });
+  console.log('✅ submissions.eventId+owner+repo');
 
   console.log('\n🎉 All indexes created successfully!');
   await client.close();

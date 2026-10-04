@@ -5,6 +5,8 @@ import { useParams, useSearchParams } from 'next/navigation';
 import { Clock, CheckCircle2, XCircle, AlertTriangle } from 'lucide-react';
 import { RegisterShell } from '@/components/RegisterShell';
 import { WhatsAppCommunityButton } from '@/components/WhatsAppButton';
+import { CardDropSummary } from '@/components/carddrop/TeamCardDrop';
+import { SubmissionSummary } from '@/components/submission/TeamSubmission';
 
 const WHATSAPP_COMMUNITY_URL = process.env.NEXT_PUBLIC_WHATSAPP_COMMUNITY_URL ?? '';
 
@@ -158,6 +160,8 @@ export default function RegistrationStatusPage() {
           ) : null}
           </div>
         </div>
+        {data?.status === 'CONFIRMED' && <CardDropSummary teamId={teamId} token={token} />}
+        {data?.status === 'CONFIRMED' && <SubmissionSummary teamId={teamId} token={token} />}
     </RegisterShell>
   );
 }

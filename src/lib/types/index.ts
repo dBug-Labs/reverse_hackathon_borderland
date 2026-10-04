@@ -229,6 +229,94 @@ export interface Metric {
   emailsSent: number;
 }
 
+// ── Card Drop (PS draft) ───────────────────────────────────────────────────
+export type CardDropPhase = 'PREFS_OPEN' | 'DRAWN' | 'LOCKED';
+export type RiskCard = 'STANDARD' | 'HIGH';
+
+export interface CardAssignment {
+  teamId: string;
+  teamName: string;
+  pick: number; // 1-based draft position
+  card: string; // card code, see src/lib/cardDrop/cards.ts
+  via: 0 | 1 | 2 | 3; // which choice it was; 0 = auto-assigned
+  title?: string; // solution title (60 chars max)
+  risk?: RiskCard;
+  lockedAt?: Date;
+  movedBy?: string; // set when an admin moved or swapped the team
+}
+
+export interface CardDropDoc {
+  _id: ObjectId;
+  eventId: ObjectId;
+  phase: CardDropPhase;
+  seed: string; // secret hex seed; revealed only after the draw
+  seedHash: string; // sha256(seed), shown before the draw
+  openedAt: Date;
+  openedBy: string;
+  cap?: number;
+  presentOnly?: boolean;
+  order?: string[]; // team IDs in pick order
+  assignments?: CardAssignment[];
+  drawnAt?: Date;
+  drawnBy?: string;
+  lockedAt?: Date;
+  lockedBy?: string;
+  updatedAt: Date;
+}
+
+export interface CardPref {
+  _id: ObjectId;
+  eventId: ObjectId;
+  teamId: string;
+  choices: string[]; // 1–3 card codes, best first
+  submittedAt: Date;
+  submittedBy: string; // 'team' or the admin's name
+}
+
+// ── Submissions (one GitHub repo per team) ─────────────────────────────────
+export interface RepoCheck {
+  at: Date;
+  ok: boolean; // repo reachable, public, and every required file present
+  error?: string; // set when GitHub could not be read
+  public?: boolean;
+  fork?: string; // full name of the parent repo when it is a fork
+  defaultBranch?: string;
+  headSha?: string;
+  headAt?: string; // committer date of the head commit
+  pushedAt?: string; // GitHub's last push time (server side)
+  createdAt?: string; // GitHub's repo creation time
+  files?: Record<string, string | null>; // REQUIRED_FILES key -> path found, or null
+  warnings?: string[];
+}
+
+export interface RepoSnapshot {
+  at: Date; // when the snapshot was taken
+  by: string;
+  freezeAt: string; // the freeze time it is for
+  headSha?: string;
+  pushedAt?: string;
+  beforeFreezeSha?: string; // last commit dated at or before the freeze
+  pushedAfterFreeze?: boolean;
+  error?: string;
+}
+
+export interface SubmissionDoc {
+  _id: ObjectId;
+  eventId: ObjectId;
+  teamId: string;
+  repoUrl: string; // https://github.com/owner/repo
+  owner: string;
+  repo: string;
+  demoVideoUrl?: string;
+  liveUrl?: string;
+  declaredAt: Date; // clean-room declaration accepted
+  check?: RepoCheck;
+  snapshots?: { docs?: RepoSnapshot; code?: RepoSnapshot };
+  history: Array<{ at: Date; by: string; repoUrl: string }>;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
 // ── API response shapes ────────────────────────────────────────────────────
 export interface ApiSuccess<T = unknown> {
   ok: true;

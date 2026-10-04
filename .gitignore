@@ -16,3 +16,6 @@ next-env.d.ts
 *.download
 
 .vercel
+
+# prerequisites mail preview (contains a team link)
+/event-plan/prereq-mail-preview.html

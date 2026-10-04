@@ -45,7 +45,7 @@ if (!MONGODB_URI) {
 async function seedEvent() {
   const client = new MongoClient(MONGODB_URI!);
   await client.connect();
-  const db = client.db('borderland');
+  const db = client.db(process.env.MONGODB_DB || 'borderland');
   console.log('Connected to MongoDB. Seeding event...\n');
 
   const event = {
@@ -56,7 +56,7 @@ async function seedEvent() {
     day1Date: new Date('2026-10-05T09:00:00+05:30'),
     day2Date: new Date('2026-10-06T09:00:00+05:30'),
     registrationOpensAt: new Date('2026-09-23T00:00:00+05:30'),
-    registrationClosesAt: new Date('2026-10-03T23:59:59+05:30'),
+    registrationClosesAt: new Date('2026-10-04T17:00:00+05:30'),
     forceClosed: false,
     capacity: 120,
     fee: ENTRY_FEE,

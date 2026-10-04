@@ -6,11 +6,13 @@ import { usePathname, useRouter } from 'next/navigation';
 import {
   BadgeCheck,
   ClipboardCheck,
+  GitBranch,
   LogOut,
   Mail,
   Menu,
   ScrollText,
   ShieldCheck,
+  Shuffle,
   Users,
   X,
 } from 'lucide-react';
@@ -22,6 +24,8 @@ const NAV = [
   { href: '/admin', label: 'Verify payments', icon: BadgeCheck, suit: '♠' },
   { href: '/admin/registrations', label: 'All teams', icon: Users, suit: '♦' },
   { href: '/admin/attendance-report', label: 'Attendance', icon: ClipboardCheck, suit: '♣' },
+  { href: '/admin/card-drop', label: 'Card Drop', icon: Shuffle, suit: '♠' },
+  { href: '/admin/submissions', label: 'Submissions', icon: GitBranch, suit: '♦' },
   { href: '/admin/emails', label: 'Email outbox', icon: Mail, suit: '♥' },
   { href: '/admin/audit', label: 'Audit log', icon: ScrollText, suit: '♥' },
 ];
