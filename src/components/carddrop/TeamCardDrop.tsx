@@ -172,7 +172,10 @@ function Picker({ saved, onSave }: { saved: string[]; onSave: (choices: string[]
   const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
   const dirty = choices.join() !== saved.join();
 
-  useEffect(() => setChoices(saved), [saved]);
+  // Sync only when the saved value itself changes. Polling hands us a new array every few
+  // seconds; keying on the array reference wiped picks the team had not saved yet.
+  const savedKey = saved.join();
+  useEffect(() => setChoices(savedKey ? savedKey.split(',') : []), [savedKey]);
 
   const toggle = (code: string) => {
     playHudClick();

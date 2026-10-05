@@ -382,9 +382,13 @@ function PrefsDialog({
   onSave: (teamId: string, choices: string[]) => void;
 }) {
   const [c, setC] = useState<string[]>(['', '', '']);
+  // Keyed on the values, not the object: the page polls every 8 s and a new `team`
+  // object would reset what the volunteer is typing.
+  const teamKey = team ? `${team.teamId}:${team.choices.join()}` : '';
   useEffect(() => {
     if (team) setC([team.choices[0] ?? '', team.choices[1] ?? '', team.choices[2] ?? '']);
-  }, [team]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [teamKey]);
   if (!team) return null;
   const set = (i: number, v: string) => setC((x) => x.map((y, j) => (j === i ? v : y)));
   const picked = c.filter(Boolean);
