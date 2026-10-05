@@ -102,7 +102,7 @@ export function SubmissionSummary({ teamId, token }: { teamId: string; token: st
       </div>
       <p className="mt-1.5 text-[15px] text-neutral-300">
         {view.stage === 'NOT_OPEN' && 'Opens at 4 PM on Monday. You submit one public GitHub repo.'}
-        {view.stage !== 'NOT_OPEN' && !s && 'Not submitted yet. Save your GitHub repo link before the 10 PM checkpoint.'}
+        {view.stage !== 'NOT_OPEN' && !s && 'Not submitted yet. Save your GitHub repo link before the 11 PM checkpoint.'}
         {s && (
           <>
             Repo saved · {found} of {REQUIRED_FILES.length} required files found

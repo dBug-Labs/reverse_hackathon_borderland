@@ -334,7 +334,7 @@ export default function PlaybookPage() {
               <B>push docs/ before any code</B>.
             </li>
             <li>
-              <B>By 10 PM:</B> on your team page, tap <B>Submit your repo</B>, paste the link, tick the declaration. First docs must be pushed. Missing
+              <B>By 11 PM:</B> on your team page, tap <B>Submit your repo</B>, paste the link, tick the declaration. First docs must be pushed. Missing
               this checkpoint costs a Visa.
             </li>
             <li>
@@ -355,7 +355,7 @@ export default function PlaybookPage() {
               <tbody>
                 {[
                   ['Mon 4:00 PM', 'Clock starts. First commit allowed.'],
-                  ['Mon 10:00 PM', 'Checkpoint: repo link saved + first docs pushed (else −1 Visa).'],
+                  ['Mon 11:00 PM', 'Checkpoint: repo link saved + first docs pushed (else −1 Visa).'],
                   ['Tue 8:30 AM', 'Docs freeze. docs/ is scored as of the last push before 8:30. Repo link locks.'],
                   ['Tue 12:30 PM', 'Code freeze. Code is judged as of the last push before 12:30.'],
                 ].map(([t, d]) => (

@@ -9,7 +9,7 @@
 /** IST times of the overnight build. */
 export const SUBMISSION_WINDOW = {
   opensAt: '2026-10-05T16:00:00+05:30', // Card Drop over, clock starts
-  checkpointAt: '2026-10-05T22:00:00+05:30', // repo link + first docs pushed
+  checkpointAt: '2026-10-05T23:00:00+05:30', // repo link + first docs pushed (extended from 10 PM)
   docsFreezeAt: '2026-10-06T08:30:00+05:30', // docs/ scored as of this time; repo link locked
   codeFreezeAt: '2026-10-06T12:30:00+05:30', // code judged as of this time; everything locked
 } as const;
