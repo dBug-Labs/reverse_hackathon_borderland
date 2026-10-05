@@ -46,7 +46,7 @@ export function renderBrief(opts: {
       <table role="presentation" cellpadding="0" cellspacing="0" style="margin-top:8px;font-size:14px;line-height:1.5;color:${C.ink};">
         ${row('After 4 PM', `Clone <a href="${esc(card.source.url)}" style="color:${C.red};">${esc(card.source.name)}</a>, run Playbook stages 0–8 on it, then create your own <strong>empty, public</strong> GitHub repo.`)}
         ${row('Then', 'Run stage 9 to write <code>docs/</code> (7 files). <strong>Push docs before any code.</strong>')}
-        ${row('By 11 PM', '<strong>Submit your repo link</strong> with the button below. Missing it costs a Visa.')}
+        ${row('By 11:30 PM', '<strong>Submit your repo link</strong> with the button below. Missing it costs a Visa.')}
         ${row('Overnight', 'Build only from your docs: the 3 Killer Tests first, then your fix and your Differentiator. Add README.md, SUBMISSION.md, deck.pdf and .env.example.')}
         ${row('Tue 8:30 AM', '<strong>Docs freeze.</strong> docs/ is scored as of your last push before 8:30.')}
         ${row('Tue 12:30 PM', '<strong>Code freeze.</strong> The last push before 12:30 is judged.')}
@@ -59,7 +59,7 @@ export function renderBrief(opts: {
       <a href="${teamLink}" style="color:${C.red};">Your team page</a> · <a href="${playbookUrl}" style="color:${C.red};">The Playbook</a> · <a href="${guideUrl}" style="color:${C.red};">Submission guide (PDF)</a></p>
     </div>`;
 
-  const html = emailLayout({ preheader: `Your card: ${card.title}. Submit your repo link by 11 PM.`, bodyHtml: body });
+  const html = emailLayout({ preheader: `Your card: ${card.title}. Submit your repo link by 11:30 PM.`, bodyHtml: body });
 
   const text = `${teamId} · ${teamName}
 
@@ -79,7 +79,7 @@ Your Differentiator (must have): at least one feature the original does not have
 What to do, and when:
 - After 4 PM: clone the original, run Playbook stages 0-8, create your own empty, public GitHub repo.
 - Then: stage 9 writes docs/ (7 files). Push docs before any code.
-- By 11 PM: submit your repo link (below). Missing it costs a Visa.
+- By 11:30 PM: submit your repo link (below). Missing it costs a Visa.
 - Overnight: build from your docs only. Killer Tests first, then your fix and Differentiator. Add README.md, SUBMISSION.md, deck.pdf, .env.example.
 - Tue 8:30 AM: docs freeze. Tue 12:30 PM: code freeze.
 

@@ -164,7 +164,7 @@ export default function SubmissionsConsole() {
       <div className="mb-6 grid grid-cols-2 gap-3 lg:grid-cols-4">
         <StatTile label="Submitted" value={`${stats.submitted}/${stats.teams}`} symbol="♠" />
         <StatTile label="All files present" value={stats.complete} symbol="♦" />
-        <StatTile label="Not submitted" value={stats.teams - stats.submitted} sub="At 11 PM: −1 Visa each" symbol="♣" />
+        <StatTile label="Not submitted" value={stats.teams - stats.submitted} sub="At 11:30 PM: −1 Visa each" symbol="♣" />
         <StatTile label="With warnings" value={stats.warnings} symbol="♥" />
       </div>
 
