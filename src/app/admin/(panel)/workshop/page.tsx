@@ -1,8 +1,8 @@
 'use client';
 
 import React, { useCallback, useEffect, useState } from 'react';
-import { Copy, ExternalLink, RefreshCw } from 'lucide-react';
-import { api } from '@/components/portal/api';
+import { Copy, ExternalLink, Mail, RefreshCw } from 'lucide-react';
+import { api, post } from '@/components/portal/api';
 import { fmtTime } from '@/components/portal/theme';
 import { Banner, Button, LoadingBlock, PageTitle, Panel, SectionLabel, StatTile } from '@/components/portal/ui';
 
@@ -17,6 +17,8 @@ export default function WorkshopAdminPage() {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [mailing, setMailing] = useState(false);
+  const [mailMsg, setMailMsg] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -31,6 +33,23 @@ export default function WorkshopAdminPage() {
   useEffect(() => {
     load();
   }, [load]);
+
+  async function mailLink() {
+    if (!confirm('Mail the workshop link to every team marked present today that has not been mailed yet?')) return;
+    setMailing(true);
+    setMailMsg(null);
+    const r = await post<{ present: number; alreadyMailed: number; sent: string[]; failed: Array<{ teamId: string; error: string }> }>(
+      '/api/admin/workshop',
+      { action: 'mail' },
+      'admin'
+    );
+    setMailing(false);
+    if (!r.ok) return setMailMsg(r.message);
+    setMailMsg(
+      `Sent to ${r.data.sent.length} team(s). ${r.data.present} present, ${r.data.alreadyMailed} mailed before.` +
+        (r.data.failed.length ? ` Failed: ${r.data.failed.map((f) => f.teamId).join(', ')}. Press again to retry.` : '')
+    );
+  }
 
   async function copyAll() {
     if (!data) return;
@@ -52,6 +71,9 @@ export default function WorkshopAdminPage() {
         subtitle="Teams submit at /workshop with their team ID and a GitHub link."
         actions={
           <div className="flex gap-2">
+            <Button onClick={mailLink} loading={mailing}>
+              {!mailing && <Mail className="h-3.5 w-3.5" />} Mail link to present teams
+            </Button>
             <Button onClick={copyAll} disabled={!data?.submissions.length}>
               <Copy className="h-3.5 w-3.5" /> {copied ? 'Copied' : 'Copy all'}
             </Button>
@@ -62,6 +84,7 @@ export default function WorkshopAdminPage() {
         }
       />
       {error && <Banner>{error}</Banner>}
+      {mailMsg && <div className="mb-4 rounded-lg border border-neutral-800 bg-[#0d0d10] p-3 font-label text-sm text-neutral-200">{mailMsg}</div>}
       {!data && !error && <LoadingBlock />}
       {data && (
         <div className="space-y-6">

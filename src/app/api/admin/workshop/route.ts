@@ -2,8 +2,36 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getDb } from '@/lib/db';
 import { requireScope } from '@/lib/security/session';
 import { getActiveEvent } from '@/lib/services/registration';
+import { logAction } from '@/lib/services/audit';
+import { mailPresentTeams } from '@/lib/services/workshop';
+import { getClientIp, hashIp } from '@/lib/security/rateLimit';
 
-/** GET /api/admin/workshop — every Day 1 workshop submission, plus which present teams have not submitted. */
+export const maxDuration = 120;
+
+/**
+ * GET  /api/admin/workshop — every Day 1 workshop submission, plus which present teams have not submitted.
+ * POST /api/admin/workshop — { action: 'mail' } mails the link to present teams not yet mailed.
+ */
+export async function POST(req: NextRequest) {
+  const auth = await requireScope(req, 'admin');
+  if (auth instanceof NextResponse) return auth;
+  const body = (await req.json().catch(() => null)) as { action?: string } | null;
+  if (body?.action !== 'mail') return NextResponse.json({ ok: false, code: 'VALIDATION', message: 'Unknown action' }, { status: 400 });
+  try {
+    const event = await getActiveEvent();
+    if (!event) return NextResponse.json({ ok: false, code: 'NOT_FOUND', message: 'No event configured' }, { status: 404 });
+    const result = await mailPresentTeams(event._id);
+    await logAction(auth.name, 'admin', 'WORKSHOP_MAIL', 'workshop', hashIp(getClientIp(req.headers)), undefined, {
+      sent: result.sent.length,
+      failed: result.failed.length,
+    });
+    return NextResponse.json({ ok: true, data: result });
+  } catch (error) {
+    console.error('POST /api/admin/workshop error:', error);
+    return NextResponse.json({ ok: false, code: 'INTERNAL', message: 'Something went wrong' }, { status: 500 });
+  }
+}
+
 export async function GET(req: NextRequest) {
   const auth = await requireScope(req, 'admin');
   if (auth instanceof NextResponse) return auth;
