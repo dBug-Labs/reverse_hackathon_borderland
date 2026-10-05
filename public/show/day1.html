@@ -24,6 +24,10 @@ window.CONFIG = {
 </script>
 <script src="assets/cards.js"></script>
 <style>.pcard.wide { width: 360px; height: 200px; } .pcard.wide .face { flex-direction: row; flex-wrap: wrap; align-content: flex-start; gap: 0 12px; } .pcard.wide .tt { width: 100%; font-size: 26px; margin-top: 16px; } .pcard.wide .lv { width: 100%; }
+.pcard.down .in { transform: rotateY(180deg); }
+.on .pcard.down .in { animation: bob 5s ease-in-out infinite; animation-delay: calc(var(--i) * 200ms); }
+.pcard.down .back { display: grid; place-items: center; }
+.pcard.down .back span { font-family: Anton; font-size: 64px; color: #f2e9d8; opacity: .9; text-shadow: 0 0 18px rgba(0,0,0,.6); }
 .shot { border-radius: 22px; border: 1.5px solid rgba(242,233,216,.18); box-shadow: 0 40px 100px rgba(0,0,0,.7), 0 0 80px rgba(224,53,47,.18); }
 .dig { text-align: center; }
 .dig .ph { width: 380px; height: 420px; margin: 0 auto 34px; border-radius: 28px; overflow: hidden; position: relative; border: 1.5px solid rgba(242,233,216,.22); box-shadow: 0 34px 90px rgba(0,0,0,.65), 0 0 70px rgba(224,53,47,.22); }
@@ -625,7 +629,8 @@ Shaurya at the mic around 10:25: “Guys, five minutes. Open Antigravity and the
   const lvl = (r) => (r === '7' || r === '8' ? 'Standard' : r === 'K' ? 'Brutal' : 'Hard');
   const card = (c, i, w) => `<div class="pcard ${T[c.track].red ? 'redc' : ''}" style="--i:${i};${w ? `width:${w}px;height:${Math.round(w * 1.4)}px` : ''}"><div class="in"><div class="face"><div class="rk">${c.rank}</div><div class="su">${T[c.track].suit}</div><div class="tt">${c.title}</div><div class="lv">${lvl(c.rank)}</div></div><div class="back"></div></div></div>`;
   const pre = document.getElementById('wall-pre');
-  if (pre) pre.innerHTML = D.cards.map((c, i) => card(c, i, 128)).join('').replace(/class="tt"/g, 'class="tt" style="font-size:13px"').replace(/class="rk"/g, 'class="rk" style="font-size:26px"').replace(/class="lv"/g, 'class="lv" style="font-size:10px"');
+  // pre-show: twelve cards, face down. Nothing about them is revealed before the Card Drop.
+  if (pre) pre.innerHTML = D.cards.map((c, i) => `<div class="pcard down" style="--i:${i};width:128px;height:179px"><div class="in"><div class="back"><span>?</span></div></div></div>`).join('');
   const tw = document.getElementById('wall-tracks');
   if (tw) tw.innerHTML = D.tracks.map((t, ti) => `<div><div class="h2" style="font-size:44px;margin-bottom:24px;color:${t.red ? 'var(--red)' : 'var(--paper)'}">${t.suit} ${t.label}</div><div style="display:flex;flex-direction:column;gap:20px;align-items:flex-start">${D.cards.filter((c) => c.track === t.id).map((c, ci) => card(c, ti * 3 + ci, 0).replace('class="pcard', 'class="pcard wide')).join('')}</div></div>`).join('');
 })();
