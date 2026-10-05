@@ -1,5 +1,6 @@
 'use client';
 
+import { SESSIONS, sessionLabel } from '@/lib/attendanceSessions';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
@@ -488,12 +489,12 @@ export default function TeamDetailPage() {
 
               <Panel>
                 <SectionLabel icon={<ClipboardCheck className="h-4 w-4" />}>Attendance</SectionLabel>
-                {[1, 2].map((d) => {
+                {SESSIONS.map((d) => {
                   const e = reg.attendance?.find((a) => a.day === d);
                   return (
                     <div key={d} className="mb-3 rounded-lg border border-neutral-800 bg-[#141417] p-3 last:mb-0">
                       <div className="flex items-center justify-between font-label text-sm">
-                        <span className="font-semibold text-neutral-300">Day {d}</span>
+                        <span className="font-semibold text-neutral-300">{sessionLabel(d)}</span>
                         {e ? (
                           <span className="text-emerald-200">
                             ✓ {fmtTime(e.markedAt)} · {e.markedBy}

@@ -24,7 +24,7 @@ export interface PlayerDTO {
 }
 
 export interface AttendanceEntryDTO {
-  day: 1 | 2;
+  day: 1 | 2 | 3;
   markedAt: string;
   markedBy: string;
   playersPresent: number[];

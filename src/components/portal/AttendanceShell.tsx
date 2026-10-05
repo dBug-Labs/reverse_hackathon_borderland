@@ -6,10 +6,11 @@ import { LogOut } from 'lucide-react';
 import { playHudClick } from '@/utils/sound';
 import { api, clearActorName, post, readActorName } from './api';
 import { GridBackdrop, Wordmark, cx } from './ui';
+import { SESSIONS, sessionShort, type AttendanceDay } from '@/lib/attendanceSessions';
 
 interface DeskCtx {
-  day: 1 | 2;
-  setDay: (d: 1 | 2) => void;
+  day: AttendanceDay;
+  setDay: (d: AttendanceDay) => void;
   name: string;
 }
 
@@ -20,7 +21,7 @@ const DAY_KEY = 'bnd_attendance_day';
 
 export function AttendanceShell({ children }: { children: React.ReactNode }) {
   const router = useRouter();
-  const [day, setDayState] = useState<1 | 2>(1);
+  const [day, setDayState] = useState<AttendanceDay>(1);
   const [name, setName] = useState('');
 
   useEffect(() => {
@@ -31,8 +32,8 @@ export function AttendanceShell({ children }: { children: React.ReactNode }) {
     } catch {
       /* ignore */
     }
-    if (saved === '1' || saved === '2') {
-      setDayState(Number(saved) as 1 | 2);
+    if (saved === '1' || saved === '2' || saved === '3') {
+      setDayState(Number(saved) as AttendanceDay);
       return;
     }
     // No saved choice → pick today's event day from the public event info.
@@ -43,7 +44,7 @@ export function AttendanceShell({ children }: { children: React.ReactNode }) {
     });
   }, []);
 
-  const setDay = (d: 1 | 2) => {
+  const setDay = (d: AttendanceDay) => {
     playHudClick();
     setDayState(d);
     try {
@@ -76,18 +77,18 @@ export function AttendanceShell({ children }: { children: React.ReactNode }) {
 
             <div className="flex items-center gap-2">
               <div className="flex rounded-full border border-neutral-800 bg-[#0d0d10] p-1" role="tablist" aria-label="Event day">
-                {[1, 2].map((d) => (
+                {SESSIONS.map((d) => (
                   <button
                     key={d}
                     role="tab"
                     aria-selected={day === d}
-                    onClick={() => setDay(d as 1 | 2)}
+                    onClick={() => setDay(d)}
                     className={cx(
                       'min-h-[40px] rounded-full px-3.5 font-label text-sm font-bold transition-colors sm:px-4',
                       day === d ? 'bg-[var(--paper)] text-[var(--ink)]' : 'text-neutral-400 hover:text-white'
                     )}
                   >
-                    Day {d}
+                    {sessionShort(d)}
                   </button>
                 ))}
               </div>
@@ -109,7 +110,7 @@ const RECENT_KEY = 'bnd_attendance_recent';
 export interface RecentMark {
   teamId: string;
   teamName: string;
-  day: 1 | 2;
+  day: AttendanceDay;
   count: number;
   total: number;
   at: string;

@@ -1,5 +1,6 @@
 import { getDb } from '@/lib/db';
 import type { Registration, AttendanceEntry } from '@/lib/types';
+import type { AttendanceDay } from '@/lib/attendanceSessions';
 
 /**
  * Attendance service — mark attendance, search teams, get counter.
@@ -90,7 +91,7 @@ export async function searchTeams(query: string): Promise<AttendanceTeamCard[]> 
 // ── Mark attendance ─────────────────────────────────────────────────────────
 
 export interface MarkAttendanceInput {
-  day: 1 | 2;
+  day: AttendanceDay;
   playersPresent: number[]; // slot numbers
   volunteerName: string;
 }
@@ -185,7 +186,7 @@ export async function markAttendance(
 
 // ── Live counter ────────────────────────────────────────────────────────────
 
-export async function getAttendanceCounter(day: 1 | 2): Promise<{
+export async function getAttendanceCounter(day: AttendanceDay): Promise<{
   teamsPresent: number;
   totalConfirmed: number;
 }> {

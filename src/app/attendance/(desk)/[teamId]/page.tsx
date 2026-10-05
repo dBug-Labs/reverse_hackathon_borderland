@@ -1,5 +1,6 @@
 'use client';
 
+import { sessionLabel, sessionShort } from '@/lib/attendanceSessions';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
@@ -155,7 +156,7 @@ export default function AttendanceTeamPage() {
         <div className="mt-2 font-poster text-2xl uppercase leading-none text-neutral-300">{team.teamName}</div>
         {other && (
           <div className="mt-2.5 font-label text-sm text-neutral-500">
-            Day {other.day}: {other.playersPresent.length}/{team.players.length} present at {fmtTime(other.markedAt)}
+            {sessionLabel(other.day)}: {other.playersPresent.length}/{team.players.length} present at {fmtTime(other.markedAt)}
           </div>
         )}
       </div>
@@ -164,7 +165,7 @@ export default function AttendanceTeamPage() {
         <div className="mb-4 flex items-start gap-3 rounded-xl border border-amber-500/35 bg-amber-500/10 p-3.5 font-label text-[15px] text-amber-200">
           <Clock className="mt-0.5 h-4 w-4 shrink-0" />
           <div>
-            Already marked for Day {day} at <b>{fmtTime(entry.markedAt)}</b> by <b>{entry.markedBy}</b> — {entry.playersPresent.length}/{team.players.length} present.
+            Already marked for {sessionLabel(day)} at <b>{fmtTime(entry.markedAt)}</b> by <b>{entry.markedBy}</b> — {entry.playersPresent.length}/{team.players.length} present.
             {!allIn && <div className="mt-1 text-amber-200/70">Tick any late arrivals below.</div>}
           </div>
         </div>
@@ -174,7 +175,7 @@ export default function AttendanceTeamPage() {
 
       <Panel hud className="mb-5">
         <div className="mb-4 flex items-end justify-between border-b border-neutral-800 pb-3">
-          <span className="font-poster text-2xl uppercase leading-none text-[#f5eee1]">Players · Day {day}</span>
+          <span className="font-poster text-2xl uppercase leading-none text-[#f5eee1]">Players · {sessionShort(day)}</span>
           <span className="font-label text-sm text-neutral-500">Tap to toggle</span>
         </div>
         <div className="space-y-2">
@@ -226,7 +227,7 @@ export default function AttendanceTeamPage() {
           disabled={!confirmed || newCount === 0 || !!done}
         >
           <Check className="h-5 w-5" />
-          {!confirmed ? 'Cannot mark — not confirmed' : allIn ? 'Everyone is already in' : newCount === 0 ? 'Select players present' : `Mark ${newCount} present · Day ${day}`}
+          {!confirmed ? 'Cannot mark — not confirmed' : allIn ? 'Everyone is already in' : newCount === 0 ? 'Select players present' : `Mark ${newCount} present · ${sessionLabel(day)}`}
         </Button>
       </div>
 
@@ -240,7 +241,7 @@ export default function AttendanceTeamPage() {
               <div className="text-6xl leading-none" aria-hidden>
                 ♣
               </div>
-              <p className="mt-4 font-label text-[11px] font-bold uppercase tracking-[0.16em] text-[var(--card-red)]">Day {day} · checked in</p>
+              <p className="mt-4 font-label text-[11px] font-bold uppercase tracking-[0.16em] text-[var(--card-red)]">{sessionLabel(day)} · checked in</p>
               <h2 className="mt-1.5 font-poster text-5xl uppercase leading-none">Access granted</h2>
               <p className="mt-3 font-poster text-2xl uppercase leading-none">{team.teamId}</p>
               <p className="mt-1.5 font-label text-sm text-[var(--ink)]/60">

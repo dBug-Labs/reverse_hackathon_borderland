@@ -1,13 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireScope } from '@/lib/security/session';
 import { markAttendance } from '@/lib/services/attendance';
+import { isSession } from '@/lib/attendanceSessions';
 import { logAction } from '@/lib/services/audit';
 import { hashIp, getClientIp } from '@/lib/security/rateLimit';
 
 /**
  * POST /api/attendance/teams/[teamId]/mark — Mark attendance
  *
- * Body: { day: 1|2, playersPresent: [1,2,3,4] }
+ * Body: { day: 1|2|3, playersPresent: [1,2,3,4] }  (3 = Day 1 after lunch)
  */
 
 export async function POST(
@@ -24,9 +25,9 @@ export async function POST(
     const body = await req.json();
     const { day, playersPresent } = body;
 
-    if (![1, 2].includes(day)) {
+    if (!isSession(day)) {
       return NextResponse.json(
-        { ok: false, code: 'VALIDATION_ERROR', message: 'Day must be 1 or 2' },
+        { ok: false, code: 'VALIDATION_ERROR', message: 'Day must be 1, 2 or 3' },
         { status: 400 }
       );
     }

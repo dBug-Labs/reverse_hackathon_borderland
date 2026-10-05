@@ -1,5 +1,6 @@
 'use client';
 
+import { sessionLabel } from '@/lib/attendanceSessions';
 import React, { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -80,7 +81,7 @@ export default function AttendanceDesk() {
           <span aria-hidden className="absolute bottom-2 left-2.5 rotate-180 text-sm leading-none">♣</span>
           <div className="flex items-end justify-between gap-4">
             <div>
-              <div className="font-label text-[11px] font-bold uppercase tracking-[0.16em] text-[var(--card-red)]">Day {day} · checked in</div>
+              <div className="font-label text-[11px] font-bold uppercase tracking-[0.16em] text-[var(--card-red)]">{sessionLabel(day)} · checked in</div>
               <div className="mt-1.5 font-poster text-6xl leading-none">
                 {counter ? counter.teamsPresent : '—'}
                 <span className="text-3xl text-[var(--ink)]/40"> / {counter ? counter.totalConfirmed : '—'}</span>
@@ -157,7 +158,7 @@ export default function AttendanceDesk() {
       {/* Recently marked on this device */}
       {recentToday.length > 0 && (
         <Panel>
-          <SectionLabel>Marked on this device · Day {day}</SectionLabel>
+          <SectionLabel>Marked on this device · {sessionLabel(day)}</SectionLabel>
           <ul className="divide-y divide-neutral-800/70">
             {recentToday.map((m) => (
               <li key={m.teamId + m.day}>

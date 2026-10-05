@@ -1,5 +1,6 @@
 'use client';
 
+import { SESSIONS, sessionLabel } from '@/lib/attendanceSessions';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { ChevronLeft, ChevronRight, Download, Search, Trash2 } from 'lucide-react';
@@ -265,18 +266,18 @@ function DayChips({ reg }: { reg: RegistrationDTO }) {
   if (reg.status !== 'CONFIRMED') return <span className="font-label text-sm text-neutral-700">—</span>;
   return (
     <div className="flex gap-1.5">
-      {[1, 2].map((d) => {
+      {SESSIONS.map((d) => {
         const e = reg.attendance?.find((a) => a.day === d);
         return (
           <span
             key={d}
-            title={e ? `Day ${d}: ${e.playersPresent.length}/${reg.players.length} present` : `Day ${d}: not marked`}
+            title={e ? `${sessionLabel(d)}: ${e.playersPresent.length}/${reg.players.length} present` : `${sessionLabel(d)}: not marked`}
             className={cx(
               'rounded-lg border px-1.5 py-0.5 font-label text-[11px]',
               e ? 'border-emerald-600/35 bg-emerald-500/10 text-emerald-200' : 'border-neutral-800 text-neutral-600'
             )}
           >
-            D{d} {e ? `${e.playersPresent.length}/${reg.players.length}` : '·'}
+            {d === 3 ? 'PM' : `D${d}`} {e ? `${e.playersPresent.length}/${reg.players.length}` : '·'}
           </span>
         );
       })}

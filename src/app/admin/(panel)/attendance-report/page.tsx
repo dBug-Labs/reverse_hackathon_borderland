@@ -4,6 +4,7 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { Copy, Phone, RefreshCw, Search } from 'lucide-react';
 import { api } from '@/components/portal/api';
+import { SESSIONS, sessionLabel, sessionShort, type AttendanceDay } from '@/lib/attendanceSessions';
 import { fmtTime } from '@/components/portal/theme';
 import type { Pagination, RegistrationDTO } from '@/components/portal/types';
 import { Banner, Button, Empty, LoadingBlock, Meter, PageTitle, Panel, SectionLabel, StatTile, cx, inputCls } from '@/components/portal/ui';
@@ -30,7 +31,7 @@ async function fetchAllConfirmed(): Promise<RegistrationDTO[] | string> {
 export default function AttendanceReportPage() {
   const [teams, setTeams] = useState<RegistrationDTO[] | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [day, setDay] = useState<1 | 2>(1);
+  const [day, setDay] = useState<AttendanceDay>(1);
   const [show, setShow] = useState<Show>('ALL');
   const [q, setQ] = useState('');
   const [loading, setLoading] = useState(false);
@@ -121,18 +122,18 @@ export default function AttendanceReportPage() {
       />
 
       <div className="mb-6 inline-flex rounded-full border border-neutral-800 bg-[#0d0d10] p-1" role="tablist" aria-label="Day">
-        {[1, 2].map((d) => (
+        {SESSIONS.map((d) => (
           <button
             key={d}
             role="tab"
             aria-selected={day === d}
-            onClick={() => setDay(d as 1 | 2)}
+            onClick={() => setDay(d)}
             className={cx(
               'rounded-full px-5 py-2 font-label text-sm font-bold transition-colors',
               day === d ? 'bg-[var(--paper)] text-[var(--ink)]' : 'text-neutral-400 hover:text-white'
             )}
           >
-            Day {d}
+            {sessionShort(d)}
           </button>
         ))}
       </div>
@@ -153,7 +154,7 @@ export default function AttendanceReportPage() {
             <Panel className="lg:col-span-1" hud>
               <SectionLabel>Arrivals (per 30 min)</SectionLabel>
               {data.arrivals.length === 0 ? (
-                <p className="font-label text-sm text-neutral-500">Nobody marked for Day {day} yet.</p>
+                <p className="font-label text-sm text-neutral-500">Nobody marked for {sessionLabel(day)} yet.</p>
               ) : (
                 <div className="space-y-2.5">
                   {data.arrivals.map(([slot, n]) => (

@@ -1,3 +1,4 @@
+import { isSession } from '@/lib/attendanceSessions';
 import { NextRequest, NextResponse } from 'next/server';
 import { requireScope } from '@/lib/security/session';
 import { getAttendanceCounter } from '@/lib/services/attendance';
@@ -12,11 +13,11 @@ export async function GET(req: NextRequest) {
 
   try {
     const url = new URL(req.url);
-    const day = parseInt(url.searchParams.get('day') || '1', 10) as 1 | 2;
+    const day = parseInt(url.searchParams.get('day') || '1', 10);
 
-    if (![1, 2].includes(day)) {
+    if (!isSession(day)) {
       return NextResponse.json(
-        { ok: false, code: 'VALIDATION_ERROR', message: 'Day must be 1 or 2' },
+        { ok: false, code: 'VALIDATION_ERROR', message: 'Day must be 1, 2 or 3' },
         { status: 400 }
       );
     }
