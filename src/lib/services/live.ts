@@ -1,7 +1,7 @@
 import { ObjectId } from 'mongodb';
 import { getDb } from '@/lib/db';
 import { CARD_BY_CODE, CARDS, TRACKS, type TrackId } from '@/lib/cardDrop/cards';
-import { ROUNDS, buildQuestions, type GameQ } from '@/lib/live/bank';
+import { ROUNDS, accuracy, buildQuestions, subFor, type GameQ, type SubQ } from '@/lib/live/bank';
 import {
   MAX_ORDER,
   ORDER_COOLDOWN_MS,
@@ -87,7 +87,9 @@ interface AnswerDoc {
   key: string;
   teamId: string;
   qi: number;
-  choice: number;
+  choice: number | number[];
+  /** 1 = fully right. Drag questions can be partly right. */
+  acc: number;
   correct: boolean;
   ms: number;
   at: Date;
@@ -287,15 +289,36 @@ export async function deleteGame(id: string) {
 
 /* ── What clients see ────────────────────────────────────────────────── */
 
-function publicQ(q: GameQ, qi: number, card?: string): PublicQuestion {
-  if (q.kind === 'card') {
-    const cq = q.perCard?.[card && q.perCard[card] ? card : '_'];
-    return { qi, round: q.round, kind: 'card', prompt: cq?.prompt ?? '', options: cq?.options, secs: q.secs, card: card && q.perCard?.[card] ? card : undefined };
-  }
-  return { qi, round: q.round, kind: q.kind, prompt: q.prompt, code: q.code, lang: q.lang, options: q.options, secs: q.secs, allIn: q.allIn, card: q.card };
+function publicQ(q: GameQ, qi: number, team?: RosterTeam): PublicQuestion {
+  const dealt = !!(q.perCard || q.deck?.length);
+  const sub: SubQ = team ? subFor(q, team.teamId, team.card) : q;
+  return {
+    qi,
+    round: q.round,
+    kind: sub.kind,
+    title: sub.title,
+    prompt: sub.prompt,
+    code: sub.code,
+    options: sub.options,
+    items: sub.items,
+    buckets: sub.buckets,
+    stamp: sub.stamp,
+    secs: q.secs,
+    allIn: q.allIn,
+    dealt,
+    card: q.perCard && team?.card && q.perCard[team.card] ? team.card : undefined,
+  };
 }
 
-function toState(g: LiveGameDoc, opts: { admin?: boolean; card?: string; teamId?: string } = {}): GameState {
+/** The right answer, in words, for the Game Master. */
+function keyText(q: SubQ): string[] {
+  if (q.kind === 'line') return q.answer.map((i) => `Line ${i + 1}: ${q.code![i].trim()}`);
+  if (q.kind === 'mcq') return [q.options![q.answer[0]]];
+  if (q.kind === 'order') return q.answer.map((i, k) => `${k + 1}. ${q.items![i]}`);
+  return q.items!.map((it, i) => `${q.buckets![q.answer[i]]} ← ${it}`);
+}
+
+function toState(g: LiveGameDoc, opts: { admin?: boolean; team?: RosterTeam } = {}): GameState {
   const s: GameState = {
     id: g._id.toHexString(),
     kind: g.kind,
@@ -321,21 +344,15 @@ function toState(g: LiveGameDoc, opts: { admin?: boolean; card?: string; teamId?
     });
     // The question text is shown from the countdown on; intro and wager only reveal the round.
     if (q && (g.phase === 'question' || g.phase === 'reveal' || g.phase === 'board')) {
-      s.question = publicQ(q, g.qi!, opts.card);
-      if (q.kind === 'card' && opts.admin) {
-        s.cardQs = Object.fromEntries(Object.keys(q.perCard || {}).map((c) => [c, publicQ(q, g.qi!, c)]));
-      }
+      s.question = publicQ(q, g.qi!, opts.team);
     }
     if (q && (g.phase === 'intro' || g.phase === 'wager')) {
       s.question = { qi: g.qi!, round: q.round, kind: q.kind, prompt: '', secs: q.secs, allIn: q.allIn };
     }
     if ((g.phase === 'reveal' || g.phase === 'board') && g.reveal?.qi === g.qi) s.reveal = g.reveal;
     if (opts.admin && q) {
-      s.key = {
-        correct: q.answer,
-        explain: q.explain,
-        perCard: q.perCard ? Object.fromEntries(Object.entries(q.perCard).map(([c, cq]) => [c, cq.options[cq.answer]])) : undefined,
-      };
+      const dealt = !!(q.perCard || q.deck?.length);
+      s.key = { correct: q.answer, explain: q.explain, text: dealt ? ['Every team drew its own card: the screen shows each team’s result.'] : keyText(q) };
     }
   } else if (g.market) {
     const m = g.market;
@@ -352,7 +369,7 @@ function toState(g: LiveGameDoc, opts: { admin?: boolean; card?: string; teamId?
       spread: SPREAD,
       maxOrder: MAX_ORDER,
     };
-    s.exBoard = (g.exBoard || []).map((r) => (opts.admin || r.teamId === opts.teamId ? r : { ...r, h: undefined }));
+    s.exBoard = (g.exBoard || []).map((r) => (opts.admin || r.teamId === opts.team?.teamId ? r : { ...r, h: undefined }));
   }
   return s;
 }
@@ -366,7 +383,7 @@ export async function getAdminState(id: string): Promise<GameState | null> {
     const key = g.phase === 'wager' ? `w${g.qi}` : `q${g.qi}`;
     const rows = await answers.find({ gameId: id, key }, { projection: { teamId: 1, choice: 1 } }).toArray();
     s.locked = rows.map((r) => r.teamId);
-    if (g.phase === 'wager') s.wagers = Object.fromEntries(rows.map((r) => [r.teamId, r.choice]));
+    if (g.phase === 'wager') s.wagers = Object.fromEntries(rows.map((r) => [r.teamId, Number(r.choice)]));
   }
   return s;
 }
@@ -407,25 +424,30 @@ async function scoreDetective(g: LiveGameDoc): Promise<{ board: DetBoardRow[]; r
       const a = by.get(`q${i}|${t.teamId}`);
       const before = row.pts;
       let gain = 0;
-      if (a?.correct) {
+      const acc = a ? (a.acc ?? (a.correct ? 1 : 0)) : 0;
+      const drag = qs[i].kind === 'order' || qs[i].kind === 'sort';
+      if (a && acc >= 1) {
         row.streak += 1;
         row.right += 1;
         gain = Q_BASE + Math.round(Q_SPEED * Math.max(0, 1 - a.ms / (qs[i].secs * 1000)));
         if (row.streak >= 3) gain += STREAK_BONUS;
       } else {
         row.streak = 0;
-        if (a) gain = -WRONG_PENALTY;
+        // Drag questions give partial credit and never cost points; a wrong tap does.
+        if (a && drag) gain = Math.round(Q_BASE * 0.8 * acc);
+        else if (a) gain = -WRONG_PENALTY;
       }
       if (qs[i].allIn) {
-        const pct = by.get(`w${i}|${t.teamId}`)?.choice ?? 0;
+        const pct = Number(by.get(`w${i}|${t.teamId}`)?.choice ?? 0);
         const stake = Math.round((Math.max(0, before) * pct) / 100);
-        gain += a?.correct ? stake : -stake;
+        gain += a && acc >= 1 ? stake : -stake;
         if (i === qi) row.stake = stake;
       }
       row.pts = before + gain;
       if (i === qi) {
         row.delta = gain;
-        row.last = a ? (a.correct ? 'right' : 'wrong') : 'none';
+        row.last = !a ? 'none' : acc >= 1 ? 'right' : drag && acc > 0 ? 'partial' : 'wrong';
+        row.acc = a ? acc : undefined;
       }
     }
     return row;
@@ -434,36 +456,29 @@ async function scoreDetective(g: LiveGameDoc): Promise<{ board: DetBoardRow[]; r
   rows.forEach((r) => (r.cd = detectiveToFinal(r.pts, best)));
 
   const now = all.filter((a) => a.key === `q${qi}`);
-  const width = q.kind === 'line' ? q.code!.length : 4;
+  const dealt = !!(q.perCard || q.deck?.length);
+  const width = dealt ? 0 : q.kind === 'line' ? q.code?.length ?? 0 : q.kind === 'mcq' ? q.options?.length ?? 0 : 0;
   const counts = Array.from({ length: width }, () => 0);
-  now.forEach((a) => {
-    if (a.choice >= 0 && a.choice < width) counts[a.choice] += 1;
-  });
-  const fastestA = now.filter((a) => a.correct).sort((a, b) => a.ms - b.ms)[0];
+  if (!dealt) {
+    now.forEach((a) => {
+      if (typeof a.choice === 'number' && a.choice >= 0 && a.choice < width) counts[a.choice] += 1;
+    });
+  }
+  const accOf = (a: AnswerDoc) => a.acc ?? (a.correct ? 1 : 0);
+  const fastestA = now.filter((a) => accOf(a) >= 1).sort((a, b) => a.ms - b.ms)[0];
   const nameOf = new Map(g.roster.map((t) => [t.teamId, t.teamName]));
   const reveal: RevealInfo = {
     qi,
-    correct: q.answer,
-    explain: q.explain,
+    correct: dealt ? [] : q.answer,
+    explain: dealt ? 'Every team had its own card. Check your phone for your answer.' : q.explain,
     counts,
     answered: now.length,
-    right: now.filter((a) => a.correct).length,
-    wrong: now.filter((a) => !a.correct).length,
+    right: now.filter((a) => accOf(a) >= 1).length,
+    wrong: now.filter((a) => accOf(a) < 1).length,
+    avgAcc: now.length ? now.reduce((x, a) => x + accOf(a), 0) / now.length : 0,
     fastest: fastestA ? { teamId: fastestA.teamId, teamName: nameOf.get(fastestA.teamId) ?? fastestA.teamId, ms: fastestA.ms } : undefined,
+    perTeam: Object.fromEntries(now.map((a) => [a.teamId, accOf(a)])),
   };
-  if (q.kind === 'card') {
-    const cardOf = new Map(g.roster.map((t) => [t.teamId, t.card && q.perCard?.[t.card] ? t.card : '_']));
-    const per: NonNullable<RevealInfo['perCard']> = {};
-    for (const t of g.roster) {
-      const c = cardOf.get(t.teamId)!;
-      const cq = q.perCard![c];
-      per[c] ??= { right: 0, total: 0, prompt: cq.prompt, answer: cq.options[cq.answer] };
-      const a = by.get(`q${qi}|${t.teamId}`);
-      per[c].total += 1;
-      if (a?.correct) per[c].right += 1;
-    }
-    reveal.perCard = per;
-  }
   return { board: rankDet(rows, g.detBoard || []), reveal };
 }
 
@@ -571,7 +586,7 @@ async function detectiveAction(g: LiveGameDoc, input: ActionInput): Promise<Part
 
 /* ── Code Detective: teams ───────────────────────────────────────────── */
 
-export async function submitAnswer(id: string, teamId: string, qi: number, choice: number) {
+export async function submitAnswer(id: string, teamId: string, qi: number, choice: number | number[]) {
   const g = await loadGame(id);
   if (!g || g.kind !== 'detective') return fail('NOT_FOUND', 'Game not found.');
   const team = g.roster.find((t) => t.teamId === teamId);
@@ -581,19 +596,24 @@ export async function submitAnswer(id: string, teamId: string, qi: number, choic
   if (now < (g.openAt ?? 0) - 500) return fail('EARLY', 'Wait for the question.');
   if (now > (g.closeAt ?? 0) + GRACE_MS) return fail('CLOSED', 'Time is up.');
   const q = g.qs![qi];
-  const width = q.kind === 'line' ? q.code!.length : 4;
-  if (!Number.isInteger(choice) || choice < 0 || choice >= width) return fail('VALIDATION', 'Pick an answer.');
-  if (q.kind === 'line' && !q.code![choice].trim()) return fail('VALIDATION', 'That line is empty.');
+  const sub = subFor(q, team.teamId, team.card);
 
-  let correct: boolean;
-  if (q.kind === 'card') {
-    const cq = q.perCard![team.card && q.perCard![team.card] ? team.card : '_'];
-    correct = cq.answer === choice;
-  } else correct = q.answer.includes(choice);
+  if (sub.kind === 'line' || sub.kind === 'mcq') {
+    const width = sub.kind === 'line' ? sub.code!.length : sub.options!.length;
+    if (typeof choice !== 'number' || !Number.isInteger(choice) || choice < 0 || choice >= width) return fail('VALIDATION', 'Pick an answer.');
+    if (sub.kind === 'line' && !sub.code![choice].trim()) return fail('VALIDATION', 'That line is empty.');
+  } else {
+    const n = sub.items!.length;
+    if (!Array.isArray(choice) || choice.length !== n || choice.some((c) => !Number.isInteger(c))) return fail('VALIDATION', 'Place every item.');
+    if (sub.kind === 'order' && new Set(choice).size !== n) return fail('VALIDATION', 'Use every step once.');
+    if (choice.some((c) => c < 0 || c >= (sub.kind === 'order' ? n : sub.buckets!.length))) return fail('VALIDATION', 'Place every item.');
+  }
+  const acc = accuracy(sub, choice);
+  const correct = acc >= 1;
   const ms = Math.max(0, Math.min(q.secs * 1000, now - (g.openAt ?? now)));
 
   const { answers } = await cols();
-  const doc: AnswerDoc = { gameId: id, key: `q${qi}`, teamId, qi, choice, correct, ms, at: new Date() };
+  const doc: AnswerDoc = { gameId: id, key: `q${qi}`, teamId, qi, choice, acc, correct, ms, at: new Date() };
   try {
     await answers.insertOne(doc);
   } catch (err) {
@@ -613,7 +633,7 @@ export async function submitWager(id: string, teamId: string, pct: number) {
   const { answers } = await cols();
   await answers.updateOne(
     { gameId: id, key: `w${g.qi}`, teamId },
-    { $set: { choice: pct, at: new Date() }, $setOnInsert: { qi: g.qi!, correct: false, ms: 0 } },
+    { $set: { choice: pct, at: new Date() }, $setOnInsert: { qi: g.qi!, acc: 0, correct: false, ms: 0 } },
     { upsert: true }
   );
   return { ok: true as const, wager: pct };
@@ -837,7 +857,8 @@ export async function teamView(eventId: ObjectId, teamId: string, opts: { gameId
     g = (await loadGame(id)) ?? g;
   }
 
-  view.game = toState(g, { card: r?.card, teamId });
+  const me = g.roster.find((t) => t.teamId === teamId);
+  view.game = toState(g, { team: me });
   if (g.kind === 'detective') {
     const det: MyDetective = { row: g.detBoard?.find((x) => x.teamId === teamId) };
     if (opts.full) {
@@ -847,7 +868,13 @@ export async function teamView(eventId: ObjectId, teamId: string, opts: { gameId
         answers.findOne({ gameId: id, key: `w${g.qi}`, teamId }),
       ]);
       if (a) det.answer = { qi: a.qi, choice: a.choice, ms: a.ms };
-      if (w) det.wager = w.choice;
+      if (w) det.wager = Number(w.choice);
+    }
+    // After the reveal, the answer to my own card.
+    const q = g.qs?.[g.qi ?? -1];
+    if (q && me && (g.phase === 'reveal' || g.phase === 'board')) {
+      const sub = subFor(q, me.teamId, me.card);
+      det.key = { correct: sub.answer, explain: sub.explain };
     }
     view.det = det;
   } else {

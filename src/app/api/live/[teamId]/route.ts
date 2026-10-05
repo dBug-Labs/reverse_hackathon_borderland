@@ -57,7 +57,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ tea
     const b = (await req.json().catch(() => null)) as Record<string, unknown> | null;
     const gameId = String(b?.gameId ?? '');
     let res;
-    if (b?.type === 'answer') res = await submitAnswer(gameId, teamId, Number(b.qi), Number(b.choice));
+    if (b?.type === 'answer') res = await submitAnswer(gameId, teamId, Number(b.qi), Array.isArray(b.choice) ? b.choice.map(Number) : Number(b.choice));
     else if (b?.type === 'wager') res = await submitWager(gameId, teamId, Number(b.pct));
     else if (b?.type === 'trade') res = await trade(gameId, teamId, String(b.code), b.side as 'buy' | 'sell', Number(b.qty));
     else return NextResponse.json({ ok: false, code: 'VALIDATION', message: 'Unknown request' }, { status: 400 });

@@ -147,7 +147,7 @@ function CreateGame({ onCreated }: { onCreated: (id: string) => void }) {
               className={`rounded-lg border px-3 py-3 text-left ${kind === k ? 'border-[var(--paper)] bg-[#18181c] text-white' : 'border-neutral-800 text-neutral-400'}`}
             >
               <div className="font-poster text-xl uppercase">{k === 'detective' ? '♠ Code Detective' : '♣ Trading Floor'}</div>
-              <div className="text-xs text-neutral-500">{k === 'detective' ? '11 questions, 4 rounds, ~20 min' : 'A live stock market of the cards'}</div>
+              <div className="text-xs text-neutral-500">{k === 'detective' ? '9 cards, 4 rounds, ~20 min' : 'A live stock market of the cards'}</div>
             </button>
           ))}
         </div>
@@ -298,8 +298,10 @@ function DetControl({ s, now, act, busy }: { s: GameState; now: number; act: Act
         {q?.prompt && <p className="mt-2 text-neutral-200">{q.prompt}</p>}
         {s.key && s.phase !== 'lobby' && (
           <div className="mt-2 rounded-md border border-emerald-900 bg-emerald-950/40 p-2 text-emerald-200">
-            <b>Answer (only you see this):</b>{' '}
-            {q?.kind === 'line' ? `line ${s.key.correct.map((c) => c + 1).join(' or ')}` : q?.kind === 'mcq' ? q.options?.[s.key.correct[0]] : 'each team has its own card question'}
+            <b>Answer (only you see this):</b>
+            {(s.key.text ?? []).map((t) => (
+              <div key={t}>{t}</div>
+            ))}
             {s.key.explain && <div className="mt-1 text-xs text-emerald-300/80">{s.key.explain}</div>}
           </div>
         )}

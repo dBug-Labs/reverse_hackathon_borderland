@@ -8,6 +8,7 @@ import { CardFace } from '@/components/carddrop/PlayingCard';
 import { sfx } from '@/utils/liveSound';
 import { FaultyTerminal } from './Shaders';
 import { clockReady } from './clock';
+import { CardWall, DealAnimation, DealtCard, OrderShow, SortShow } from './cards';
 import { CodeText, Confetti, CountdownRing, OPTS, Rolling, Shockwave, SlamTitle, SuitWars, suitOf } from './fx';
 
 /**
@@ -243,23 +244,21 @@ function Question({ s, now }: { s: GameState; now: number }) {
     }
   }, [pre, left]);
 
+  const lastDeal = useRef(false);
+  useEffect(() => {
+    if (pre && !lastDeal.current) {
+      lastDeal.current = true;
+      sfx.whoosh();
+    }
+  }, [pre]);
+
   if (pre) {
     return (
       <div className="flex flex-1 flex-col items-center justify-center">
-        <div className="font-caps text-[2.4vh] uppercase tracking-[0.5em] text-neutral-400">Question {q.qi + 1}</div>
-        <AnimatePresence mode="popLayout">
-          <motion.div
-            key={n}
-            className="font-poster leading-none text-[#ff3b3b]"
-            style={{ fontSize: '40vh', textShadow: '0 0 90px rgba(255,59,59,.8)' }}
-            initial={{ scale: 2.4, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            exit={{ scale: 0.3, opacity: 0 }}
-            transition={{ duration: 0.35 }}
-          >
-            {Math.max(1, n)}
-          </motion.div>
-        </AnimatePresence>
+        <div className="font-caps text-[2.4vh] uppercase tracking-[0.5em] text-neutral-400">
+          Card {q.qi + 1} · {q.dealt ? 'every team draws a different card' : 'dealing'}
+        </div>
+        <DealAnimation count={s.roster.length} n={n} />
       </div>
     );
   }
@@ -269,15 +268,15 @@ function Question({ s, now }: { s: GameState; now: number }) {
     <div className="mt-[2vh] flex flex-1 gap-[2.5vw]">
       <div className="flex min-w-0 flex-1 flex-col">
         {q.allIn && <div className="mb-[1vh] font-caps text-[2vh] uppercase tracking-[0.4em] text-[#facc15]">💀 All In · double or nothing</div>}
-        {q.kind === 'card' ? (
-          <CardRound s={s} />
+        {q.dealt ? (
+          <Dealt s={s} vh={vh} />
         ) : (
           <>
-            <motion.h2 initial={{ opacity: 0, x: -30 }} animate={{ opacity: 1, x: 0 }} className="font-label text-[3.6vh] font-bold leading-tight text-white">
-              {q.prompt}
-            </motion.h2>
+            <QHead q={q} suit={s.rounds?.[q.round]?.suit ?? '♠'} />
             {q.code && <CodePanel code={q.code} />}
             {q.kind === 'mcq' && q.options && <Options options={q.options} />}
+            {q.kind === 'order' && q.items && <OrderShow items={q.items} />}
+            {q.kind === 'sort' && q.items && q.buckets && <SortShow items={q.items} buckets={q.buckets} />}
           </>
         )}
       </div>
@@ -290,24 +289,60 @@ function Question({ s, now }: { s: GameState; now: number }) {
           </div>
           <div className="font-caps text-[1.4vh] uppercase tracking-[0.35em] text-neutral-400">locked in</div>
         </div>
-        <div className="flex flex-wrap justify-center gap-[0.5vh]">
-          {s.roster.map((t) => (
-            <motion.span
-              key={t.teamId}
-              animate={locked.has(t.teamId) ? { scale: [1, 1.5, 1], backgroundColor: '#ff3b3b' } : { backgroundColor: 'rgba(255,255,255,0.08)' }}
-              transition={{ duration: 0.4 }}
-              title={t.teamName}
-              className="h-[1.6vh] w-[1.6vh] rounded-[3px]"
-              style={locked.has(t.teamId) ? { boxShadow: '0 0 10px #ff3b3b' } : undefined}
-            />
-          ))}
-        </div>
+        {!q.dealt && (
+          <div className="flex flex-wrap justify-center gap-[0.4vh]">
+            {s.roster.map((t) => (
+              <DealtCard key={t.teamId} faceUp={locked.has(t.teamId)} suit={suitOf(t.track).suit === '·' ? '♠' : suitOf(t.track).suit} width={Math.round(vh * 0.032)} />
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );
 }
 
-function CodePanel({ code, correct, counts, scanning }: { code: string[]; correct?: number[]; counts?: number[]; scanning?: boolean }) {
+function QHead({ q, suit }: { q: NonNullable<GameState['question']>; suit: string }) {
+  return (
+    <div className="flex items-start gap-[1.4vw]">
+      <motion.div initial={{ rotateY: 180, scale: 0.6 }} animate={{ rotateY: 0, scale: 1 }} transition={{ type: 'spring', stiffness: 120, damping: 12 }} className="shrink-0">
+        <DealtCard faceUp suit={suit} title={q.title} width={Math.round(typeof window === 'undefined' ? 90 : window.innerHeight * 0.1)} />
+      </motion.div>
+      <motion.h2 initial={{ opacity: 0, x: -30 }} animate={{ opacity: 1, x: 0 }} className="font-label text-[3.4vh] font-bold leading-tight text-white">
+        {q.prompt}
+      </motion.h2>
+    </div>
+  );
+}
+
+/** A question where every team drew its own card: the wall of cards is the show. */
+function Dealt({ s, vh, results }: { s: GameState; vh: number; results?: Record<string, number> }) {
+  const q = s.question!;
+  const n = s.roster.length;
+  // The biggest card size that fits every team in the space left of the clock.
+  const vw = typeof window === 'undefined' ? vh * 1.78 : window.innerWidth;
+  const availW = vw * 0.66;
+  const availH = vh * 0.74;
+  const gap = vw * 0.01;
+  let width = 40;
+  for (let cols = 3; cols <= 14; cols++) {
+    const rows = Math.ceil(n / cols);
+    const w = Math.min((availW - gap * (cols - 1)) / cols, (availH - gap * (rows - 1)) / rows / 1.4);
+    if (w > width) width = w;
+  }
+  width = Math.floor(Math.min(width, vh * 0.2));
+  return (
+    <div className="flex flex-1 flex-col">
+      <h2 className="font-label text-[3.4vh] font-bold leading-tight text-white">
+        {results ? 'Every card, revealed.' : `${q.prompt}. Check your phones.`}
+      </h2>
+      <div className="mt-[3vh] flex-1">
+        <CardWall roster={s.roster} locked={new Set(s.locked ?? [])} results={results} width={width} />
+      </div>
+    </div>
+  );
+}
+
+function CodePanel({ code, correct, counts, scanning, stamp = 'Guilty' }: { code: string[]; correct?: number[]; counts?: number[]; scanning?: boolean; stamp?: string }) {
   const max = Math.max(1, ...(counts ?? [0]));
   const fs = code.length > 10 ? 2.9 : 3.3;
   return (
@@ -358,7 +393,7 @@ function CodePanel({ code, correct, counts, scanning }: { code: string[]; correc
                 transition={{ delay: 1.35, type: 'spring', stiffness: 300, damping: 14 }}
                 className="relative ml-4 rounded border-4 border-[#ff3b3b] px-2 font-poster text-[2.6vh] uppercase tracking-widest text-[#ff3b3b]"
               >
-                Guilty
+                {stamp}
               </motion.span>
             )}
           </motion.div>
@@ -407,48 +442,10 @@ function Options({ options, correct, counts }: { options: string[]; correct?: nu
   );
 }
 
-function CardRound({ s, reveal }: { s: GameState; reveal?: boolean }) {
-  const cards = useMemo(() => {
-    const m = new Map<string, number>();
-    s.roster.forEach((t) => m.set(t.card ?? '_', (m.get(t.card ?? '_') ?? 0) + 1));
-    return [...m.entries()].filter(([c]) => c !== '_').sort((a, b) => a[0].localeCompare(b[0]));
-  }, [s.roster]);
-  const locked = new Set(s.locked ?? []);
-  const per = s.reveal?.perCard;
-  return (
-    <div className="flex flex-1 flex-col">
-      <h2 className="font-label text-[3.6vh] font-bold text-white">Every team has a question about its own card. Check your phones.</h2>
-      <div className="mt-[3vh] grid flex-1 grid-cols-6 content-start gap-[1.4vw]">
-        {cards.map(([code, n], i) => {
-          const card = CARD_BY_CODE[code];
-          const done = s.roster.filter((t) => t.card === code && locked.has(t.teamId)).length;
-          const st = per?.[code];
-          return (
-            <motion.div key={code} initial={{ rotateY: 180, opacity: 0 }} animate={{ rotateY: 0, opacity: 1 }} transition={{ delay: i * 0.08, type: 'spring', stiffness: 90 }} className="flex flex-col items-center gap-2">
-              <div className="w-full max-w-[11vw]">{card && <CardFace card={card} glow={reveal ? !!st && st.right === st.total : done === n} />}</div>
-              {reveal && st ? (
-                <div className="text-center">
-                  <div className={`font-poster text-[3.4vh] ${st.right === st.total ? 'text-[#22e584]' : st.right === 0 ? 'text-[#ff4a4a]' : 'text-[#f2e9d8]'}`}>
-                    {st.right}/{st.total} right
-                  </div>
-                  <div className="font-label text-[1.4vh] leading-tight text-neutral-300">{st.answer}</div>
-                </div>
-              ) : (
-                <div className="font-poster text-[3vh] text-[#f2e9d8]">
-                  {done}/{n} <span className="text-[1.6vh] text-neutral-500">locked</span>
-                </div>
-              )}
-            </motion.div>
-          );
-        })}
-      </div>
-    </div>
-  );
-}
-
 /* ── Reveal ───────────────────────────────────────────────────────────── */
 
 function Reveal({ s }: { s: GameState }) {
+  const vh = useVh();
   const q = s.question!;
   const r = s.reveal;
   const [scan, setScan] = useState(true);
@@ -464,24 +461,27 @@ function Reveal({ s }: { s: GameState }) {
   return (
     <div className="mt-[2vh] flex flex-1 gap-[2.5vw]">
       <div className="flex min-w-0 flex-1 flex-col">
-        {q.kind === 'card' ? (
-          <CardRound s={s} reveal />
+        {q.dealt ? (
+          <Dealt s={s} vh={vh} results={r.perTeam} />
         ) : (
           <>
             <h2 className="font-label text-[3.2vh] font-bold leading-tight text-white">{q.prompt}</h2>
-            {q.code && <CodePanel code={q.code} correct={r.correct} counts={r.counts} scanning={scan} />}
+            {q.code && <CodePanel code={q.code} correct={r.correct} counts={r.counts} scanning={scan} stamp={q.stamp} />}
             {q.kind === 'mcq' && q.options && <Options options={q.options} correct={r.correct} counts={r.counts} />}
+            {q.kind === 'order' && q.items && <OrderShow items={q.items} correct={r.correct} />}
+            {q.kind === 'sort' && q.items && q.buckets && <SortShow items={q.items} buckets={q.buckets} correct={r.correct} />}
           </>
         )}
-        {r.explain && (
+        {r.explain && !q.dealt && (
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 1.8 }} className="mt-[2.5vh] rounded-xl border-l-4 border-[#ff3b3b] bg-black/60 px-[1.4vw] py-[1.4vh] font-label text-[2.3vh] text-neutral-200">
             {r.explain}
           </motion.div>
         )}
       </div>
       <div className="flex w-[22vw] shrink-0 flex-col gap-[2vh]">
-        <Stat label="Right" value={r.right} color="#22e584" delay={1.4} />
-        <Stat label="Wrong" value={r.wrong} color="#ff4a4a" delay={1.55} />
+        <Stat label={q.kind === 'order' || q.kind === 'sort' || q.dealt ? 'Nailed it' : 'Right'} value={r.right} color="#22e584" delay={1.4} />
+        <Stat label={q.kind === 'order' || q.kind === 'sort' || q.dealt ? 'Not quite' : 'Wrong'} value={r.wrong} color="#ff4a4a" delay={1.55} />
+        {r.answered > 0 && <Stat label="Average accuracy" value={Math.round(r.avgAcc * 100)} color="#facc15" delay={1.62} />}
         <Stat label="No answer" value={none} color="#888" delay={1.7} />
         {r.fastest && (
           <motion.div

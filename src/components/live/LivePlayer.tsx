@@ -6,6 +6,7 @@ import { CARD_BY_CODE, TRACKS } from '@/lib/cardDrop/cards';
 import type { GameState, MyExchange, TeamGameView, Ticker } from '@/lib/live/types';
 import { sfx } from '@/utils/liveSound';
 import { CodeText, Confetti, OPTS, Rolling, Sparkline } from './fx';
+import { DealtCard, OrderInput, SortInput, useStable } from './cards';
 import { clockReady, fmtChips, fmtPct, getJSON, postJSON, usePoll, useServerNow } from './clock';
 
 /** A team's phone during the live games: one link, both games. */
@@ -116,7 +117,7 @@ function DetectivePhone({ v, g, now, send }: { v: TeamGameView; g: GameState; no
   const q = g.question;
   const row = v.det?.row;
   const qi = g.qi ?? -1;
-  const [mine, setMine] = useState<{ qi: number; choice: number; ms: number } | null>(null);
+  const [mine, setMine] = useState<{ qi: number; choice: number | number[]; ms: number } | null>(null);
   const [bet, setBet] = useState<{ qi: number; pct: number } | null>(null);
   const [pick, setPick] = useState<number | null>(null);
   const [msg, setMsg] = useState('');
@@ -132,6 +133,9 @@ function DetectivePhone({ v, g, now, send }: { v: TeamGameView; g: GameState; no
   }, [qi, phase]);
 
   const answered = mine?.qi === qi ? mine : null;
+  const items = useStable(q?.items ?? []);
+  const buckets = useStable(q?.buckets ?? []);
+  const suit = q ? g.rounds?.[q.round]?.suit ?? '♠' : '♠';
 
   // Laptops: 1–4 answer or bet, ↑/↓ pick a line, Enter locks it in.
   const keyRef = useRef<(e: KeyboardEvent) => void>(() => undefined);
@@ -152,7 +156,7 @@ function DetectivePhone({ v, g, now, send }: { v: TeamGameView; g: GameState; no
       else if (e.key === 'Enter' && pick !== null) answer(pick);
       else return;
       e.preventDefault();
-    } else if (n >= 1 && n <= 4) answer(n - 1);
+    } else if (q.kind === 'mcq' && n >= 1 && n <= (q.options?.length ?? 4)) answer(n - 1);
   };
   useEffect(() => {
     const h = (e: KeyboardEvent) => keyRef.current(e);
@@ -160,12 +164,12 @@ function DetectivePhone({ v, g, now, send }: { v: TeamGameView; g: GameState; no
     return () => window.removeEventListener('keydown', h);
   }, []);
 
-  async function answer(choice: number) {
+  async function answer(choice: number | number[]) {
     if (answered) return;
     sfx.lock();
     buzz(30);
     const r = await send({ type: 'answer', qi, choice });
-    if (r.ok && r.data?.answer) setMine(r.data.answer as { qi: number; choice: number; ms: number });
+    if (r.ok && r.data?.answer) setMine(r.data.answer as { qi: number; choice: number | number[]; ms: number });
     else setMsg(r.message || 'Could not send. Tap again.');
   }
   async function wager(pct: number) {
@@ -244,9 +248,13 @@ function DetectivePhone({ v, g, now, send }: { v: TeamGameView; g: GameState; no
     const openAt = g.openAt ?? 0;
     if (now < openAt) {
       return (
-        <div className="flex flex-1 items-center justify-center">
+        <div className="flex flex-1 flex-col items-center justify-center gap-6">
+          <div className="font-caps text-xs uppercase tracking-[0.4em] text-neutral-400">Your card is being dealt</div>
+          <motion.div initial={{ y: -500, rotate: -40 }} animate={{ y: [0, -10, 0], rotate: [0, 4, -4, 0] }} transition={{ y: { duration: 1.2, repeat: Infinity }, rotate: { duration: 0.9, repeat: Infinity } }}>
+            <DealtCard faceUp={false} suit={suit} width={170} />
+          </motion.div>
           <AnimatePresence mode="popLayout">
-            <motion.span key={Math.ceil((openAt - now) / 1000)} initial={{ scale: 2, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.4, opacity: 0 }} className="font-poster text-[12rem] leading-none text-[#ff3b3b]">
+            <motion.span key={Math.ceil((openAt - now) / 1000)} initial={{ scale: 2, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.4, opacity: 0 }} className="font-poster text-7xl leading-none text-[#ff3b3b]">
               {Math.max(1, Math.ceil((openAt - now) / 1000))}
             </motion.span>
           </AnimatePresence>
@@ -254,7 +262,8 @@ function DetectivePhone({ v, g, now, send }: { v: TeamGameView; g: GameState; no
       );
     }
     if (answered) {
-      const opt = q.kind !== 'line' ? OPTS[answered.choice] : null;
+      const c = answered.choice;
+      const what = typeof c === 'number' ? (q.kind === 'line' ? `Line ${c + 1}` : `${OPTS[c]?.suit} ${q.options?.[c] ?? ''}`) : q.kind === 'order' ? 'Order locked' : 'Sorted';
       return (
         <div className="flex flex-1 flex-col items-center justify-center gap-4 text-center">
           <TimeBar start={openAt} end={g.closeAt!} now={now} />
@@ -262,7 +271,7 @@ function DetectivePhone({ v, g, now, send }: { v: TeamGameView; g: GameState; no
             Locked
           </motion.div>
           <div className="font-label text-lg text-neutral-300">
-            {q.kind === 'line' ? `Line ${answered.choice + 1}` : `${opt?.suit} ${q.options?.[answered.choice] ?? ''}`} · ⚡ {(answered.ms / 1000).toFixed(2)}s
+            {what} · ⚡ {(answered.ms / 1000).toFixed(2)}s
           </div>
           <p className="font-label text-sm text-neutral-500">Eyes on the big screen.</p>
         </div>
@@ -274,12 +283,15 @@ function DetectivePhone({ v, g, now, send }: { v: TeamGameView; g: GameState; no
       <div className="flex flex-1 flex-col gap-3">
         <TimeBar start={openAt} end={g.closeAt!} now={now} />
         {q.allIn && <div className="text-center font-caps text-xs uppercase tracking-[0.35em] text-[#facc15]">💀 All In question</div>}
-        {q.kind === 'card' && q.card && (
-          <div className="text-center font-caps text-[11px] uppercase tracking-[0.3em] text-[#ff8a8a]">
-            {TRACKS[CARD_BY_CODE[q.card].track].suit} Your card · {CARD_BY_CODE[q.card].title}
+        <div className="flex items-center gap-3">
+          <motion.div initial={{ rotateY: 180, scale: 1.6, y: 40 }} animate={{ rotateY: 0, scale: 1, y: 0 }} transition={{ type: 'spring', stiffness: 110, damping: 12 }} className="shrink-0">
+            <DealtCard faceUp suit={q.card ? TRACKS[CARD_BY_CODE[q.card].track].suit : suit} title={q.title} width={74} />
+          </motion.div>
+          <div className="min-w-0">
+            {q.dealt && <div className="font-caps text-[10px] uppercase tracking-[0.3em] text-[#ff8a8a]">{q.card ? `Your card · ${CARD_BY_CODE[q.card].title}` : 'You drew this card'}</div>}
+            <p className="font-label text-[16px] font-bold leading-snug text-white md:text-lg">{q.prompt}</p>
           </div>
-        )}
-        <p className="font-label text-[17px] font-bold leading-snug text-white">{q.prompt}</p>
+        </div>
         {closed ? (
           <p className="mt-6 text-center font-poster text-4xl uppercase text-neutral-500">Time&apos;s up</p>
         ) : q.kind === 'line' ? (
@@ -314,6 +326,10 @@ function DetectivePhone({ v, g, now, send }: { v: TeamGameView; g: GameState; no
               <span className="hidden font-label text-xs normal-case opacity-70 md:block">Laptop: ↑ ↓ to pick, Enter to lock in</span>
             </motion.button>
           </>
+        ) : q.kind === 'order' ? (
+          <OrderInput items={items} onLock={(o) => answer(o)} />
+        ) : q.kind === 'sort' ? (
+          <SortInput items={items} buckets={buckets} onLock={(pl) => answer(pl)} />
         ) : (
           <div className="grid flex-1 grid-cols-1 gap-2.5">
             {(q.options ?? []).map((o, i) => (
@@ -340,22 +356,27 @@ function DetectivePhone({ v, g, now, send }: { v: TeamGameView; g: GameState; no
   }
   if ((phase === 'reveal' || phase === 'board') && row) {
     const right = row.last === 'right';
+    const partial = row.last === 'partial';
     const wrong = row.last === 'wrong';
-    const r = g.reveal;
+    const key = v.det?.key;
     let answerText = '';
-    if (q?.kind === 'line' && r) answerText = `Line ${r.correct.map((c) => c + 1).join(' or ')}`;
-    else if (q?.kind === 'mcq' && r) answerText = q.options?.[r.correct[0]] ?? '';
-    else if (q?.kind === 'card' && r?.perCard) answerText = r.perCard[v.team.card && r.perCard[v.team.card] ? v.team.card : '_']?.answer ?? '';
+    let answerList: string[] = [];
+    if (q && key) {
+      if (q.kind === 'line') answerText = `Line ${key.correct.map((c) => c + 1).join(' or ')}`;
+      else if (q.kind === 'mcq') answerText = q.options?.[key.correct[0]] ?? '';
+      else if (q.kind === 'order') answerList = key.correct.map((i, k) => `${k + 1}. ${q.items?.[i]}`);
+      else if (q.kind === 'sort') answerList = (q.items ?? []).map((it, i) => `${q.buckets?.[key.correct[i]]} ← ${it}`);
+    }
     return (
       <div className="flex flex-1 flex-col items-center justify-center gap-3 text-center">
         <motion.div
           initial={{ scale: 0.2, rotate: right ? -15 : 15 }}
           animate={{ scale: 1, rotate: 0 }}
           transition={{ type: 'spring', stiffness: 240, damping: 11 }}
-          className={`font-poster text-7xl uppercase leading-none ${right ? 'text-[#22e584]' : wrong ? 'text-[#ff3b3b] live-glitch' : 'text-neutral-400'}`}
-          style={{ textShadow: right ? '0 0 50px rgba(34,229,132,.7)' : wrong ? '0 0 50px rgba(255,59,59,.7)' : undefined }}
+          className={`font-poster text-7xl uppercase leading-none ${right ? 'text-[#22e584]' : partial ? 'text-[#facc15]' : wrong ? 'text-[#ff3b3b] live-glitch' : 'text-neutral-400'}`}
+          style={{ textShadow: right ? '0 0 50px rgba(34,229,132,.7)' : partial ? '0 0 50px rgba(250,204,21,.6)' : wrong ? '0 0 50px rgba(255,59,59,.7)' : undefined }}
         >
-          {right ? 'Correct' : wrong ? 'Wrong' : 'No answer'}
+          {right ? 'Nailed it' : partial ? `${Math.round((row.acc ?? 0) * 100)}% right` : wrong ? 'Wrong' : 'No answer'}
         </motion.div>
         <div className={`font-poster text-5xl ${row.delta >= 0 ? 'text-[#22e584]' : 'text-[#ff4a4a]'}`}>
           {row.delta >= 0 ? '+' : ''}
@@ -364,6 +385,14 @@ function DetectivePhone({ v, g, now, send }: { v: TeamGameView; g: GameState; no
         {row.stake ? <div className="font-label text-sm text-[#facc15]">Bet: {row.stake.toLocaleString('en-IN')} points</div> : null}
         {row.streak >= 3 && <div className="font-label text-lg font-bold text-[#ff8a3d]">🔥 {row.streak} in a row: +100 per answer</div>}
         {answerText && <div className="rounded-xl border border-white/10 bg-white/5 px-4 py-2 font-label text-sm text-neutral-200">Answer: {answerText}</div>}
+        {answerList.length > 0 && (
+          <div className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-left font-label text-[12px] leading-relaxed text-neutral-200">
+            <div className="mb-1 font-caps text-[10px] uppercase tracking-[0.3em] text-neutral-500">The answer</div>
+            {answerList.map((a) => (
+              <div key={a}>{a}</div>
+            ))}
+          </div>
+        )}
         <div className="mt-4 flex items-end gap-6">
           <div>
             <div className="font-poster text-6xl leading-none text-[#f2e9d8]">#{row.rank}</div>

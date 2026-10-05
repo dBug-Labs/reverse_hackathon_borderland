@@ -20,7 +20,7 @@ export interface RosterTeam {
 /* ── Code Detective ───────────────────────────────────────────────────── */
 
 export type DetPhase = 'lobby' | 'intro' | 'wager' | 'question' | 'reveal' | 'board' | 'final';
-export type QKind = 'line' | 'mcq' | 'card';
+export type QKind = 'line' | 'mcq' | 'order' | 'sort';
 
 export interface Round {
   title: string;
@@ -33,29 +33,39 @@ export interface PublicQuestion {
   qi: number;
   round: number;
   kind: QKind;
+  /** Name on the dealt card. */
+  title?: string;
   prompt: string;
-  /** Code lines for `line` questions (and optional code for `mcq`). */
+  /** Code lines or a file tree for `line` questions. */
   code?: string[];
-  lang?: string;
   options?: string[];
+  /** order / sort: the items as shown. */
+  items?: string[];
+  buckets?: string[];
+  stamp?: string;
   secs: number;
   allIn?: boolean;
-  /** Card round: the card this question is about. */
+  /** Every team drew its own card for this question (by its card, or from a deck). */
+  dealt?: boolean;
+  /** Dealt by card: the card this challenge is about. */
   card?: string;
 }
 
 export interface RevealInfo {
   qi: number;
-  /** Correct option index / line index(es). For a card round: per-card answers. */
+  /** Shared questions: the right line(s) / option, the right order, or the right bucket per item. */
   correct: number[];
   explain: string;
+  /** line / mcq: how many teams picked each line or option. */
   counts: number[];
   answered: number;
   right: number;
   wrong: number;
+  /** Average accuracy of the teams that answered (0–1). */
+  avgAcc: number;
   fastest?: { teamId: string; teamName: string; ms: number };
-  /** Card round: per card, how many teams were right out of how many answered. */
-  perCard?: Record<string, { right: number; total: number; prompt: string; answer: string }>;
+  /** Every team's accuracy (0–1), for the card wall. Missing = no answer. */
+  perTeam: Record<string, number>;
 }
 
 export interface DetBoardRow {
@@ -73,7 +83,9 @@ export interface DetBoardRow {
   /** Code Detective points out of 50 if the game ended now. */
   cd: number;
   /** How the team did on the last revealed question. */
-  last?: 'right' | 'wrong' | 'none';
+  last?: 'right' | 'partial' | 'wrong' | 'none';
+  /** Accuracy on the last revealed question (0–1). */
+  acc?: number;
   /** Points bet on the All In question (once revealed). */
   stake?: number;
 }
@@ -170,10 +182,8 @@ export interface GameState {
   // exchange
   market?: MarketDTO;
   exBoard?: ExBoardRow[];
-  /** Card round: every card's question, for the screen. */
-  cardQs?: Record<string, PublicQuestion>;
   /** Admin only: the answer to the current question, for the Game Master. */
-  key?: { correct: number[]; explain: string; perCard?: Record<string, string> };
+  key?: { correct: number[]; explain: string; text?: string[] };
   /** Set once the game has ended. */
   results?: GameResult[];
 }
@@ -199,7 +209,9 @@ export interface LiveScoreRow {
 
 export interface MyDetective {
   /** My answer to the current question, if I gave one. */
-  answer?: { qi: number; choice: number; ms: number };
+  answer?: { qi: number; choice: number | number[]; ms: number };
+  /** After the reveal: the right answer to my own challenge. */
+  key?: { correct: number[]; explain: string };
   wager?: number;
   /** My result on the last revealed question. */
   result?: { qi: number; correct: boolean; pts: number; streak: number };
