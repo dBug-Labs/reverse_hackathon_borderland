@@ -2,7 +2,7 @@
 
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
-import { RefreshCw, Search } from 'lucide-react';
+import { Copy, Phone, RefreshCw, Search } from 'lucide-react';
 import { api } from '@/components/portal/api';
 import { fmtTime } from '@/components/portal/theme';
 import type { Pagination, RegistrationDTO } from '@/components/portal/types';
@@ -34,6 +34,7 @@ export default function AttendanceReportPage() {
   const [show, setShow] = useState<Show>('ALL');
   const [q, setQ] = useState('');
   const [loading, setLoading] = useState(false);
+  const [copied, setCopied] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -84,6 +85,23 @@ export default function AttendanceReportPage() {
     );
   }, [data, show, q]);
 
+  const leader = (t: RegistrationDTO) => t.players.find((p) => p.isLeader) || t.players[0];
+
+  // the no-show call list as plain text, ready to paste into WhatsApp
+  async function copyCallList() {
+    if (!data) return;
+    const lines = data.rows
+      .filter((r) => r.state === 'ABSENT')
+      .map((r) => `${r.t.teamId} · ${r.t.teamName} · ${leader(r.t)?.fullName} · ${r.t.leaderPhone}`);
+    try {
+      await navigator.clipboard.writeText(lines.join('\n'));
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1600);
+    } catch {
+      /* clipboard blocked: the table still shows every number */
+    }
+  }
+
   return (
     <>
       <PageTitle
@@ -91,9 +109,14 @@ export default function AttendanceReportPage() {
         title="Attendance"
         subtitle="Read-only. Volunteers mark attendance at the check-in desk (/attendance)."
         actions={
-          <Button onClick={load} loading={loading}>
-            {!loading && <RefreshCw className="h-3.5 w-3.5" />} Refresh
-          </Button>
+          <div className="flex gap-2">
+            <Button onClick={copyCallList} disabled={!data}>
+              <Copy className="h-3.5 w-3.5" /> {copied ? 'Copied' : 'Copy no-show call list'}
+            </Button>
+            <Button onClick={load} loading={loading}>
+              {!loading && <RefreshCw className="h-3.5 w-3.5" />} Refresh
+            </Button>
+          </div>
         }
       />
 
@@ -178,6 +201,7 @@ export default function AttendanceReportPage() {
                     <thead className="sticky top-0 bg-[#0d0d10] font-label text-[11px] font-bold uppercase tracking-[0.16em] text-neutral-500">
                       <tr>
                         <th className="px-3 py-2">Team</th>
+                        <th className="px-3 py-2">Leader</th>
                         <th className="px-3 py-2">Present</th>
                         <th className="px-3 py-2">Marked</th>
                       </tr>
@@ -190,6 +214,12 @@ export default function AttendanceReportPage() {
                               {t.teamId}
                             </Link>
                             <div className="text-xs text-neutral-400">{t.teamName}</div>
+                          </td>
+                          <td className="px-3 py-2.5 font-label text-sm">
+                            <div className="text-neutral-200">{leader(t)?.fullName}</div>
+                            <a href={`tel:${t.leaderPhone}`} className="mt-0.5 inline-flex items-center gap-1 text-[#ff8a8a] underline-offset-2 hover:underline">
+                              <Phone className="h-3.5 w-3.5" /> {t.leaderPhone}
+                            </a>
                           </td>
                           <td className="px-3 py-2.5">
                             <span
