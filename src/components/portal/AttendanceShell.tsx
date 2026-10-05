@@ -32,7 +32,7 @@ export function AttendanceShell({ children }: { children: React.ReactNode }) {
     } catch {
       /* ignore */
     }
-    if (saved === '1' || saved === '2' || saved === '3') {
+    if (saved === '1' || saved === '2' || saved === '3' || saved === '4') {
       setDayState(Number(saved) as AttendanceDay);
       return;
     }
@@ -40,7 +40,7 @@ export function AttendanceShell({ children }: { children: React.ReactNode }) {
     api<{ day1Date: string; day2Date: string }>('/api/event').then((r) => {
       if (!r.ok) return;
       const today = new Date().toDateString();
-      if (new Date(r.data.day2Date).toDateString() === today) setDayState(2);
+      if (new Date(r.data.day2Date).toDateString() === today) setDayState(new Date().getHours() >= 12 ? 4 : 2);
     });
   }, []);
 
@@ -84,7 +84,7 @@ export function AttendanceShell({ children }: { children: React.ReactNode }) {
                     aria-selected={day === d}
                     onClick={() => setDay(d)}
                     className={cx(
-                      'min-h-[40px] rounded-full px-3.5 font-label text-sm font-bold transition-colors sm:px-4',
+                      'min-h-[40px] rounded-full px-2.5 font-label text-sm font-bold transition-colors sm:px-4',
                       day === d ? 'bg-[var(--paper)] text-[var(--ink)]' : 'text-neutral-400 hover:text-white'
                     )}
                   >

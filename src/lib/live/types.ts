@@ -6,6 +6,7 @@
  */
 
 import type { TrackId } from '@/lib/cardDrop/cards';
+import type { TeamJudging } from '@/lib/judging/types';
 
 export type GameKind = 'detective' | 'exchange';
 export type GameStatus = 'LOBBY' | 'LIVE' | 'ENDED';
@@ -258,6 +259,8 @@ export interface TeamGameView {
   ex?: MyExchange;
   /** Other games this team is in (to switch between them). */
   games: GameSummary[];
+  /** Final judging: my panel and my place in its queue, once announced. */
+  judging?: TeamJudging;
   now: number;
 }
 

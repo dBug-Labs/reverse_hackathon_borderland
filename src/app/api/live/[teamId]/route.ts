@@ -3,6 +3,7 @@ import type { ObjectId } from 'mongodb';
 import { verifyMagicToken } from '@/lib/security/magicLink';
 import { getActiveEvent } from '@/lib/services/registration';
 import { submitAnswer, submitWager, teamView, trade } from '@/lib/services/live';
+import { teamJudging } from '@/lib/services/judging';
 
 /**
  * A team's phone during the live games. Same signed status token as /r/[teamId]?t=...
@@ -41,8 +42,9 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ team
     const ev = await eventId();
     if (!ev) return NextResponse.json({ ok: false, code: 'NOT_FOUND', message: 'No event' }, { status: 404 });
     const sp = new URL(req.url).searchParams;
-    const data = await teamView(ev, teamId, { gameId: sp.get('g') || undefined, full: sp.get('full') === '1' });
-    return NextResponse.json({ ok: true, data });
+    const [data, judging] = await Promise.all([teamView(ev, teamId, { gameId: sp.get('g') || undefined, full: sp.get('full') === '1' }), teamJudging(ev, teamId)]);
+    if (judging && data.team.teamName === teamId) data.team.teamName = judging.teamName;
+    return NextResponse.json({ ok: true, data: { ...data, judging } });
   } catch (error) {
     console.error(`GET /api/live/${teamId} error:`, error);
     return NextResponse.json({ ok: false, code: 'INTERNAL', message: 'Something went wrong' }, { status: 500 });

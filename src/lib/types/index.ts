@@ -56,7 +56,7 @@ export interface Player {
 
 // ── Attendance entry (embedded in registration) ────────────────────────────
 export interface AttendanceEntry {
-  day: 1 | 2 | 3; // 3 = Day 1 after lunch, see src/lib/attendanceSessions.ts
+  day: 1 | 2 | 3 | 4; // 3 = Day 1 after lunch, 4 = Day 2 after lunch, see src/lib/attendanceSessions.ts
   markedAt: Date;
   markedBy: string; // volunteer name from session
   playersPresent: number[]; // slot numbers

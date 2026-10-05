@@ -8,6 +8,7 @@ import { sfx } from '@/utils/liveSound';
 import { CodeText, Confetti, OPTS, Rolling, Sparkline } from './fx';
 import { DealtCard, OrderInput, SortInput, useStable } from './cards';
 import { RiddlePlay, RiddlePlayed } from './riddle';
+import { JudgingCall, JudgingPhone } from '@/components/judging/JudgingPhone';
 import { clockReady, fmtChips, fmtPct, getJSON, postJSON, usePoll, useServerNow } from './clock';
 
 /** A team's phone during the live games: one link, both games. */
@@ -46,6 +47,9 @@ export function LivePlayer({ teamId, token }: { teamId: string; token: string })
   if (!token) return <Centered>Open this page from the team link in your email.</Centered>;
   if (!view) return <Centered>{error || 'Joining…'}</Centered>;
   const g = view.game;
+  // Once the panels are announced, the panel takes over the page unless a game is running.
+  const j = view.judging;
+  const judgingFirst = !!j && (!g || g.status === 'ENDED');
 
   return (
     <div className="relative min-h-[100dvh] overflow-hidden bg-[#060608] text-[#ededed]">
@@ -73,7 +77,10 @@ export function LivePlayer({ teamId, token }: { teamId: string; token: string })
           )}
         </div>
         {error && <div className="mb-2 rounded bg-red-950/70 px-3 py-1.5 font-label text-xs text-red-200">{error} · retrying…</div>}
-        {!g ? (
+        {j && !judgingFirst && <JudgingPhone j={j} />}
+        {judgingFirst ? (
+          <JudgingPhone j={j!} big />
+        ) : !g ? (
           <Waiting title="No game yet" text="Keep this page open. When the Game Master starts a game, it appears here by itself." />
         ) : g.kind === 'detective' ? (
           <DetectivePhone v={view} g={g} now={now} send={send} />
@@ -81,6 +88,7 @@ export function LivePlayer({ teamId, token }: { teamId: string; token: string })
           <ExchangePhone v={view} g={g} now={now} send={send} />
         )}
       </div>
+      {j && <JudgingCall j={j} />}
     </div>
   );
 }
