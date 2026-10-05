@@ -88,3 +88,96 @@ export const SOLO_LAB = "Repo: accountill (an invoicing app for freelancers). Ti
 
 export const EVIDENCE_FORMAT = `- <claim>
   Evidence: path/to/file:line [Confirmed]`;
+
+/** Plain-language guide for each stage, so a team can follow /playbook without a speaker. */
+export interface StageGuide {
+  question: string; // the one question this stage answers
+  why: string;
+  time: string;
+  driver: string;
+  checkers: string;
+  feeds: string; // which overnight doc it feeds
+}
+
+export const STAGE_GUIDE: Record<number, StageGuide> = {
+  0: {
+    question: 'What is this made of, and how is it laid out?',
+    why: 'You cannot read 10,000 lines at once. Recon gives you a map, so every later answer has a place to go. It also flags files that will mislead you later (old scripts, mockups, compiled output).',
+    time: '~8 min',
+    driver: 'Paste the prompt. Do not let the agent install or run anything.',
+    checkers: 'Open the dependency file (package.json, requirements.txt, go.mod…) and compare 3 versions with the agent’s. Open 2 of the “odd files” and decide if they are really odd.',
+    feeds: 'OBSERVATIONS.md (stack, how to run)',
+  },
+  1: {
+    question: 'What does this product do, and for whom?',
+    why: 'If you cannot say it in three sentences, you cannot write a spec for it. The roles you find here become the “who may call it” column in Stage 3.',
+    time: '~7 min',
+    driver: 'Paste the prompt in the same chat.',
+    checkers: 'Before reading the answer, each write your own one-line summary. Then compare. Pick one role and open the page or route the agent cited: can that role really reach it?',
+    feeds: 'PRD.md (problem, users), OBSERVATIONS.md',
+  },
+  2: {
+    question: 'What talks to what, and where is the data kept?',
+    why: 'The diagram is the skeleton of your ARCHITECTURE.md tonight. “Where state lives” is where most bugs and security gaps hide: anything kept only in the browser can be changed by the user.',
+    time: '~12 min',
+    driver: 'Paste the prompt. If the diagram does not render, copy the Mermaid code into mermaid.live.',
+    checkers: 'For 2 boxes, open the file in the table. For external services, look for their env variable names or client libraries. Any box with no file goes to “Not sure”.',
+    feeds: 'ARCHITECTURE.md',
+  },
+  3: {
+    question: 'What are all the doors into this app, and who may open each one?',
+    why: 'Routes are the real feature list, whatever the README says. The “who may call it” column is where real gaps are found: a door with no lock.',
+    time: '~8 min',
+    driver: 'Paste the prompt.',
+    checkers: 'Count the route files yourself in the explorer (for example every route.ts under app/api, or every router.get/post) and compare with the agent’s count. Open 2 rows marked admin or owner only and find the line that checks it.',
+    feeds: 'API.md, GAPS.md',
+  },
+  4: {
+    question: 'What does it store, and how are things linked?',
+    why: 'Your rebuild must store the same things correctly. Unique constraints and indexes are what stop duplicates and double bookings, and Killer Tests check exactly that.',
+    time: '~6 min',
+    driver: 'Paste the prompt.',
+    checkers: 'Open every model or schema file. For one arrow in the diagram, find the line that proves it (a foreign key, a ref, or just an ID field). An arrow with no line is a guess.',
+    feeds: 'DATA_MODEL.md',
+  },
+  5: {
+    question: 'What really happens, step by step, when a user does the main thing?',
+    why: 'Docs describe, code does. A trace shows the real order of checks and writes, and what is left behind when a step fails. This becomes the core flow of your PRD.',
+    time: '~10 min',
+    driver: 'Replace [the feature] with the main flow from Stage 1, then paste.',
+    checkers: 'Open the functions for 3 steps. Does step N really call step N+1? Is every listed check really there, in that order?',
+    feeds: 'PRD.md (core flow), ARCHITECTURE.md, OBSERVATIONS.md',
+  },
+  6: {
+    question: 'What does the user see, and which code is behind each screen?',
+    why: 'It ties the UI to the code, so the user journey in your PRD is real and not imagined. It also catches mockups and design files that look like screens but are never served.',
+    time: '~8 min',
+    driver: 'Attach 1–3 screenshots with the image button, then paste. No running app? Use images from the README or the product’s website.',
+    checkers: 'Open the file the agent matched to each screen. Is it really routed (does its URL exist in the router), or is it a mockup?',
+    feeds: 'PRD.md (user journey)',
+  },
+  7: {
+    question: 'What is wrong or missing, and who does it hurt?',
+    why: 'Your 2 improvements tonight come from this list. A gap with evidence and a fix is worth points; a vague worry is not.',
+    time: '~9 min',
+    driver: 'Paste the prompt.',
+    checkers: 'Open 3 gaps at their lines. Is the problem really there, or is it handled somewhere else (a middleware, a wrapper, the database)?',
+    feeds: 'GAPS.md',
+  },
+  8: {
+    question: 'Which of the agent’s claims are actually true?',
+    why: 'Agents invent line numbers and over-claim. Stage 8 makes the agent check itself, and then you check the agent. A made-up claim caught by a Game Master costs a Visa.',
+    time: '~8 min',
+    driver: 'Paste the prompt in the same chat.',
+    checkers: 'Open at least 3 claims tagged Confirmed by hand. Find one the agent got wrong or could not prove, and fix its tag.',
+    feeds: 'OBSERVATIONS.md',
+  },
+  9: {
+    question: 'Can a stranger’s AI build our product from our docs alone?',
+    why: 'Tomorrow a fresh AI agent gets only your docs/ folder (the Doc Test). Anything missing from the docs is missing from that build.',
+    time: 'Tonight, ~1–2 hours',
+    driver: 'Run it on your card’s product, not Espionage. Fill in the path to your own repo and paste your card’s Brief and Killer Tests.',
+    checkers: 'Read the PRD: is there an acceptance criterion for each Killer Test? Read DATA_MODEL: are the unique keys there? Is there any “Unknown” you can fill in?',
+    feeds: 'All 7 files in docs/',
+  },
+};
