@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import React, { useState, useEffect } from 'react';
 import { useParams, useSearchParams } from 'next/navigation';
 import { Clock, CheckCircle2, XCircle, AlertTriangle } from 'lucide-react';
@@ -160,6 +161,20 @@ export default function RegistrationStatusPage() {
           ) : null}
           </div>
         </div>
+        {data?.status === 'CONFIRMED' && token && (
+          <Link
+            href={`/r/${encodeURIComponent(teamId)}/play?t=${encodeURIComponent(token)}`}
+            className="mt-6 flex items-center justify-between gap-4 rounded-2xl border border-[var(--card-red)] bg-[var(--card-red)]/15 p-5 transition hover:bg-[var(--card-red)]/25"
+          >
+            <span>
+              <span className="block font-poster text-3xl uppercase leading-none text-[#f2e9d8]">
+                Play <span className="text-[#ff4a4a]">live</span>
+              </span>
+              <span className="mt-1 block font-label text-sm text-neutral-300">Day 2: Code Detective ♠ and the Trading Floor ♣ on your phone.</span>
+            </span>
+            <span className="font-poster text-4xl text-[#ff4a4a]">→</span>
+          </Link>
+        )}
         {data?.status === 'CONFIRMED' && <CardDropSummary teamId={teamId} token={token} />}
         {data?.status === 'CONFIRMED' && <SubmissionSummary teamId={teamId} token={token} />}
     </RegisterShell>

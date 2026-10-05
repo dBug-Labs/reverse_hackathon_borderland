@@ -13,6 +13,7 @@ import {
   ScrollText,
   ShieldCheck,
   Shuffle,
+  Swords,
   Users,
   X,
 } from 'lucide-react';
@@ -25,6 +26,7 @@ const NAV = [
   { href: '/admin/registrations', label: 'All teams', icon: Users, suit: '♦' },
   { href: '/admin/attendance-report', label: 'Attendance', icon: ClipboardCheck, suit: '♣' },
   { href: '/admin/card-drop', label: 'Card Drop', icon: Shuffle, suit: '♠' },
+  { href: '/admin/live', label: 'Live games', icon: Swords, suit: '♣' },
   { href: '/admin/submissions', label: 'Submissions', icon: GitBranch, suit: '♦' },
   { href: '/admin/workshop', label: 'Workshop', icon: GitBranch, suit: '♣' },
   { href: '/admin/emails', label: 'Email outbox', icon: Mail, suit: '♥' },

@@ -297,3 +297,42 @@
     animation: none;
   }
 }
+
+/* ── Live games (Code Detective, Trading Floor) ── */
+@keyframes live-glitch {
+  0%, 100% { text-shadow: 3px 0 #ff2e2e, -3px 0 #2ee6ff; transform: translate(0); }
+  20% { text-shadow: -4px 1px #ff2e2e, 4px -1px #2ee6ff; transform: translate(-2px, 1px); }
+  40% { text-shadow: 2px -2px #ff2e2e, -2px 2px #2ee6ff; transform: translate(2px, -1px) skewX(-4deg); }
+  60% { text-shadow: -1px 0 #ff2e2e, 1px 0 #2ee6ff; transform: translate(0) skewX(3deg); }
+  80% { text-shadow: 5px 1px #ff2e2e, -5px -1px #2ee6ff; transform: translate(-1px, 0); }
+}
+.live-glitch { animation: live-glitch 0.9s steps(2, end) infinite; }
+@keyframes live-shake {
+  0%, 100% { transform: translate(0, 0) rotate(0); }
+  10% { transform: translate(-14px, 8px) rotate(-0.6deg); }
+  20% { transform: translate(12px, -10px) rotate(0.5deg); }
+  30% { transform: translate(-10px, -6px) rotate(-0.4deg); }
+  40% { transform: translate(9px, 9px) rotate(0.4deg); }
+  55% { transform: translate(-6px, 4px); }
+  70% { transform: translate(4px, -3px); }
+  85% { transform: translate(-2px, 2px); }
+}
+.live-shake { animation: live-shake 0.75s cubic-bezier(.36,.07,.19,.97) both; }
+@keyframes live-hazard { from { background-position: 0 0; } to { background-position: 80px 0; } }
+.live-hazard {
+  background-image: repeating-linear-gradient(-45deg, #facc15 0 20px, #0a0a0a 20px 40px);
+  background-size: 80px 80px;
+  animation: live-hazard 0.8s linear infinite;
+}
+@keyframes live-scan { from { transform: translateY(-100%); } to { transform: translateY(100vh); } }
+.live-scanline::after {
+  content: '';
+  position: absolute; inset: 0 0 auto 0; height: 30%;
+  background: linear-gradient(to bottom, transparent, rgba(255, 60, 60, 0.07), transparent);
+  animation: live-scan 4s linear infinite;
+  pointer-events: none;
+}
+@keyframes live-marquee { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+.live-marquee { animation: live-marquee 40s linear infinite; will-change: transform; }
+@keyframes live-pulse-red { 0%, 100% { box-shadow: 0 0 0 0 rgba(255, 46, 46, 0.7); } 50% { box-shadow: 0 0 0 18px rgba(255, 46, 46, 0); } }
+.live-pulse-red { animation: live-pulse-red 1s ease-out infinite; }
