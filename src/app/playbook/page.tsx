@@ -207,30 +207,19 @@ export default function PlaybookPage() {
         {/* ── Map ────────────────────────────────────────────────────── */}
         <Section id="map" kicker="The whole path" title="The map">
           <p>Each stage answers one question. Each answer feeds one of tonight’s docs, so nothing you do this morning is wasted.</p>
-          <div className="overflow-x-auto">
-            <table className="w-full min-w-[520px] border-collapse text-sm">
-              <thead>
-                <tr className="border-b border-neutral-800 text-left text-neutral-400">
-                  <th className="py-2 pr-3">Stage</th>
-                  <th className="py-2 pr-3">The question</th>
-                  <th className="py-2">Feeds</th>
-                </tr>
-              </thead>
-              <tbody>
-                {STAGES.map((s) => (
-                  <tr key={s.n} className="border-b border-neutral-900 align-top">
-                    <td className="py-2 pr-3">
-                      <a href={`#stage-${s.n}`} className="whitespace-nowrap text-white hover:text-[#ff8a8a]">
-                        {s.n} · {s.title.split(' (')[0]}
-                      </a>
-                    </td>
-                    <td className="py-2 pr-3">{STAGE_GUIDE[s.n]?.question}</td>
-                    <td className="py-2 text-neutral-400">{STAGE_GUIDE[s.n]?.feeds}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <ol className="space-y-2">
+            {STAGES.map((s) => (
+              <li key={s.n}>
+                <a href={`#stage-${s.n}`} className="block rounded-lg border border-neutral-800 bg-black/40 p-3 hover:border-neutral-600">
+                  <div className="font-semibold text-white">
+                    {s.n} · {s.title.split(' (')[0]}
+                  </div>
+                  <div className="mt-0.5">{STAGE_GUIDE[s.n]?.question}</div>
+                  <div className="mt-0.5 text-sm text-neutral-500">Feeds: {STAGE_GUIDE[s.n]?.feeds}</div>
+                </a>
+              </li>
+            ))}
+          </ol>
         </Section>
 
         {/* ── Stages ─────────────────────────────────────────────────── */}
@@ -361,8 +350,8 @@ export default function PlaybookPage() {
             </li>
           </ol>
 
-          <div className="overflow-x-auto">
-            <table className="w-full min-w-[460px] border-collapse text-sm">
+          <div>
+            <table className="w-full border-collapse text-sm">
               <tbody>
                 {[
                   ['Mon 4:00 PM', 'Clock starts. First commit allowed.'],
