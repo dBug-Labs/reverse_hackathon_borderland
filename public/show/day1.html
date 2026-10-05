@@ -1,0 +1,641 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>HACKBACK · Day 1</title>
+<link rel="stylesheet" href="assets/deck.css">
+<script>
+/* ── EDIT THESE BEFORE THE SHOW ─────────────────────────────── */
+window.CONFIG = {
+  wifiName: '________',
+  wifiPass: '________',
+  hod: 'Dr. M. Lakshmi',         hodRole: 'Professor & Head, Dept. of Networking and Communications',
+  convenor: 'Dr. Arun A',        convenorRole: 'Faculty Convenor',
+  coConvenor: 'Dr. N. Prasath',  coConvenorRole: 'Faculty Co-Convenor',
+  // guests: leave both names empty and the guests slide is skipped
+  chiefGuest: '',   chiefGuestRole: '[Designation], [Organization]',
+  specialGuest: '', specialGuestRole: '[Designation], [Organization]',
+  s1Speakers: 'Shaurya Ojha & Saalini',
+  s2Speaker: '[Session 2 speaker]',
+  dealerFintech: '________', dealerWorkflow: '________', dealerInfra: '________', dealerCyber: '________',
+  bestCatch: 'The agent said the routes were protected. They opened the files: the auth middleware is never used.',
+};
+</script>
+<script src="assets/cards.js"></script>
+<style>.pcard.wide { width: 360px; height: 200px; } .pcard.wide .face { flex-direction: row; flex-wrap: wrap; align-content: flex-start; gap: 0 12px; } .pcard.wide .tt { width: 100%; font-size: 26px; margin-top: 16px; } .pcard.wide .lv { width: 100%; }
+.shot { border-radius: 22px; border: 1.5px solid rgba(242,233,216,.18); box-shadow: 0 40px 100px rgba(0,0,0,.7), 0 0 80px rgba(224,53,47,.18); }
+.dig { text-align: center; }
+.dig .ph { width: 380px; height: 420px; margin: 0 auto 34px; border-radius: 28px; overflow: hidden; position: relative; border: 1.5px solid rgba(242,233,216,.22); box-shadow: 0 34px 90px rgba(0,0,0,.65), 0 0 70px rgba(224,53,47,.22); }
+.dig .ph img { width: 100%; height: 100%; object-fit: cover; object-position: 50% 18%; display: block; }
+.dig .ph::after { content: ''; position: absolute; inset: 0; background: linear-gradient(180deg, transparent 62%, rgba(11,10,9,.55)); }
+.dig .ph .su { position: absolute; left: 22px; bottom: 14px; z-index: 1; font-family: Cinzel; font-size: 46px; color: var(--red); text-shadow: 0 0 20px rgba(224,53,47,.6); }
+.dig .tg { font-family: Cinzel; font-size: 22px; letter-spacing: .26em; text-transform: uppercase; color: var(--red); margin-bottom: 12px; }
+.dig h3 { font-size: 56px; }
+.dig p { font-size: 25px; line-height: 1.35; color: var(--paper2); margin-top: 10px; }
+.speaker { font-family: Anton; font-size: 130px; line-height: 1; text-transform: uppercase; background: linear-gradient(180deg, #fff, #d9ccb2); -webkit-background-clip: text; background-clip: text; color: transparent; }
+</style>
+</head>
+<body>
+<div id="viewport"><div id="stage">
+  <div class="amb city"></div><div class="amb grid"></div><div class="amb suits-float"></div>
+  <div class="laser l"></div><div class="laser r"></div>
+
+  <!-- ═══════════ PRE-SHOW 9:00 ═══════════ -->
+  <section class="slide" data-notes="9:00 PRE-SHOW · Akshat: Good morning, everyone! Welcome to TP2 712. Please make your way to your numbered tables with your team.
+Keep this up while teams check in. Note: there are TWELVE cards on the wall (4 tracks × 3), not nine.">
+    <div style="text-align:center">
+      <img class="pop" src="assets/img/hackback-wordmark.png" style="width:1100px;--d:.2s" alt="HACKBACK">
+      <div class="jp pop" style="--d:.7s">今際のハッカソン · DAY 1 · TP2 712</div>
+    </div>
+    <div id="wall-pre" class="row" style="justify-content:center;gap:22px;margin-top:60px;flex:none"></div>
+    <div class="ticker"><span>REVERSE IT · SPEC IT · REBUILD IT BETTER · ♠ ♥ ♦ ♣ · THE CARD DROP AT 3:00 PM · INAUGURATION AT 9:15 · FIND YOUR TABLE · OPEN YOUR LAPTOP ·</span></div>
+  </section>
+
+  <section class="slide" data-notes="Akshat: Laptops? · Sejal: Charged? · Akshat: Wi-Fi? · Sejal: Teammates? · Akshat: And most importantly… · Sejal: Caffeine?
+(click once per word) · Akshat: Excellent. Now we're ready. Plug into the extensions, log into the Wi-Fi; volunteers are around to help.">
+    <div class="kicker">Before we begin</div>
+    <div class="row" style="align-items:center;gap:80px">
+      <div style="flex:1.3">
+        <div class="h1 f">Laptops?</div>
+        <div class="h1 f">Charged?</div>
+        <div class="h1 f">Wi-Fi?</div>
+        <div class="h1 f">Teammates?</div>
+        <div class="h1 f red">Caffeine?</div>
+      </div>
+      <div class="box hot f" style="flex:1">
+        <h3>Wi-Fi</h3>
+        <p>Network: <b data-cfg="wifiName">________</b></p>
+        <p>Password: <b data-cfg="wifiPass">________</b></p>
+        <p style="margin-top:20px">Open the <b>Antigravity IDE</b> with the <b>espionage-event</b> folder.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="slide" data-notes="Optional while waiting: today's plan.">
+    <div class="kicker">Today</div>
+    <h2 class="split" style="margin-bottom:40px">Day 1 at a glance</h2>
+    <div class="tl st" style="grid-template-columns:200px 1fr">
+      <div class="t">9:15</div><div><b>Inauguration</b></div>
+      <div class="t hl">10:30</div><div class="hl"><b>Session 1</b> · Reverse engineering with AI agents</div>
+      <div class="t">12:30</div><div><b>Lunch</b> · back by 1:30</div>
+      <div class="t hl">1:30</div><div class="hl"><b>Session 2</b> · Thinking like a product manager</div>
+      <div class="t hl">3:00</div><div class="hl"><b>The Card Drop</b> · each team gets one real product</div>
+      <div class="t">3:45</div><div><b>Overnight briefing</b> · rules, scoring, what is due</div>
+      <div class="t">4:00</div><div><b>Leave</b> · the overnight build starts</div>
+    </div>
+  </section>
+
+  <!-- ═══════════ INAUGURATION 9:15 ═══════════ -->
+  <section class="slide" data-notes="9:15 · Lights dim. Akshat: “They say in modern software engineering, victory does not belong to the ones who write code from scratch the fastest. It belongs to those who can observe a complex system, dissect its architecture, think sharper,” Sejal: “and then rebuild it better.”">
+    <div class="kicker">9:15 · Inauguration</div>
+    <div class="dimprev">
+      <p class="lead f" style="font-size:52px;max-width:1600px">In modern software engineering, victory does <b>not</b> belong to those who write code from scratch the fastest.</p>
+      <p class="lead f" style="font-size:52px;max-width:1600px;margin-top:30px">It belongs to those who can observe a complex system, dissect its architecture, think sharper…</p>
+      <div class="h1 f red" style="margin-top:40px">…and then rebuild it better.</div>
+    </div>
+  </section>
+
+  <section class="slide" data-notes="Akshat: Which sounds easy. Until someone gives you a massive codebase and says — Sejal: “Figure this out.” · Akshat: And that’s exactly where the fun begins.">
+    <div style="text-align:center">
+      <p class="lead f" style="margin:0 auto 50px;font-size:46px">Until someone hands you a massive codebase and says…</p>
+      <div class="h1 glitch f" data-text="FIGURE THIS OUT." style="font-size:210px">FIGURE THIS OUT.</div>
+    </div>
+  </section>
+
+  <section class="slide" data-notes="Sejal: And that is exactly the spirit of HACKBACK V2! · Akshat: A world of AI coding agents, Sejal: product strategy, Akshat: high-pressure decisions… · Welcome, Players! · Sejal: HACKBACK V2 — REVERSE IT. SPEC IT. REBUILD IT BETTER. A two-day reverse engineering challenge by dBug Labs at SRM IST.">
+    <div style="text-align:center">
+      <img class="pop" src="assets/img/hackback-wordmark.png" style="width:1300px;--d:.15s" alt="HACKBACK">
+      <div class="h2 split" style="--d:.8s;margin-top:40px">Reverse it. Spec it. <span class="red">Rebuild it better.</span></div>
+      <div class="row st" style="justify-content:center;gap:24px;margin-top:60px;flex:none">
+        <div class="box" style="flex:none;padding:18px 34px"><p>AI coding agents</p></div>
+        <div class="box" style="flex:none;padding:18px 34px"><p>Product strategy</p></div>
+        <div class="box" style="flex:none;padding:18px 34px"><p>High-pressure decisions</p></div>
+        <div class="box hot" style="flex:none;padding:18px 34px"><p>Very good debugging</p></div>
+      </div>
+      <div class="jp pop" style="--d:1.6s;margin-top:50px">A TWO-DAY REVERSE ENGINEERING CHALLENGE · dBUG LABS · SRM IST</div>
+    </div>
+  </section>
+
+  <section class="slide" data-notes="Akshat: HACKBACK is not your conventional hackathon where you throw together a random pitch deck. Today you take on real, production-grade open-source software. · Sejal: You don't start by building. You start by understanding. · (click ×3)">
+    <div class="kicker">What this is</div>
+    <h2 class="split">Not a pitch-deck hackathon.</h2>
+    <p class="lead pop" style="--d:1s;margin-top:24px">Real, production-grade open-source software. <span class="red">You don’t start by building. You start by understanding.</span></p>
+    <div class="grid3" style="margin-top:60px">
+      <div class="box f shine"><div class="badge">♠</div><h3>Tear it down</h3><p>Take apart complex codebases with AI coding agents.</p></div>
+      <div class="box f shine"><div class="badge">♥</div><h3>Spec it</h3><p>Document the software like an elite product manager.</p></div>
+      <div class="box hot f shine"><div class="badge">♦</div><h3>Rebuild it</h3><p>Rebuild its hard core from your own specification alone.</p></div>
+    </div>
+  </section>
+
+  <section class="slide" data-notes="Sejal: so essentially, · Akshat: yes? · Sejal: Today you are detectives. · Akshat: Tomorrow? · Sejal: Builders. · Akshat: And right now? · Sejal: Very busy people. (pause for laughter)">
+    <div style="display:grid;grid-template-columns:auto 1fr;gap:20px 60px;align-items:baseline">
+      <div class="lead f" style="font-size:48px">Today you are</div><div class="h1 f red" style="font-size:180px">Detectives.</div>
+      <div class="lead f" style="font-size:48px">Tomorrow?</div><div class="h1 f" style="font-size:180px">Builders.</div>
+      <div class="lead f" style="font-size:48px">Right now?</div><div class="h1 f dim" style="font-size:120px">Very busy people.</div>
+    </div>
+  </section>
+
+  <section class="slide" data-notes="Dignitaries — click once as each is welcomed, pause for the token / bouquet exchange.
+1. Dr. M. Lakshmi, Professor & Head, NWC · 2. Dr. Arun A, Faculty Convenor · 3. Dr. N. Prasath, Faculty Co-Convenor. Names: CONFIG at the top of this file.">
+    <div class="kicker">Our esteemed dignitaries</div>
+    <h2 class="split" style="margin-bottom:56px">A warm welcome</h2>
+    <div class="grid3" style="gap:70px">
+      <div class="dig f"><div class="ph"><img src="assets/img/hod.jpg" alt=""><span class="su">♥</span></div><div class="tg">Head of Department</div><h3 data-cfg="hod">Dr. M. Lakshmi</h3><p data-cfg="hodRole">Professor &amp; Head, Dept. of Networking and Communications</p></div>
+      <div class="dig f"><div class="ph"><img src="assets/img/arun.jpg" alt=""><span class="su">♠</span></div><div class="tg">Faculty Convenor</div><h3 data-cfg="convenor">Dr. Arun A</h3><p data-cfg="convenorRole">Faculty Convenor</p></div>
+      <div class="dig f"><div class="ph"><img src="assets/img/prasath.jpg" alt=""><span class="su">♦</span></div><div class="tg">Faculty Co-Convenor</div><h3 data-cfg="coConvenor">Dr. N. Prasath</h3><p data-cfg="coConvenorRole">Faculty Co-Convenor</p></div>
+    </div>
+  </section>
+
+  <section class="slide" data-needs="chiefGuest specialGuest" data-notes="Guests: only shown when a chief guest or special guest name is set in CONFIG. Click once per guest.">
+    <div class="kicker">Our guests</div>
+    <h2 class="split" style="margin-bottom:60px">Joining us today</h2>
+    <div class="grid2" style="display:grid;grid-template-columns:1fr 1fr;gap:40px">
+      <div class="box hot f shine" data-needs="chiefGuest" style="min-height:330px"><div class="badge">♦</div><p class="dim" style="font-size:24px;letter-spacing:.2em;text-transform:uppercase">Chief Guest</p><h3 data-cfg="chiefGuest" style="margin-top:14px">[Chief Guest Name]</h3><p data-cfg="chiefGuestRole">[Designation]</p></div>
+      <div class="box hot f shine" data-needs="specialGuest" style="min-height:330px"><div class="badge">♣</div><p class="dim" style="font-size:24px;letter-spacing:.2em;text-transform:uppercase">Special Chief Guest</p><h3 data-cfg="specialGuest" style="margin-top:14px">[Special Chief Guest Name]</h3><p data-cfg="specialGuestRole">[Designation]</p></div>
+    </div>
+  </section>
+
+  <section class="slide" data-notes="Sejal: To formally inaugurate HACKBACK V2, we request our dignitaries to join us on stage for the Lamp Lighting. · Akshat: The lamp symbolizes knowledge, clarity, and the spark of innovation… · CLICK when the lamp is lit (or press L). · Sejal: And considering what these teams are about to do… Akshat: we are definitely going to need all three.">
+    <div class="row" style="align-items:center;gap:100px">
+      <div style="flex:1.2">
+        <div class="kicker">The inauguration</div>
+        <h1 class="split">Lamp lighting</h1>
+        <div class="row st" style="margin-top:50px;gap:24px">
+          <div class="box" style="padding:24px 30px"><h3 class="gold">Knowledge</h3></div>
+          <div class="box" style="padding:24px 30px"><h3 class="gold">Clarity</h3></div>
+          <div class="box hot" style="padding:24px 30px"><h3>Innovation</h3></div>
+        </div>
+        <p class="lead f" data-action="lamp" style="margin-top:50px">HACKBACK V2 is now open. ♦</p>
+      </div>
+      <div style="flex:.8"><div class="lamp"><div class="glow"></div><div class="flame"></div><div class="base"></div></div></div>
+    </div>
+  </section>
+
+  <section class="slide" data-notes="Akshat: We now invite our Secretary from dBug Labs to share a few words about who we are and why we designed this reverse hackathon. (~10 min) Click to reveal each reason as the Secretary speaks.">
+    <img class="pop" src="assets/img/dbuglabs-wordmark.png" style="width:520px;--d:.15s" alt="dBug Labs">
+    <h2 class="split" style="margin-top:40px">Why a reverse hackathon?</h2>
+    <div class="grid3" style="margin-top:60px">
+      <div class="box f"><div class="num">01</div><h3>How software is built now</h3><p>AI writes most of the code. The skill is understanding a system, writing a clear spec, and checking the agent’s work.</p></div>
+      <div class="box f"><div class="num">02</div><h3>Fair across years</h3><p>No year-wise tracks. A first-year team that thinks clearly can beat a third-year team that only types fast.</p></div>
+      <div class="box hot f"><div class="num">03</div><h3>It can’t be faked</h3><p>Docs tested by a fresh agent. Rebuilds face live Killer Tests. Understanding questioned live.</p></div>
+    </div>
+  </section>
+
+  <section class="slide" data-notes="Sejal: A massive event like HACKBACK is made possible through the collaboration of incredible visionaries. We express our sincere gratitude to our industry partners — CyberThulir and HebeSec Technologies — for supporting student innovation and career growth!">
+    <div style="text-align:center">
+      <div class="kicker" style="margin-bottom:40px">Our industry partners</div>
+      <h1 class="split">Thank you</h1>
+      <div class="logo-row" style="margin-top:110px">
+        <div class="pop" style="--d:.9s;display:flex;align-items:center;gap:36px"><img src="assets/img/cyberthulir.png" style="height:220px" alt=""><span class="h2" style="font-size:90px">CyberThulir</span></div>
+        <img class="pop" src="assets/img/hebesec-logo-white.png" style="width:760px;--d:1.3s" alt="HebeSec Technologies">
+      </div>
+    </div>
+  </section>
+
+  <section class="slide" data-notes="10:10 Group photo with the guests. 10:15–10:30 changeover: guests leave, every table opens Antigravity with espionage-event. Volunteers fix logins, quota and Wi-Fi.
+Shaurya at the mic around 10:25: “Guys, five minutes. Open Antigravity and the espionage-event folder. Setup problems: raise your hand, a volunteer will come.”">
+    <div style="text-align:center">
+      <div class="kicker">10:10 · Group photo · then a 15-minute changeover</div>
+      <h1 class="split">Say “Borderland”</h1>
+      <p class="lead pop" style="--d:1.2s;margin:40px auto 0">Then: open the <b class="red">Antigravity IDE</b> with the <b>espionage-event</b> folder. Session 1 starts at 10:30.</p>
+    </div>
+  </section>
+
+  <!-- ═══════════ SESSION 1 · INVITE ═══════════ -->
+  <section class="slide" data-notes="EMCEE: “We now invite Shaurya Ojha and Saalini to take us through Session 1: Reverse engineering with AI agents.”">
+    <div style="text-align:center">
+      <div class="kicker">10:30 · Session 1</div>
+      <h2 class="split">Reverse engineering with AI agents</h2>
+      <p class="lead pop" style="--d:1s;margin:50px auto 18px;font-size:34px;letter-spacing:.3em;text-transform:uppercase">Please welcome</p>
+      <div class="speaker pop" style="--d:1.3s" data-cfg="s1Speakers">Shaurya Ojha &amp; Saalini</div>
+      <div class="pop" style="--d:1.8s;font-size:200px;color:var(--red2);font-family:Cinzel;margin-top:10px;line-height:1">♦</div>
+    </div>
+  </section>
+
+  <!-- ═══════════ SESSION 1 · PART A · 10:30–10:40 ═══════════ -->
+  <section class="slide" data-notes="10:30 OPENING HOOK. “Good morning guys. How many of you have used some website recently and thought, ‘Yeah, I could build something like this’? [PAUSE] Now a harder question: how many think you can rebuild it without seeing its code — only notes? [PAUSE] Exactly. That is what you’re going to do here. This is Espionage. We built this in our club for an event… you haven’t seen the code. In the next 90 minutes you’ll understand it really well. Not by reading 50,000 lines. By asking the AI the right questions… and checking its answers.”">
+    <div class="row" style="align-items:center;gap:70px">
+      <div style="flex:1">
+        <div class="kicker">10:30 · Part A</div>
+        <p class="lead f" style="font-size:44px">Used a website and thought, <b style="color:var(--paper)">“I could build this”?</b></p>
+        <p class="lead f" style="font-size:44px;margin-top:30px">Could you rebuild it <b class="red">without seeing its code</b>, only from notes?</p>
+        <div class="h2 f" style="margin-top:40px">That’s what you’re doing here.</div>
+      </div>
+      <div style="flex:1.1"><img class="shot pop" src="assets/img/espionage-landing.jpg" style="width:100%;--d:.4s" alt="Espionage landing page"><p class="jp pop" style="--d:.9s;text-align:center">ESPIONAGE · BUILT BY dBUG LABS</p></div>
+    </div>
+  </section>
+
+  <section class="slide" data-notes="10:32 THE WHOLE TWO DAYS. Click once per step. “It’s basically four steps… And tomorrow, we test what you built. Live.”">
+    <div class="kicker">10:32 · The two days</div>
+    <h2 class="split">Four steps</h2>
+    <div class="grid4" style="margin-top:60px">
+      <div class="box f"><div class="badge">♠</div><p class="dim" style="font-size:24px;letter-spacing:.18em">STEP 1 · THIS MORNING</p><h3 style="margin-top:10px">Understand it</h3><p>A real codebase, an AI agent. Ask the right questions, check the answers.</p></div>
+      <div class="box f"><div class="badge">♥</div><p class="dim" style="font-size:24px;letter-spacing:.18em">STEP 2 · AFTER LUNCH</p><h3 style="margin-top:10px">Think like a PM</h3><p>Why does it exist? Who uses it? How do you explain it so someone else can build it?</p></div>
+      <div class="box f"><div class="badge">♦</div><p class="dim" style="font-size:24px;letter-spacing:.18em">STEP 3 · 3 PM</p><h3 style="margin-top:10px">The Card Drop</h3><p>Every team gets one real open-source product used by actual companies.</p></div>
+      <div class="box hot f"><div class="badge">♣</div><p class="dim" style="font-size:24px;letter-spacing:.18em">STEP 4 · TONIGHT</p><h3 style="margin-top:10px">Rebuild it better</h3><p>Reverse-engineer it, document it, build a better version. Not their code. <b>Your docs.</b></p></div>
+    </div>
+    <div class="h2 f red" style="margin-top:50px;font-size:72px">Tomorrow, we test what you built. Live.</div>
+  </section>
+
+  <section class="slide" data-notes="WHY THIS WAY. “AI can write a lot of code really fast. So the important skill is not typing faster. Understand the system. Explain what you want clearly. And catch the AI when it is wrong. That’s the skill we’re testing — so yes, even a first-year can beat a third-year here.”">
+    <div class="kicker">Why this way?</div>
+    <h2 class="split">AI types fast. That’s not the skill anymore.</h2>
+    <div class="grid3" style="margin-top:60px">
+      <div class="box f"><div class="num">01</div><h3>Understand the system</h3></div>
+      <div class="box f"><div class="num">02</div><h3>Explain it clearly</h3></div>
+      <div class="box hot f"><div class="num" style="color:#fff">03</div><h3>Catch the AI when it’s wrong</h3></div>
+    </div>
+    <p class="lead f" style="margin-top:50px">That’s the skill we’re testing. <b class="red">A first-year can beat a third-year here.</b></p>
+  </section>
+
+  <section class="slide" data-notes="10:36 THE ONE RULE. “AI is like a very fast intern… sometimes very confidently wrong. Every claim needs proof: file name and line number. Like this.” Click: the example, then the three tags. “Tonight, a file and line that doesn’t support your claim gets zero.”">
+    <div class="kicker">10:36 · The one rule</div>
+    <h2 class="split">AI is a very fast intern who is sometimes confidently wrong.</h2>
+    <div class="code f" style="margin-top:46px"><span class="c">- </span>Round 1 gives each player up to 25 questions.
+  <span class="red">Evidence:</span> src/app/api/round1/questions/route.ts:8 <span class="green">[Confirmed]</span><span class="caret"></span></div>
+    <div class="grid3" style="margin-top:36px">
+      <div class="box f"><h3 class="green">Confirmed</h3><p>You opened the file and checked it yourself.</p></div>
+      <div class="box f"><h3 class="gold">Likely</h3><p>Strong signs, not fully checked yet.</p></div>
+      <div class="box hot f"><h3>Guess</h3><p>No proof yet.</p></div>
+    </div>
+  </section>
+
+  <section class="slide" data-notes="10:38 ROLES. “Don’t just say ‘yeah, looks right’. Decide now. Driver, raise your hand. [PAUSE] Good. In the solo lab you swap.”">
+    <div class="kicker">10:38 · At every table</div>
+    <h2 class="split">One driver. Everyone else checks.</h2>
+    <div class="grid2" style="margin-top:70px">
+      <div class="box f"><div class="badge">♠</div><h3>Driver</h3><p>Pastes the prompts into the agent. That’s it.</p></div>
+      <div class="box hot f"><div class="badge">♣</div><h3>Checkers</h3><p>When the agent gives a file or evidence, open it and check. Don’t just say “yeah, looks right”.</p></div>
+    </div>
+    <div class="h2 f" style="margin-top:50px;font-size:72px">Driver, raise your hand. <span class="red">✋</span></div>
+  </section>
+
+  <!-- PART B -->
+  <section class="slide" data-notes="10:40 ANTIGRAVITY TOUR — switch to the Antigravity window. Show only these four things. “Every prompt is on the playbook and the card on your table. Don’t type them. Copy them.”">
+    <div class="kicker">10:40 · Part B · Antigravity</div>
+    <h2 class="split">Only four things</h2>
+    <div class="grid4" style="margin-top:60px">
+      <div class="box f"><div class="num">1</div><h3>The folder</h3></div>
+      <div class="box f"><div class="num">2</div><h3>The agent panel</h3></div>
+      <div class="box f"><div class="num">3</div><h3>Where to paste</h3></div>
+      <div class="box f"><div class="num">4</div><h3>Attach an image</h3></div>
+    </div>
+    <div class="box hot f" style="margin-top:50px;display:flex;align-items:center;justify-content:space-between;gap:40px">
+      <p style="color:var(--paper);font-size:36px">Every prompt is here. <b>Don’t type them. Copy them.</b></p>
+      <div class="h2" style="font-size:58px;color:var(--paper);white-space:nowrap">dbuglabshackback.vercel.app<span class="red">/playbook</span></div>
+    </div>
+  </section>
+
+  <section class="slide" data-notes="10:45 STAGE 0. “Everyone, copy Stage 0 and paste it now. Go.” While thinking: “The prompt says don’t change any files and cite every fact. We’re detectives first.” When the answer arrives, scroll to test-rp.js: “How many of you think this app has payments? Checkers: search the whole repo for ‘razorpay’.” → just one old test file.">
+    <div class="kicker">10:45 · Stage 0 · Recon</div><h2 class="split">Copy Stage 0. Paste it. Go.</h2>
+    <div class="grid2" style="margin-top:50px">
+      <div><div class="box f"><p class="dim">WHILE IT THINKS</p><p style="font-size:34px;color:var(--paper);margin-top:10px">The prompt says: <b>don’t change any files</b>, and <b>cite every fact</b>.</p></div>
+      <div class="h2 f" style="margin-top:34px;font-size:72px">We’re detectives first.</div></div>
+      <div><div class="box f"><p class="dim">ASK THE ROOM</p><p style="font-size:34px;color:var(--paper);margin-top:10px">The agent found <span class="mono red">test-rp.js</span>, which mentions Razorpay. <b>Does this app take payments?</b> Search the repo.</p></div>
+      <div class="box hot f" style="margin-top:26px"><h3>A file existing ≠ the feature existing.</h3></div></div>
+    </div>
+  </section>
+
+  <section class="slide" data-notes="10:53 STAGE 1. “Use only what you actually read. Don’t guess from the project name — AI loves assumptions from names.” Read the 3-sentence summary, point at the roles. “Anyone’s summary slightly different? Same repo, different answers. That’s why we check the evidence.”">
+    <div class="kicker">10:53 · Stage 1 · Big picture</div><h2 class="split">Use only what you actually read</h2>
+    <div class="grid2" style="margin-top:50px">
+      <ul class="b st"><li>What it does, for whom, in 3 sentences</li><li>Every user role and what it can do</li><li>Main features, each with its folder</li><li>README claims the code doesn’t back</li></ul>
+      <div><div class="box f"><p class="dim">ASK THE ROOM</p><p style="font-size:34px;color:var(--paper);margin-top:10px">“Does anyone have a summary that’s different from mine?”</p></div>
+      <div class="box hot f" style="margin-top:26px"><h3>Same repo. Different answers. That’s why we check.</h3></div></div>
+    </div>
+  </section>
+
+  <section class="slide" data-notes="11:00 STAGE 2. Render the diagram. “Architecture just tells us one thing: what is talking to what.” Walk: browser → Next.js API → MongoDB; Piston runs code, OpenRouter does AI grading, Turnstile is captcha. Two checks: every box has a file? Where does the login live? → only in the browser’s local storage. “Keep that in your head.”">
+    <div class="kicker">11:00 · Stage 2 · Architecture</div><h2 class="split">What is talking to what?</h2>
+    <div class="row st" style="margin-top:60px;align-items:center;gap:20px;flex:none">
+      <div class="box" style="text-align:center;padding:30px"><h3>Browser</h3></div><div class="h2 red" style="flex:none">→</div>
+      <div class="box" style="text-align:center;padding:30px"><h3>Next.js API</h3></div><div class="h2 red" style="flex:none">→</div>
+      <div class="box hot" style="text-align:center;padding:30px"><h3>MongoDB</h3></div>
+    </div>
+    <div class="row st" style="margin-top:24px;gap:20px;flex:none">
+      <div class="box" style="padding:20px 26px"><p><b>Mail</b> · SMTP</p></div><div class="box" style="padding:20px 26px"><p><b>Piston</b> · runs code</p></div>
+      <div class="box" style="padding:20px 26px"><p><b>OpenRouter</b> · AI grading</p></div><div class="box" style="padding:20px 26px"><p><b>Turnstile</b> · captcha</p></div>
+    </div>
+    <div class="grid2" style="margin-top:40px">
+      <div class="box f"><p style="font-size:34px;color:var(--paper)">Does every box have a <b>file</b> behind it?</p></div>
+      <div class="box hot f"><p style="font-size:34px;color:var(--paper)">Where does the <b>login</b> live? <span class="f">→ only in the browser’s local storage.</span></p></div>
+    </div>
+  </section>
+
+  <section class="slide" data-notes="11:13 QUESTION POCKET 1. Two minutes, at most three questions. Setup problems → raise your hand for a volunteer. Longer ones: “Good question. Let’s catch that at lunch.”">
+    <div style="text-align:center">
+      <div class="kicker">11:13 · Question break</div>
+      <h1 class="split" style="font-size:220px">Questions?</h1>
+      <p class="lead pop" style="--d:1s;margin:30px auto 0">Two minutes. Only about what we’ve covered. <b class="red">Setup problem? Raise your hand for a volunteer.</b></p>
+    </div>
+  </section>
+
+  <!-- PART C -->
+  <section class="slide" data-notes="11:17 STAGES 3 + 4. “A route is a door into the app. Who is allowed to use that door?” Show count: “Checkers, don’t trust it — count them. 37 route files, 46 handlers.” Player routes trust an email from the browser; admin routes check a password, two different ways. “That’s a smell.” Then Stage 4: “Team has many Participants — where does that arrow come from? Open the models.” → just ID strings, Team has unused payment fields → Likely leftover.">
+    <div class="kicker">11:17 · Stages 3–4 · Routes + data model</div><h2 class="split">A route is a door. Who can use it?</h2>
+    <div class="row" style="margin-top:40px;gap:40px;align-items:stretch">
+      <div class="box pop" style="--d:.6s;flex:.6;text-align:center"><div class="num count" data-to="37">37</div><p>route files</p></div>
+      <div class="box pop" style="--d:.8s;flex:.6;text-align:center"><div class="num count" data-to="46">46</div><p>handlers</p></div>
+      <div style="flex:1.5">
+        <div class="box f"><p style="font-size:30px;color:var(--paper)">Player routes trust an <b>email from the browser</b>. Admin routes check a password <b>two different ways</b>. <span class="red">That’s a smell.</span></p></div>
+        <div class="box f" style="margin-top:20px"><p style="font-size:30px;color:var(--paper)">“Team has many Participants.” <b>Where does that arrow come from?</b> Just lists of ID strings.</p></div>
+      </div>
+    </div>
+    <div class="box hot f" style="margin-top:30px"><h3>A diagram is a claim too. It needs evidence.</h3></div>
+  </section>
+
+  <section class="slide" data-notes="11:29 STAGE 5. Feature: a player takes Round 1, gets scored, and the admin shortlists the top players. “Think of it like CCTV: one action, followed through every file.” Open route.ts:8 (25 questions), then README.md:17–18 (whole bank). “Who’s wrong? The agent, the README, or us? [PAUSE] The README. Docs can be wrong too. The code is the truth. Tonight: write down both, with file and line.”">
+    <div class="kicker">11:29 · Stage 5 · Trace a feature</div><h2 class="split">Like CCTV for one action</h2>
+    <p class="lead pop" style="--d:.9s;margin-top:16px">A player takes Round 1 → gets scored → the admin shortlists the top players.</p>
+    <div class="grid2" style="margin-top:40px">
+      <div class="st">
+        <div class="code" style="font-size:28px"><span class="c">README.md:17–18</span>
+<span class="dim">“each player gets the question bank”</span></div>
+        <div class="code" style="font-size:28px;margin-top:20px"><span class="c">round1/questions/route.ts:8</span>
+<span class="red">25 questions per player</span></div>
+      </div>
+      <div><div class="box f"><p class="dim">ASK THE ROOM</p><p style="font-size:36px;color:var(--paper);margin-top:10px">Who’s wrong? The agent? The README? Or us?</p></div>
+      <div class="box hot f" style="margin-top:26px"><h3>Docs can be wrong. The code is the truth.</h3></div></div>
+    </div>
+  </section>
+
+  <section class="slide" data-notes="11:39 STAGE 6. Attach the 3 Espionage screenshots, paste Stage 6, then ask: “List every screen of this app.” If it lists stitch_screens or an enrollment page, STOP: “Those are design mockups. Real pages are in src/app — 11 of them. A file existing does not mean a feature exists.”">
+    <div class="kicker">11:39 · Stage 6 · Screens → journey</div><h2 class="split">“List every screen of this app.”</h2>
+    <div class="grid2" style="margin-top:50px">
+      <div class="box f"><p class="dim">THE TRAP</p><p style="font-size:34px;color:var(--paper);margin-top:10px">It lists <span class="mono red">stitch_screens/</span>. Those are <b>design mockups</b>, not pages.</p></div>
+      <div class="box f"><p class="dim">THE TRUTH</p><p style="font-size:34px;color:var(--paper);margin-top:10px">Real pages live in <span class="mono">src/app</span>. There are <b class="red">11</b>.</p></div>
+    </div>
+    <div class="box hot f" style="margin-top:30px"><h3>Again: a file existing does not mean a feature exists.</h3></div>
+  </section>
+
+  <section class="slide" data-notes="11:45 STAGES 7 + 8. “Every real product has gaps. Finding them is your job tonight — two become the improvements you build. We only describe what, where, and the fix. Never attack steps.” Click each gap. “Remember the login in local storage at 11? That’s gap one.”">
+    <div class="kicker">11:45 · Stage 7 · Gaps</div><h2 class="split">Every real product has gaps</h2>
+    <div style="margin-top:40px;display:flex;flex-direction:column;gap:20px">
+      <div class="box f"><p style="font-size:30px;color:var(--paper)"><b class="red">1 ·</b> Player routes identify a player by an <b>email from the request</b>. The session token is never checked on the server.</p></div>
+      <div class="box f"><p style="font-size:30px;color:var(--paper)"><b class="red">2 ·</b> <span class="mono">/run-code</span> has <b>no auth and no rate limit</b>, and no page uses it.</p></div>
+      <div class="box f"><p style="font-size:30px;color:var(--paper)"><b class="red">3 ·</b> Round 1 scoring checks answers against the <b>whole bank</b>, not the player’s 25 questions.</p></div>
+    </div>
+    <p class="lead f" style="margin-top:30px"><b class="red">What · where · how to fix.</b> Never attack steps.</p>
+  </section>
+
+  <section class="slide" data-notes="STAGE 8 in the same chat. “Now the agent checks itself. But here’s the game: every table, find one claim marked Confirmed that is actually wrong. Two minutes. Best catch is shown at 12:24.” Press T for the 2-minute timer. Then show the OBSERVATIONS.md format.">
+    <div class="row" style="align-items:center;gap:70px">
+      <div style="flex:1.2">
+        <div class="kicker">Stage 8 · The game</div>
+        <h2 class="split">Catch the agent</h2>
+        <p class="lead pop" style="--d:1s;margin-top:24px">Find one claim marked <b class="green">Confirmed</b> that is <b class="red">actually wrong</b>. Best catch goes on screen at 12:24.</p>
+        <div class="code f" style="margin-top:40px;font-size:28px"><span class="c">OBSERVATIONS.md</span>
+- &lt;claim&gt;
+  <span class="red">Evidence:</span> path/to/file:line <span class="green">[Confirmed]</span></div>
+      </div>
+      <div class="box hot" style="flex:.8;text-align:center;padding:50px 30px"><div class="timer" data-sec="120" style="font-size:200px">02:00</div><p style="margin-top:16px">Press T</p></div>
+    </div>
+  </section>
+
+  <section class="slide" data-notes="11:58 Q POCKET 2 + HANDOFF. Max two questions. “The real test starts now. New repo. Same prompts. No help from me.”">
+    <div style="text-align:center">
+      <div class="kicker">11:58</div>
+      <h1 class="split">The real test starts now</h1>
+      <div class="row st" style="justify-content:center;gap:30px;margin-top:60px;flex:none">
+        <div class="box" style="flex:none;padding:24px 40px"><h3>New repo</h3></div>
+        <div class="box" style="flex:none;padding:24px 40px"><h3>Same prompts</h3></div>
+        <div class="box hot" style="flex:none;padding:24px 40px"><h3>No help from me</h3></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- PART D -->
+  <section class="slide" data-notes="12:02 SOLO LAB. Press T to start 20:00. “Don’t try to run it — it’s old and won’t start. That’s fine, we only read it. Five stages: 0, 3, 4, 7, 8. accountill-notes.md with five claims; one must be a claim the agent got wrong and you caught. Tell the agent to ignore client/build. Swap drivers. And go.” 12:15 checkpoint: ask “Where’s your evidence?” 12:17: “Five minutes left. Fewer than three claims? Stop exploring. Start writing.”">
+    <div class="row" style="align-items:center;gap:80px">
+      <div style="flex:1.1">
+        <div class="kicker">12:02 · Part D · Solo lab</div><h2 class="split">Your turn: Accountill</h2>
+        <ul class="b st" style="margin-top:40px"><li>An invoicing app for freelancers. <b class="red">Don’t run it. Read it.</b></li><li>Stages 0, 3, 4, 7 and 8</li><li><span class="mono">accountill-notes.md</span>: 5 claims in the evidence format</li><li>One must be a claim the agent got wrong, and you caught</li><li>Ignore client/build. <b>Swap drivers. Go.</b></li></ul>
+      </div>
+      <div class="box hot" style="flex:.9;text-align:center;padding:60px 30px"><div class="timer" data-sec="1200" style="font-size:210px">20:00</div><p style="margin-top:20px">No help from the speaker</p></div>
+    </div>
+  </section>
+
+  <section class="slide" data-notes="12:22 WRAP. Put the best catch from volunteers in CONFIG.bestCatch (or just say it). “That is the whole skill we’re practising today. Fast agent. Slow human check.”">
+    <div class="kicker">12:22 · Best catch</div>
+    <p class="lead f" style="font-size:44px;max-width:1550px;color:var(--paper)" data-cfg="bestCatch">The agent said the routes were protected. They opened the files: the auth middleware is never used.</p>
+    <div class="h1 f red" style="margin-top:60px">Fast agent.</div>
+    <div class="h1 f">Slow human check.</div>
+  </section>
+
+  <section class="slide" data-notes="5 lines to remember — a recap. Then: “After lunch: why should this product exist, and how do we explain it so an AI can build it? 3 PM: your product. Save your notes. Lunch till 1:30 — back on time.” 12:27 open questions till 12:30.">
+    <div class="kicker">Five lines to remember</div>
+    <div class="st" style="margin-top:30px;display:flex;flex-direction:column;gap:14px">
+      <div class="h2" style="font-size:66px">You’re a detective, not a builder, until tonight.</div>
+      <div class="h2" style="font-size:66px">A file existing ≠ the feature existing.</div>
+      <div class="h2" style="font-size:66px">AI is a fast intern that can be <span class="red">confidently wrong</span>.</div>
+      <div class="h2" style="font-size:66px">The code is the truth.</div>
+      <div class="h2 red" style="font-size:66px">Fast agent. Slow human check.</div>
+    </div>
+  </section>
+
+  <section class="slide" data-notes="12:30 LUNCH">
+    <div style="text-align:center">
+      <div class="kicker">12:30</div><h1 class="split" style="font-size:240px">Lunch</h1>
+      <p class="lead pop" style="--d:1s;margin:30px auto 0">Save your notes file. Back in your seat by <b class="red">1:30 sharp</b>.</p>
+    </div>
+  </section>
+
+  <!-- ═══════════ SESSION 2 · INVITE ═══════════ -->
+  <section class="slide" data-notes="1:30 EMCEE invites the Session 2 speaker (set CONFIG.s2Speaker). The speaker presents from her own deck. Come back here for the Card Drop at 3:00.">
+    <div style="text-align:center">
+      <div class="kicker">1:30 · Session 2</div>
+      <h2 class="split">Thinking like a product manager</h2>
+      <p class="lead pop" style="--d:1s;margin:50px auto 18px;font-size:34px;letter-spacing:.3em;text-transform:uppercase">Please welcome</p>
+      <div class="speaker pop" style="--d:1.3s" data-cfg="s2Speaker">[Session 2 speaker]</div>
+      <div class="pop" style="--d:1.8s;font-size:200px;color:var(--red2);font-family:Cinzel;margin-top:10px;line-height:1">♥</div>
+    </div>
+  </section>
+
+  <!-- ═══════════ CARD DROP ═══════════ -->
+  <section class="slide" data-notes="3:00 THE CARD DROP. Then switch the projector to /admin/stage for the live draw.">
+    <div class="kicker">3:00 · The Card Drop</div>
+    <h1 class="split">Twelve real products.<br><span class="red">One is yours.</span></h1>
+    <p class="lead pop" style="--d:1.4s;margin-top:40px">Rank your top 3. A sealed, live draw decides the order.</p>
+  </section>
+
+  <section class="slide" data-notes="The 12 cards, by track.">
+    <div class="kicker">4 tracks · 3 cards each · one at every difficulty</div>
+    <div id="wall-tracks" class="grid4" style="margin-top:30px;gap:30px"></div>
+  </section>
+
+  <section class="slide" data-notes="How to choose (3:00–3:25).">
+    <div class="kicker">How to choose · 3:00 – 3:25</div><h2 class="split">Pick your top 3 on your phone</h2>
+    <div class="grid4" style="margin-top:60px">
+      <div class="box f"><div class="num">1</div><h3>Open</h3><p>Your team page: the status link from your email.</p></div>
+      <div class="box f"><div class="num">2</div><h3>Read</h3><p>Tap “Choose problem statements”. 12 cards, filter by track.</p></div>
+      <div class="box f"><div class="num">3</div><h3>Choose 3</h3><p>Your 1st, 2nd and 3rd, in order. Reorder at the bottom.</p></div>
+      <div class="box hot f"><div class="num" style="color:#fff">4</div><h3>Save</h3><p>Change it any time until the draw starts.</p></div>
+    </div>
+    <p class="lead f" style="margin-top:40px">Can’t open your link? Raise your hand: a volunteer enters your choices.</p>
+  </section>
+
+  <section class="slide" data-notes="Fairness of the draw.">
+    <div class="kicker">The draw · 3:25</div><h2 class="split">Provably fair. Nobody can steer it.</h2>
+    <div class="grid2" style="margin-top:60px">
+      <div class="box f"><h3>Sealed before you choose</h3><p>A secret random seed is fixed when the Card Drop opens. Only its fingerprint, the seal, is shown.</p></div>
+      <div class="box f"><h3>Random pick order</h3><p>The seed shuffles the teams. Pick 1 gets its first choice for sure.</p></div>
+      <div class="box f"><h3>3 seats per card</h3><p>You get your highest choice that still has a seat.</p></div>
+      <div class="box hot f"><h3>Verified on screen</h3><p>After the draw the seed is revealed and the order re-computed: ✓ seed matches the seal.</p></div>
+    </div>
+  </section>
+
+  <section class="slide" data-notes="Lock in (3:35–3:45).">
+    <div class="kicker">Lock in · 3:35 – 3:45</div><h2 class="split">Name it. Choose your risk.</h2>
+    <div class="grid3" style="margin-top:60px">
+      <div class="box f"><h3>Solution title</h3><p>Up to 60 characters, e.g. “FestPass: rush-proof passes”.</p></div>
+      <div class="box f"><h3>Standard</h3><p>Your Doc Test counts as it is.</p></div>
+      <div class="box hot f"><h3>High Risk</h3><p>Doc Test ×1.5 if it scores 30+. Under 20: it counts 0 and costs a Visa.</p></div>
+    </div>
+  </section>
+
+  <!-- ═══════════ OVERNIGHT BRIEFING 3:45 ═══════════ -->
+  <section class="slide" data-notes="3:45 OVERNIGHT BRIEFING.">
+    <div class="kicker">3:45 · Tonight, from home</div><h2 class="split">Three moves, in this order</h2>
+    <div class="grid3" style="margin-top:60px">
+      <div class="box f"><div class="num">1</div><h3>Reverse it</h3><p>Playbook stages 0–8 on your card’s product. Every claim with file:line.</p></div>
+      <div class="box hot f"><div class="num" style="color:#fff">2</div><h3>Spec it</h3><p>Stage 9: OBSERVATIONS, PRD, ARCHITECTURE, DATA_MODEL, API, GAPS, AGENT_LOG. Push them first.</p></div>
+      <div class="box f"><div class="num">3</div><h3>Rebuild it</h3><p>Empty repo, your docs, your agent. The hard core, better, plus your 2 improvements.</p></div>
+    </div>
+    <p class="lead f" style="margin-top:40px"><b class="red">Tomorrow</b> a stranger’s AI agent gets only your docs/. If it can’t build from them, your docs aren’t finished.</p>
+  </section>
+
+  <section class="slide" data-notes="The two rules.">
+    <div class="kicker">The two rules</div>
+    <h2 class="split">Break them and it’s Game Over</h2>
+    <div class="grid2" style="margin-top:70px">
+      <div class="box hot f"><h3>♠ The Verify Rule</h3><p>Every claim needs evidence: a <b>file:line</b> or a screenshot. A claim the AI made up, caught by a Game Master, costs a Visa.</p></div>
+      <div class="box hot f"><h3>♦ The Clean-Room Rule</h3><p>Your rebuild starts from an <b>empty repo</b>, built from your own docs. Docs pushed before code. No commits before 4 PM today. No copying the original.</p></div>
+    </div>
+  </section>
+
+  <section class="slide" data-notes="Visas are lives. Start with 3.">
+    <div class="row" style="align-items:center;gap:90px">
+      <div style="flex:.8;text-align:center">
+        <div class="kicker" style="justify-content:center">Visas</div>
+        <div class="h1 count red" data-to="3" style="font-size:420px;line-height:.9;text-shadow:0 0 80px rgba(224,53,47,.5)">3</div>
+        <h3>Lives per team</h3>
+        <p class="lead" style="font-size:30px;margin-top:14px">At 0 it is Game Over. Every Visa left = +10 points.</p>
+      </div>
+      <div style="flex:1.4;grid-template-columns:1fr 230px" class="tl st">
+        <div>Missing the 10 PM checkpoint</div><div class="t">−1</div>
+        <div>Late overnight submission (after 8:30 AM)</div><div class="t">−1</div>
+        <div>Missing from your table at a Day 2 checkpoint</div><div class="t">−1</div>
+        <div>A made-up claim caught by a Game Master</div><div class="t">−1</div>
+        <div>Fake information on the Trading Floor</div><div class="t">−2</div>
+        <div class="hl"><b>Clean-Room violation</b></div><div class="t hl">GAME OVER</div>
+      </div>
+    </div>
+  </section>
+
+  <section class="slide" data-notes="How the winner is decided.">
+    <div class="kicker">Scoring</div>
+    <h2 class="split">How the winner is decided</h2>
+    <div style="display:grid;grid-template-columns:420px 140px 1fr;gap:16px 30px;align-items:center;margin-top:40px;font-size:36px">
+      <div>♠ Code Detective</div><div class="red" style="font-family:Anton;font-size:52px">50</div><div class="bar" data-i="0" style="width:33%"></div>
+      <div>♦ Deduction</div><div class="red" style="font-family:Anton;font-size:52px">150</div><div class="bar" data-i="1" style="width:100%"></div>
+      <div>Doc Test</div><div class="red" style="font-family:Anton;font-size:52px">50</div><div class="bar" data-i="2" style="width:33%"></div>
+      <div>♥ Final judging</div><div class="red" style="font-family:Anton;font-size:52px">150</div><div class="bar" data-i="3" style="width:100%"></div>
+      <div>♣ Trading bonus</div><div class="red" style="font-family:Anton;font-size:52px">+30</div><div class="bar" data-i="4" style="width:20%"></div>
+    </div>
+    <div class="box hot f" style="margin-top:36px;padding:26px 40px"><p style="font-size:34px;color:var(--paper)"><b>Final score</b> = points × card multiplier (×1.0 · ×1.1 · ×1.2) + 10 × Visas left</p></div>
+  </section>
+
+  <section class="slide" data-notes="Deadlines tonight.">
+    <div class="kicker">The night</div><h2 class="split" style="margin-bottom:40px">What is due, and when</h2>
+    <div class="tl st" style="grid-template-columns:260px 1fr">
+      <div class="t">4:00 PM</div><div><b>Clock starts</b> · first commit allowed</div>
+      <div class="t">6:00 PM</div><div>Dealer check-in on WhatsApp</div>
+      <div class="t hl">10:00 PM</div><div class="hl"><b>Checkpoint</b> · repo link saved + first docs pushed · missing it: −1 Visa</div>
+      <div class="t">12:00 AM</div><div>Dealer check-in</div>
+      <div class="t hl">8:30 AM</div><div class="hl"><b>Docs freeze</b> · docs/ scored as of the last push before 8:30</div>
+      <div class="t hl">12:30 PM</div><div class="hl"><b>Code freeze (Tue)</b> · code judged as of the last push before 12:30</div>
+    </div>
+  </section>
+
+  <section class="slide" data-notes="Submission.">
+    <div class="kicker">Submission</div><h2 class="split">One public GitHub repo</h2>
+    <div class="row" style="margin-top:40px;gap:50px;align-items:stretch">
+      <div class="code pop" style="--d:.5s;flex:.9;font-size:28px;line-height:1.45">your-repo/
+├─ README.md
+├─ SUBMISSION.md
+├─ <span class="red">deck.pdf</span>
+├─ .env.example
+├─ docs/
+│  ├─ OBSERVATIONS.md
+│  ├─ PRD.md  ·  ARCHITECTURE.md
+│  ├─ DATA_MODEL.md  ·  API.md
+│  └─ GAPS.md  ·  AGENT_LOG.md
+└─ (your rebuild)</div>
+      <div style="flex:1.1">
+        <div class="box f"><h3><span class="red">1</span> Team page → “Submit your repo”</h3></div>
+        <div class="box f" style="margin-top:20px"><h3><span class="red">2</span> Paste the link, tick the declaration</h3></div>
+        <div class="box f" style="margin-top:20px"><h3><span class="red">3</span> Fix what the repo check flags</h3></div>
+        <div class="box hot f" style="margin-top:20px"><p style="color:var(--paper)">Scored by Claude, an AI reviewer, against a fixed rubric. Game Masters check every score.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="slide" data-notes="Clean-room rules.">
+    <div class="kicker">Clean-room rules</div><h2 class="split">Read these twice</h2>
+    <div class="grid3" style="margin-top:50px">
+      <div class="box f"><h3>Repo after 4 PM</h3><p>Push often. We use GitHub’s push times.</p></div>
+      <div class="box f"><h3>Docs before code</h3><p>Push docs/ before your first code commit.</p></div>
+      <div class="box f"><h3>Never copy</h3><p>No original code, no original packages. General libraries are fine.</p></div>
+      <div class="box f"><h3>Runs on your laptop</h3><p>No deploy needed. Time windows settable in .env.</p></div>
+      <div class="box hot f"><h3>Don’t talk to the scorer</h3><p>Anything written to steer the AI reviewer disqualifies the team.</p></div>
+      <div class="box f"><h3>No secrets in git</h3><p>Use .env and keep it out of the repo.</p></div>
+    </div>
+  </section>
+
+  <section class="slide" data-notes="Dealers: fill names in CONFIG. Show each track's WhatsApp QR.">
+    <div class="kicker">You are not alone</div><h2 class="split">Your Dealer is on WhatsApp all evening</h2>
+    <div class="grid4" style="margin-top:60px">
+      <div class="box f"><div class="badge">♦</div><h3>FinTech</h3><p>Dealer: <b data-cfg="dealerFintech">________</b></p></div>
+      <div class="box f"><div class="badge">♥</div><h3>Workflow &amp; Trust</h3><p>Dealer: <b data-cfg="dealerWorkflow">________</b></p></div>
+      <div class="box f"><div class="badge" style="background:#2a2622">♠</div><h3>Real-time &amp; Infra</h3><p>Dealer: <b data-cfg="dealerInfra">________</b></p></div>
+      <div class="box f"><div class="badge" style="background:#2a2622">♣</div><h3>Cyber Security</h3><p>Dealer: <b data-cfg="dealerCyber">________</b></p></div>
+    </div>
+    <p class="lead f" style="margin-top:50px">Dealers answer rules and scope questions and unblock you. They never write code for you.</p>
+  </section>
+
+  <section class="slide" data-notes="4:00 · Close.">
+    <div style="text-align:center">
+      <img class="pop" src="assets/img/hackback-wordmark.png" style="width:1100px;--d:.2s" alt="HACKBACK">
+      <div class="kicker" style="margin-top:50px">4:00 PM · The game continues</div>
+      <h1 class="split">See you tomorrow at 9:30</h1>
+      <p class="lead pop" style="--d:1.6s;margin:30px auto 0">10 PM checkpoint · 8:30 AM docs freeze · dbuglabshackback.vercel.app/playbook</p>
+    </div>
+  </section>
+
+  <div id="foot"><span>HACKBACK · Day 1 · TP2 712</span><span id="footR"></span></div>
+  <div id="progress"></div>
+</div></div>
+<div id="notes"></div>
+<div id="help">→ / Space / click: next · ← / right-click: back<br>F fullscreen · N cues · T timer · R reset · L lamp<br>Number + Enter: jump to slide · H: this help</div>
+
+<script>
+(function () {
+  const D = window.HB_CARDS, T = Object.fromEntries(D.tracks.map((t) => [t.id, t]));
+  const lvl = (r) => (r === '7' || r === '8' ? 'Standard' : r === 'K' ? 'Brutal' : 'Hard');
+  const card = (c, i, w) => `<div class="pcard ${T[c.track].red ? 'redc' : ''}" style="--i:${i};${w ? `width:${w}px;height:${Math.round(w * 1.4)}px` : ''}"><div class="in"><div class="face"><div class="rk">${c.rank}</div><div class="su">${T[c.track].suit}</div><div class="tt">${c.title}</div><div class="lv">${lvl(c.rank)}</div></div><div class="back"></div></div></div>`;
+  const pre = document.getElementById('wall-pre');
+  if (pre) pre.innerHTML = D.cards.map((c, i) => card(c, i, 128)).join('').replace(/class="tt"/g, 'class="tt" style="font-size:13px"').replace(/class="rk"/g, 'class="rk" style="font-size:26px"').replace(/class="lv"/g, 'class="lv" style="font-size:10px"');
+  const tw = document.getElementById('wall-tracks');
+  if (tw) tw.innerHTML = D.tracks.map((t, ti) => `<div><div class="h2" style="font-size:44px;margin-bottom:24px;color:${t.red ? 'var(--red)' : 'var(--paper)'}">${t.suit} ${t.label}</div><div style="display:flex;flex-direction:column;gap:20px;align-items:flex-start">${D.cards.filter((c) => c.track === t.id).map((c, ci) => card(c, ti * 3 + ci, 0).replace('class="pcard', 'class="pcard wide')).join('')}</div></div>`).join('');
+})();
+</script>
+<script>
+// drop anything whose CONFIG names are all empty (e.g. the guests slide when there are no guests)
+document.querySelectorAll('[data-needs]').forEach((el) => {
+  if (!el.dataset.needs.split(' ').some((k) => (window.CONFIG[k] || '').trim())) el.remove();
+});
+</script>
+<script src="assets/deck.js"></script>
+</body>
+</html>
