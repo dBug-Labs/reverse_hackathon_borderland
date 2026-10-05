@@ -13,7 +13,7 @@
  * Two sets (A and B) so groups that play one after the other do not see the same questions.
  */
 
-import type { QKind, Round } from './types';
+import type { HandCard, QKind, Round } from './types';
 
 export const ROUNDS: Round[] = [
   { title: 'Trace It', subtitle: 'Drag the steps into the right order', suit: '♠' },
@@ -45,6 +45,11 @@ export interface SubQ {
   explain: string;
   /** Word stamped on the right line at the reveal. */
   stamp?: string;
+  /** riddle: the clues, hardest first. The answer is an index into the hand. */
+  clues?: string[];
+  hand?: HandCard[];
+  /** riddle: which riddle this is (so the next track gets fresh ones). */
+  rid?: string;
 }
 
 /** A question as stored in the game (answers included, never sent before the reveal). */
@@ -508,7 +513,7 @@ export function subFor(q: GameQ, teamId: string, card?: string): SubQ {
 
 /** How close an answer is, from 0 to 1. */
 export function accuracy(q: { kind: QKind; answer: number[] }, choice: number | number[]): number {
-  if (q.kind === 'line' || q.kind === 'mcq') return typeof choice === 'number' && q.answer.includes(choice) ? 1 : 0;
+  if (q.kind === 'line' || q.kind === 'mcq' || q.kind === 'riddle') return typeof choice === 'number' && q.answer.includes(choice) ? 1 : 0;
   if (!Array.isArray(choice) || choice.length !== q.answer.length) return 0;
   if (q.kind === 'sort') return choice.filter((b, i) => b === q.answer[i]).length / q.answer.length;
   // order: the longest run of steps already in the right sequence (LCS), over all steps

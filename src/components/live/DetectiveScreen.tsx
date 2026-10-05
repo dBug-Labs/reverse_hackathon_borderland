@@ -9,6 +9,7 @@ import { sfx } from '@/utils/liveSound';
 import { FaultyTerminal } from './Shaders';
 import { clockReady } from './clock';
 import { CardWall, DealAnimation, DealtCard, OrderShow, SortShow } from './cards';
+import { RiddleStage } from './riddle';
 import { CodeText, Confetti, CountdownRing, OPTS, Rolling, Shockwave, SlamTitle, SuitWars, suitOf } from './fx';
 
 /**
@@ -83,7 +84,7 @@ export function DetectiveScreen({ s, now, act }: { s: GameState; now: number; ac
             {phase === 'intro' && round && <Intro s={s} />}
             {phase === 'wager' && <Wager s={s} now={now} />}
             {phase === 'question' && <Question s={s} now={now} />}
-            {phase === 'reveal' && <Reveal s={s} />}
+            {phase === 'reveal' && <Reveal s={s} now={now} />}
             {phase === 'board' && <Board s={s} />}
             {phase === 'final' && <Final s={s} />}
           </motion.div>
@@ -98,10 +99,10 @@ function Header({ s, round }: { s: GameState; round?: string }) {
   return (
     <div className="flex items-center justify-between font-caps text-[1.6vh] uppercase tracking-[0.4em] text-neutral-400">
       <span>
-        <span className="text-[#ff4a4a]">♠</span> Code Detective · {s.group}
+        <span className="text-[#ff4a4a]">{s.mode === 'riddle' ? '♦' : '♠'}</span> {s.mode === 'riddle' ? 'Riddle Deck' : 'Code Detective'} · {s.group}
       </span>
       <span>
-        {s.phase !== 'lobby' && s.phase !== 'final' && s.qi !== undefined && s.qi >= 0 ? `${round ?? ''} · Q ${s.qi + 1} / ${s.total}` : 'dBug Labs · Hackback'}
+        {s.phase !== 'lobby' && s.phase !== 'final' && s.qi !== undefined && s.qi >= 0 ? (s.mode === 'riddle' ? `Riddle ${s.qi + 1} / ${s.total}` : `${round ?? ''} · Q ${s.qi + 1} / ${s.total}`) : 'dBug Labs · Hackback'}
       </span>
     </div>
   );
@@ -113,12 +114,28 @@ function Lobby({ s }: { s: GameState }) {
   const joined = new Set(s.joined);
   return (
     <div className="flex flex-1 flex-col items-center justify-center gap-[3vh] text-center">
-      <SlamTitle className="font-poster text-[15vh] uppercase leading-[0.85] text-[#f2e9d8]">
-        Code <span className="text-[#ff3b3b]">Detective</span>
-      </SlamTitle>
-      <p className="max-w-[70vw] font-label text-[2.4vh] text-neutral-300">
-        Open your <b className="text-white">team link</b> from the email on one phone (or all of them) → <b className="text-[#ff6b6b]">Play live</b>. Fast and right wins. Wrong costs you.
-      </p>
+      {s.mode === 'riddle' ? (
+        <>
+          <SlamTitle className="font-poster text-[15vh] uppercase leading-[0.85] text-[#f2e9d8]">
+            Riddle <span className="text-[#ff3b3b]">Deck</span>
+          </SlamTitle>
+          <div className="font-poster text-[5vh] uppercase text-[#ff6b6b]">{s.group}</div>
+          <p className="max-w-[72vw] font-label text-[2.4vh] text-neutral-300">
+            Every team holds the same hand of cards. A riddle comes out <b className="text-white">one clue at a time</b>. Play the card it describes:
+            clue 1 pays <b className="text-[#facc15]">300</b>, clue 2 <b className="text-[#facc15]">200</b>, clue 3 <b className="text-[#facc15]">100</b>. First right card +50.
+            A wrong card <b className="text-[#ff6b6b]">burns</b>, and you might need it later.
+          </p>
+        </>
+      ) : (
+        <>
+          <SlamTitle className="font-poster text-[15vh] uppercase leading-[0.85] text-[#f2e9d8]">
+            Code <span className="text-[#ff3b3b]">Detective</span>
+          </SlamTitle>
+          <p className="max-w-[70vw] font-label text-[2.4vh] text-neutral-300">
+            Open your <b className="text-white">team link</b> from the email on one phone (or all of them) → <b className="text-[#ff6b6b]">Play live</b>. Fast and right wins. Wrong costs you.
+          </p>
+        </>
+      )}
       <div className="font-mono text-[2vh] text-neutral-500">{SITE}/r/&lt;team-id&gt;?t=… → Play live</div>
       <div className="flex flex-wrap justify-center gap-[0.8vh] px-[4vw]">
         {s.roster.map((t, i) => {
@@ -165,12 +182,28 @@ function Intro({ s }: { s: GameState }) {
         {round.suit}
       </motion.div>
       <motion.div initial={{ letterSpacing: '1em', opacity: 0 }} animate={{ letterSpacing: '0.5em', opacity: 1 }} transition={{ delay: 0.5 }} className="font-caps text-[2.6vh] uppercase text-neutral-400">
-        Round {q.round + 1} of {s.rounds!.length}
+        {s.rounds!.length > 1 ? `Round ${q.round + 1} of ${s.rounds!.length}` : s.group}
       </motion.div>
       <SlamTitle className="mt-[1vh] font-poster text-[13vh] uppercase leading-[0.9] text-[#f2e9d8]">{round.title}</SlamTitle>
       <motion.p initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.9 }} className="mt-[2vh] font-label text-[3vh] text-neutral-300">
         {round.subtitle}
       </motion.p>
+      {s.mode === 'riddle' && (
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 1.3 }} className="mt-[3vh] flex gap-[1.5vw] font-label text-[2.4vh]">
+          {[
+            ['Clue 1', '300'],
+            ['Clue 2', '200'],
+            ['Clue 3', '100'],
+            ['First right card', '+50'],
+            ['Wrong card', '🔥 burns'],
+          ].map(([a, b]) => (
+            <div key={a} className="rounded-xl border border-white/15 bg-black/60 px-[1.4vw] py-[1.2vh]">
+              <div className="font-poster text-[4vh] leading-none text-[#facc15]">{b}</div>
+              <div className="text-neutral-400">{a}</div>
+            </div>
+          ))}
+        </motion.div>
+      )}
       {q.allIn && (
         <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 1.3 }} className="mt-[2vh] max-w-[60vw] font-label text-[2.3vh] text-[#ffb4b4]">
           Bet 0%, 25%, 50% or ALL of your points. Right: you win the bet. Wrong: you lose it.
@@ -256,13 +289,14 @@ function Question({ s, now }: { s: GameState; now: number }) {
     return (
       <div className="flex flex-1 flex-col items-center justify-center">
         <div className="font-caps text-[2.4vh] uppercase tracking-[0.5em] text-neutral-400">
-          Card {q.qi + 1} · {q.dealt ? 'every team draws a different card' : 'dealing'}
+          {q.kind === 'riddle' ? `Riddle ${q.qi + 1} of ${s.total}` : `Card ${q.qi + 1} · ${q.dealt ? 'every team draws a different card' : 'dealing'}`}
         </div>
         <DealAnimation count={s.roster.length} n={n} />
       </div>
     );
   }
 
+  if (q.kind === 'riddle') return <RiddleStage s={s} now={now} vh={vh} />;
   const locked = new Set(s.locked ?? []);
   return (
     <div className="mt-[2vh] flex flex-1 gap-[2.5vw]">
@@ -444,7 +478,7 @@ function Options({ options, correct, counts }: { options: string[]; correct?: nu
 
 /* ── Reveal ───────────────────────────────────────────────────────────── */
 
-function Reveal({ s }: { s: GameState }) {
+function Reveal({ s, now }: { s: GameState; now: number }) {
   const vh = useVh();
   const q = s.question!;
   const r = s.reveal;
@@ -457,6 +491,7 @@ function Reveal({ s }: { s: GameState }) {
     return () => clearTimeout(t);
   }, []);
   if (!r) return null;
+  if (q.kind === 'riddle') return <RiddleStage s={s} now={now} vh={vh} reveal />;
   const none = s.roster.length - r.answered;
   return (
     <div className="mt-[2vh] flex flex-1 gap-[2.5vw]">
@@ -579,7 +614,7 @@ function Board({ s }: { s: GameState }) {
         </LayoutGroup>
       </div>
       <div className="flex w-[30vw] shrink-0 flex-col gap-[2vh]">
-        <SuitWars values={trackAvg(rows)} label="Suit Wars · average points" />
+        {new Set(rows.map((r) => r.track).filter(Boolean)).size > 1 && <SuitWars values={trackAvg(rows)} label="Suit Wars · average points" />}
         {climber && climber.prevRank - climber.rank >= 2 && (
           <motion.div initial={{ x: 300 }} animate={{ x: 0 }} transition={{ delay: 1.2, type: 'spring' }} className="rounded-2xl border border-[#22e584]/50 bg-[#22e584]/10 p-[1.6vh]">
             <div className="font-caps text-[1.4vh] uppercase tracking-[0.35em] text-[#22e584]">🚀 Biggest climb</div>

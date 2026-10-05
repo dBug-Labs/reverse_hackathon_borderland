@@ -20,7 +20,16 @@ export interface RosterTeam {
 /* ── Code Detective ───────────────────────────────────────────────────── */
 
 export type DetPhase = 'lobby' | 'intro' | 'wager' | 'question' | 'reveal' | 'board' | 'final';
-export type QKind = 'line' | 'mcq' | 'order' | 'sort';
+export type QKind = 'line' | 'mcq' | 'order' | 'sort' | 'riddle';
+/** quiz: the all-teams card quiz. riddle: the Riddle Deck, one track at a time. */
+export type DetMode = 'quiz' | 'riddle';
+
+/** A card in the Riddle Deck hand. */
+export interface HandCard {
+  name: string;
+  icon: string;
+  suit: '♠' | '♥' | '♦' | '♣';
+}
 
 export interface Round {
   title: string;
@@ -49,6 +58,14 @@ export interface PublicQuestion {
   dealt?: boolean;
   /** Dealt by card: the card this challenge is about. */
   card?: string;
+  /** riddle: the clues out so far (teams only get a clue once it is due). */
+  clues?: string[];
+  clueTotal?: number;
+  clueSecs?: number;
+  /** riddle: the hand every team holds. */
+  hand?: HandCard[];
+  /** riddle: hand cards already won on earlier riddles (out of the game). */
+  gone?: number[];
 }
 
 export interface RevealInfo {
@@ -66,6 +83,10 @@ export interface RevealInfo {
   fastest?: { teamId: string; teamName: string; ms: number };
   /** Every team's accuracy (0–1), for the card wall. Missing = no answer. */
   perTeam: Record<string, number>;
+  /** riddle: the hand card each team played. */
+  plays?: Record<string, number>;
+  /** riddle: the first team to play the right card. */
+  firstBlood?: string;
 }
 
 export interface DetBoardRow {
@@ -88,6 +109,8 @@ export interface DetBoardRow {
   acc?: number;
   /** Points bet on the All In question (once revealed). */
   stake?: number;
+  /** riddle: hand cards this team burned with a wrong play. */
+  burned?: number[];
 }
 
 /* ── Trading Floor ────────────────────────────────────────────────────── */
@@ -166,6 +189,7 @@ export interface GameState {
   roster: RosterTeam[];
   joined: string[];
   // detective
+  mode?: DetMode;
   rounds?: Round[];
   total?: number;
   qi?: number;
@@ -245,6 +269,16 @@ export const Q_BASE = 600;
 export const Q_SPEED = 400;
 export const WRONG_PENALTY = 200;
 export const STREAK_BONUS = 100;
+
+/** Riddle Deck: right on the first clue 300, second 200, third 100; first right card +50. */
+export const RIDDLE_POINTS = [300, 200, 100];
+export const FIRST_BLOOD = 50;
+export const CLUE_SECS = 12;
+
+/** Which clue was showing `ms` after the riddle opened (a little slack for the network). */
+export function clueAt(ms: number, total: number, clueSecs = CLUE_SECS): number {
+  return Math.max(0, Math.min(total - 1, Math.floor(Math.max(0, ms - 300) / (clueSecs * 1000))));
+}
 
 /**
  * Code Detective is worth 50 points. The team with the most game points gets all 50;

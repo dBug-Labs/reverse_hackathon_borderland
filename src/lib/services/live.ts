@@ -2,6 +2,7 @@ import { ObjectId } from 'mongodb';
 import { getDb } from '@/lib/db';
 import { CARD_BY_CODE, CARDS, TRACKS, type TrackId } from '@/lib/cardDrop/cards';
 import { ROUNDS, accuracy, buildQuestions, subFor, type GameQ, type SubQ } from '@/lib/live/bank';
+import { RIDDLE_ROUNDS, buildRiddles } from '@/lib/live/riddles';
 import {
   MAX_ORDER,
   ORDER_COOLDOWN_MS,
@@ -16,10 +17,14 @@ import {
   type MarketDoc,
 } from '@/lib/live/market';
 import {
+  CLUE_SECS,
+  FIRST_BLOOD,
   Q_BASE,
+  RIDDLE_POINTS,
   Q_SPEED,
   STREAK_BONUS,
   WRONG_PENALTY,
+  clueAt,
   detectiveToFinal,
   exchangeBonuses,
   type DetBoardRow,
@@ -67,8 +72,8 @@ interface LiveGameDoc {
   endedAt?: Date;
   roster: RosterTeam[];
   joined: string[];
-  // detective
-  set?: 'A' | 'B';
+  // detective (set R is the Riddle Deck)
+  set?: 'A' | 'B' | 'R';
   qs?: GameQ[];
   qi?: number;
   phase?: DetPhase;
@@ -199,7 +204,7 @@ export interface CreateInput {
   group?: string;
   teamIds?: string[];
   presentOnly?: boolean;
-  set?: 'A' | 'B';
+  set?: 'A' | 'B' | 'R';
   durationMin?: number;
 }
 
@@ -252,12 +257,21 @@ export async function createGame(eventId: ObjectId, input: CreateInput, actor: s
   };
   let doc: Omit<LiveGameDoc, '_id'>;
   if (input.kind === 'detective') {
-    const set = input.set === 'B' ? 'B' : 'A';
+    const set = input.set === 'B' ? 'B' : input.set === 'R' ? 'R' : 'A';
+    let qs: GameQ[];
+    if (set === 'R') {
+      // Fresh riddles for every track: skip the ones earlier games already played.
+      const { games } = await cols();
+      const before = await games.find({ eventId, kind: 'detective', set: 'R' }, { projection: { 'qs.rid': 1 } }).toArray();
+      const used = new Map<string, number>();
+      before.forEach((b) => (b.qs || []).forEach((q) => q.rid && used.set(q.rid, (used.get(q.rid) ?? 0) + 1)));
+      qs = buildRiddles(used, now.getTime() % 100000);
+    } else qs = buildQuestions(set, now.getTime() % 100000);
     doc = {
       ...base,
-      name: input.name?.trim() || `Code Detective · ${groupLabel}`,
+      name: input.name?.trim() || `${set === 'R' ? 'Riddle Deck' : 'Code Detective'} · ${groupLabel}`,
       set,
-      qs: buildQuestions(set, now.getTime() % 100000),
+      qs,
       qi: -1,
       phase: 'lobby',
       detBoard: rankDet(roster.map((t) => blankRow(t)), []),
@@ -289,7 +303,31 @@ export async function deleteGame(id: string) {
 
 /* ── What clients see ────────────────────────────────────────────────── */
 
-function publicQ(q: GameQ, qi: number, team?: RosterTeam): PublicQuestion {
+/** Riddles: how many clues are out. Teams only ever receive the clues that are due. */
+function cluesOut(g: LiveGameDoc, q: GameQ, admin: boolean): number {
+  const all = q.clues?.length ?? 0;
+  if (admin || g.phase !== 'question') return all;
+  const now = Date.now();
+  if (now < (g.openAt ?? 0)) return 0;
+  return Math.min(all, Math.floor((now - (g.openAt ?? 0)) / (CLUE_SECS * 1000)) + 1);
+}
+
+function publicQ(q: GameQ, qi: number, team?: RosterTeam, g?: LiveGameDoc, admin = false): PublicQuestion {
+  if (q.kind === 'riddle' && g) {
+    return {
+      qi,
+      round: q.round,
+      kind: 'riddle',
+      title: q.title,
+      prompt: q.prompt,
+      secs: q.secs,
+      clues: q.clues!.slice(0, cluesOut(g, q, admin)),
+      clueTotal: q.clues!.length,
+      clueSecs: CLUE_SECS,
+      hand: q.hand,
+      gone: g.qs!.slice(0, qi).map((x) => x.answer[0]),
+    };
+  }
   const dealt = !!(q.perCard || q.deck?.length);
   const sub: SubQ = team ? subFor(q, team.teamId, team.card) : q;
   return {
@@ -314,6 +352,7 @@ function publicQ(q: GameQ, qi: number, team?: RosterTeam): PublicQuestion {
 function keyText(q: SubQ): string[] {
   if (q.kind === 'line') return q.answer.map((i) => `Line ${i + 1}: ${q.code![i].trim()}`);
   if (q.kind === 'mcq') return [q.options![q.answer[0]]];
+  if (q.kind === 'riddle') return [`${q.hand![q.answer[0]].icon} ${q.hand![q.answer[0]].name}`, ...q.clues!.map((c, i) => `Clue ${i + 1}: ${c}`)];
   if (q.kind === 'order') return q.answer.map((i, k) => `${k + 1}. ${q.items![i]}`);
   return q.items!.map((it, i) => `${q.buckets![q.answer[i]]} ← ${it}`);
 }
@@ -334,7 +373,8 @@ function toState(g: LiveGameDoc, opts: { admin?: boolean; team?: RosterTeam } = 
   if (g.kind === 'detective') {
     const q = g.qs?.[g.qi ?? -1];
     Object.assign(s, {
-      rounds: ROUNDS,
+      mode: g.set === 'R' ? 'riddle' : 'quiz',
+      rounds: g.set === 'R' ? RIDDLE_ROUNDS : ROUNDS,
       total: g.qs?.length ?? 0,
       qi: g.qi,
       phase: g.phase,
@@ -344,7 +384,7 @@ function toState(g: LiveGameDoc, opts: { admin?: boolean; team?: RosterTeam } = 
     });
     // The question text is shown from the countdown on; intro and wager only reveal the round.
     if (q && (g.phase === 'question' || g.phase === 'reveal' || g.phase === 'board')) {
-      s.question = publicQ(q, g.qi!, opts.team);
+      s.question = publicQ(q, g.qi!, opts.team, g, opts.admin);
     }
     if (q && (g.phase === 'intro' || g.phase === 'wager')) {
       s.question = { qi: g.qi!, round: q.round, kind: q.kind, prompt: '', secs: q.secs, allIn: q.allIn };
@@ -417,6 +457,13 @@ async function scoreDetective(g: LiveGameDoc): Promise<{ board: DetBoardRow[]; r
   const qs = g.qs!;
   const qi = g.qi!;
   const q = qs[qi];
+  // Riddles: the first team to play the right card on each one.
+  const firstRight = new Map<number, string>();
+  qs.forEach((x, i) => {
+    if (x.kind !== 'riddle') return;
+    const best = all.filter((a) => a.key === `q${i}` && a.correct).sort((a, b) => a.ms - b.ms || a.at.getTime() - b.at.getTime())[0];
+    if (best) firstRight.set(i, best.teamId);
+  });
 
   const rows = g.roster.map((t) => {
     const row = blankRow(t);
@@ -426,7 +473,17 @@ async function scoreDetective(g: LiveGameDoc): Promise<{ board: DetBoardRow[]; r
       let gain = 0;
       const acc = a ? (a.acc ?? (a.correct ? 1 : 0)) : 0;
       const drag = qs[i].kind === 'order' || qs[i].kind === 'sort';
-      if (a && acc >= 1) {
+      if (qs[i].kind === 'riddle') {
+        // Earlier clue, more points. A wrong card costs nothing but burns that card.
+        if (a && acc >= 1) {
+          row.right += 1;
+          row.streak += 1;
+          gain = RIDDLE_POINTS[clueAt(a.ms, qs[i].clues!.length)] + (firstRight.get(i) === t.teamId ? FIRST_BLOOD : 0);
+        } else {
+          row.streak = 0;
+          if (a && typeof a.choice === 'number') row.burned = [...(row.burned ?? []), a.choice];
+        }
+      } else if (a && acc >= 1) {
         row.streak += 1;
         row.right += 1;
         gain = Q_BASE + Math.round(Q_SPEED * Math.max(0, 1 - a.ms / (qs[i].secs * 1000)));
@@ -457,7 +514,7 @@ async function scoreDetective(g: LiveGameDoc): Promise<{ board: DetBoardRow[]; r
 
   const now = all.filter((a) => a.key === `q${qi}`);
   const dealt = !!(q.perCard || q.deck?.length);
-  const width = dealt ? 0 : q.kind === 'line' ? q.code?.length ?? 0 : q.kind === 'mcq' ? q.options?.length ?? 0 : 0;
+  const width = dealt ? 0 : q.kind === 'line' ? q.code?.length ?? 0 : q.kind === 'mcq' ? q.options?.length ?? 0 : q.kind === 'riddle' ? q.hand?.length ?? 0 : 0;
   const counts = Array.from({ length: width }, () => 0);
   if (!dealt) {
     now.forEach((a) => {
@@ -479,6 +536,10 @@ async function scoreDetective(g: LiveGameDoc): Promise<{ board: DetBoardRow[]; r
     fastest: fastestA ? { teamId: fastestA.teamId, teamName: nameOf.get(fastestA.teamId) ?? fastestA.teamId, ms: fastestA.ms } : undefined,
     perTeam: Object.fromEntries(now.map((a) => [a.teamId, accOf(a)])),
   };
+  if (q.kind === 'riddle') {
+    reveal.plays = Object.fromEntries(now.map((a) => [a.teamId, Number(a.choice)]));
+    reveal.firstBlood = firstRight.get(qi);
+  }
   return { board: rankDet(rows, g.detBoard || []), reveal };
 }
 
@@ -598,7 +659,12 @@ export async function submitAnswer(id: string, teamId: string, qi: number, choic
   const q = g.qs![qi];
   const sub = subFor(q, team.teamId, team.card);
 
-  if (sub.kind === 'line' || sub.kind === 'mcq') {
+  if (sub.kind === 'riddle') {
+    const n = sub.hand!.length;
+    if (typeof choice !== 'number' || !Number.isInteger(choice) || choice < 0 || choice >= n) return fail('VALIDATION', 'Pick a card.');
+    if (g.qs!.slice(0, qi).some((x) => x.answer[0] === choice)) return fail('VALIDATION', 'That card has already been won.');
+    if (g.detBoard?.find((r) => r.teamId === teamId)?.burned?.includes(choice)) return fail('VALIDATION', 'You burned that card.');
+  } else if (sub.kind === 'line' || sub.kind === 'mcq') {
     const width = sub.kind === 'line' ? sub.code!.length : sub.options!.length;
     if (typeof choice !== 'number' || !Number.isInteger(choice) || choice < 0 || choice >= width) return fail('VALIDATION', 'Pick an answer.');
     if (sub.kind === 'line' && !sub.code![choice].trim()) return fail('VALIDATION', 'That line is empty.');

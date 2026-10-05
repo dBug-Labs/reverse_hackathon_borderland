@@ -7,6 +7,7 @@ import type { GameState, MyExchange, TeamGameView, Ticker } from '@/lib/live/typ
 import { sfx } from '@/utils/liveSound';
 import { CodeText, Confetti, OPTS, Rolling, Sparkline } from './fx';
 import { DealtCard, OrderInput, SortInput, useStable } from './cards';
+import { RiddlePlay, RiddlePlayed } from './riddle';
 import { clockReady, fmtChips, fmtPct, getJSON, postJSON, usePoll, useServerNow } from './clock';
 
 /** A team's phone during the live games: one link, both games. */
@@ -194,6 +195,15 @@ function DetectivePhone({ v, g, now, send }: { v: TeamGameView; g: GameState; no
     }
   }, [revealKey, row]);
 
+  if (phase === 'lobby' && g.mode === 'riddle') {
+    return (
+      <Waiting
+        emoji="♦"
+        title="You're in"
+        text="Riddle Deck: your whole track plays together. You all hold the same hand of cards. A riddle comes out one clue at a time; play the card it describes. Clue 1 pays 300, clue 2 pays 200, clue 3 pays 100. A wrong card burns. Any phone of your team can play; the first tap counts."
+      />
+    );
+  }
   if (phase === 'lobby') {
     return (
       <Waiting
@@ -209,7 +219,7 @@ function DetectivePhone({ v, g, now, send }: { v: TeamGameView; g: GameState; no
         <motion.div initial={{ scale: 0, rotate: -180 }} animate={{ scale: 1, rotate: 0 }} className="font-poster text-[9rem] leading-none text-[#ff3b3b]">
           {round.suit}
         </motion.div>
-        <div className="font-caps text-xs uppercase tracking-[0.4em] text-neutral-400">Round {q.round + 1}</div>
+        <div className="font-caps text-xs uppercase tracking-[0.4em] text-neutral-400">{g.mode === 'riddle' ? g.group : `Round ${q.round + 1}`}</div>
         <div className="font-poster text-5xl uppercase text-[#f2e9d8]">{round.title}</div>
         <p className="mt-2 font-label text-neutral-400">{round.subtitle}</p>
       </div>
@@ -249,7 +259,7 @@ function DetectivePhone({ v, g, now, send }: { v: TeamGameView; g: GameState; no
     if (now < openAt) {
       return (
         <div className="flex flex-1 flex-col items-center justify-center gap-6">
-          <div className="font-caps text-xs uppercase tracking-[0.4em] text-neutral-400">Your card is being dealt</div>
+          <div className="font-caps text-xs uppercase tracking-[0.4em] text-neutral-400">{q.kind === 'riddle' ? `${q.title ?? 'Riddle'} is coming` : 'Your card is being dealt'}</div>
           <motion.div initial={{ y: -500, rotate: -40 }} animate={{ y: [0, -10, 0], rotate: [0, 4, -4, 0] }} transition={{ y: { duration: 1.2, repeat: Infinity }, rotate: { duration: 0.9, repeat: Infinity } }}>
             <DealtCard faceUp={false} suit={suit} width={170} />
           </motion.div>
@@ -260,6 +270,9 @@ function DetectivePhone({ v, g, now, send }: { v: TeamGameView; g: GameState; no
           </AnimatePresence>
         </div>
       );
+    }
+    if (answered && q.kind === 'riddle') {
+      return <RiddlePlayed c={q.hand?.[answered.choice as number]} ms={answered.ms} clueSecs={q.clueSecs} total={q.clueTotal ?? 3} />;
     }
     if (answered) {
       const c = answered.choice;
@@ -279,6 +292,16 @@ function DetectivePhone({ v, g, now, send }: { v: TeamGameView; g: GameState; no
     }
     // The server is the judge; only show time's up once our clock is trusted.
     const closed = clockReady() && now > (g.closeAt ?? 0) + 800;
+    if (q.kind === 'riddle') {
+      if (closed) return <Waiting emoji="♦" title="Time's up" text="Eyes on the big screen." />;
+      return (
+        <div className="flex flex-1 flex-col gap-3">
+          <TimeBar start={openAt} end={g.closeAt!} now={now} />
+          <RiddlePlay q={q} now={now} openAt={openAt} burned={row?.burned ?? []} onPlay={(i) => answer(i)} />
+          {msg && <p className="text-center font-label text-sm text-red-300">{msg}</p>}
+        </div>
+      );
+    }
     return (
       <div className="flex flex-1 flex-col gap-3">
         <TimeBar start={openAt} end={g.closeAt!} now={now} />
@@ -364,6 +387,7 @@ function DetectivePhone({ v, g, now, send }: { v: TeamGameView; g: GameState; no
     if (q && key) {
       if (q.kind === 'line') answerText = `Line ${key.correct.map((c) => c + 1).join(' or ')}`;
       else if (q.kind === 'mcq') answerText = q.options?.[key.correct[0]] ?? '';
+      else if (q.kind === 'riddle') answerText = `${q.hand?.[key.correct[0]]?.icon} ${q.hand?.[key.correct[0]]?.name}`;
       else if (q.kind === 'order') answerList = key.correct.map((i, k) => `${k + 1}. ${q.items?.[i]}`);
       else if (q.kind === 'sort') answerList = (q.items ?? []).map((it, i) => `${q.buckets?.[key.correct[i]]} ← ${it}`);
     }
@@ -376,14 +400,16 @@ function DetectivePhone({ v, g, now, send }: { v: TeamGameView; g: GameState; no
           className={`font-poster text-7xl uppercase leading-none ${right ? 'text-[#22e584]' : partial ? 'text-[#facc15]' : wrong ? 'text-[#ff3b3b] live-glitch' : 'text-neutral-400'}`}
           style={{ textShadow: right ? '0 0 50px rgba(34,229,132,.7)' : partial ? '0 0 50px rgba(250,204,21,.6)' : wrong ? '0 0 50px rgba(255,59,59,.7)' : undefined }}
         >
-          {right ? 'Nailed it' : partial ? `${Math.round((row.acc ?? 0) * 100)}% right` : wrong ? 'Wrong' : 'No answer'}
+          {right ? (q?.kind === 'riddle' ? 'Right card' : 'Nailed it') : partial ? `${Math.round((row.acc ?? 0) * 100)}% right` : wrong ? (q?.kind === 'riddle' ? 'Burned' : 'Wrong') : q?.kind === 'riddle' ? 'No card' : 'No answer'}
         </motion.div>
-        <div className={`font-poster text-5xl ${row.delta >= 0 ? 'text-[#22e584]' : 'text-[#ff4a4a]'}`}>
+        <div className={`font-poster text-5xl ${row.delta > 0 ? 'text-[#22e584]' : row.delta < 0 ? 'text-[#ff4a4a]' : 'text-neutral-500'}`}>
           {row.delta >= 0 ? '+' : ''}
           {row.delta}
         </div>
         {row.stake ? <div className="font-label text-sm text-[#facc15]">Bet: {row.stake.toLocaleString('en-IN')} points</div> : null}
-        {row.streak >= 3 && <div className="font-label text-lg font-bold text-[#ff8a3d]">🔥 {row.streak} in a row: +100 per answer</div>}
+        {g.reveal?.firstBlood === v.team.teamId && <div className="font-label text-lg font-bold text-[#facc15]">⚡ First blood: +50</div>}
+        {wrong && q?.kind === 'riddle' && <div className="font-label text-sm text-neutral-400">That card is gone from your hand for the rest of the game.</div>}
+        {row.streak >= 3 && q?.kind !== 'riddle' && <div className="font-label text-lg font-bold text-[#ff8a3d]">🔥 {row.streak} in a row: +100 per answer</div>}
         {answerText && <div className="rounded-xl border border-white/10 bg-white/5 px-4 py-2 font-label text-sm text-neutral-200">Answer: {answerText}</div>}
         {answerList.length > 0 && (
           <div className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-left font-label text-[12px] leading-relaxed text-neutral-200">

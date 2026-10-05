@@ -16,6 +16,7 @@ export function DealtCard({
   suit,
   title,
   sub,
+  icon,
   width = 120,
   tone,
   delay = 0,
@@ -24,6 +25,8 @@ export function DealtCard({
   suit: string;
   title?: string;
   sub?: string;
+  /** A big picture in the middle of the face (Riddle Deck cards). */
+  icon?: string;
   width?: number;
   /** Result colour shown on the face after a reveal. */
   tone?: 'right' | 'partial' | 'wrong' | 'none';
@@ -60,6 +63,11 @@ export function DealtCard({
           <span aria-hidden className={`absolute inset-0 flex items-center justify-center opacity-[0.08] ${red ? 'text-[#b3202a]' : 'text-[#1b1714]'}`} style={{ fontSize: '80cqw' }}>
             {suit}
           </span>
+          {icon && (
+            <span className="relative mb-[6%] leading-none" style={{ fontSize: '34cqw' }}>
+              {icon}
+            </span>
+          )}
           {title && (
             <span className="relative px-[8%] font-poster uppercase leading-[1] text-[#1b1714]" style={{ fontSize: '13cqw' }}>
               {title}

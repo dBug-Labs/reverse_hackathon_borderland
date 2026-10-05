@@ -114,7 +114,7 @@ function CreateGame({ onCreated }: { onCreated: (id: string) => void }) {
   const [group, setGroup] = useState('all');
   const [teamIds, setTeamIds] = useState('');
   const [presentOnly, setPresentOnly] = useState(true);
-  const [set, setSet] = useState<'A' | 'B'>('A');
+  const [set, setSet] = useState<'A' | 'B' | 'R'>('R');
   const [mins, setMins] = useState(15);
   const [name, setName] = useState('');
   const [busy, setBusy] = useState(false);
@@ -135,6 +135,23 @@ function CreateGame({ onCreated }: { onCreated: (id: string) => void }) {
     } else setMsg(r.message || 'Could not create the game.');
   }
 
+  // Riddle Deck: one game per track, made one after another so each track gets fresh riddles.
+  async function createPerTrack() {
+    if (!confirm('Create four Riddle Deck games, one per track?')) return;
+    setBusy(true);
+    setMsg('');
+    let first = '';
+    const failed: string[] = [];
+    for (const t of TRACK_ORDER) {
+      const r = await post<{ id: string }>('/api/admin/live', { action: 'create', kind: 'detective', group: `track:${t}`, presentOnly, set: 'R' }, 'admin');
+      if (r.ok) first ||= r.data.id;
+      else failed.push(`${TRACKS[t].label}: ${r.message}`);
+    }
+    setBusy(false);
+    if (failed.length) setMsg(failed.join(' · '));
+    if (first) onCreated(first);
+  }
+
   return (
     <Panel>
       <SectionLabel>New game</SectionLabel>
@@ -147,7 +164,7 @@ function CreateGame({ onCreated }: { onCreated: (id: string) => void }) {
               className={`rounded-lg border px-3 py-3 text-left ${kind === k ? 'border-[var(--paper)] bg-[#18181c] text-white' : 'border-neutral-800 text-neutral-400'}`}
             >
               <div className="font-poster text-xl uppercase">{k === 'detective' ? '♠ Code Detective' : '♣ Trading Floor'}</div>
-              <div className="text-xs text-neutral-500">{k === 'detective' ? '9 cards, 4 rounds, ~20 min' : 'A live stock market of the cards'}</div>
+              <div className="text-xs text-neutral-500">{k === 'detective' ? 'Riddle Deck per track, or the card quiz' : 'A live stock market of the cards'}</div>
             </button>
           ))}
         </div>
@@ -176,16 +193,28 @@ function CreateGame({ onCreated }: { onCreated: (id: string) => void }) {
         </div>
         {kind === 'detective' ? (
           <div>
-            <div className="mb-1 font-semibold text-neutral-300">Question set</div>
-            <div className="flex gap-1.5">
+            <div className="mb-1 font-semibold text-neutral-300">Game</div>
+            <div className="flex flex-wrap gap-1.5">
+              <Chip on={set === 'R'} onClick={() => setSet('R')}>
+                ♦ Riddle Deck
+              </Chip>
               <Chip on={set === 'A'} onClick={() => setSet('A')}>
-                Set A
+                Card quiz · Set A
               </Chip>
               <Chip on={set === 'B'} onClick={() => setSet('B')}>
-                Set B
+                Card quiz · Set B
               </Chip>
             </div>
-            <p className="mt-1 text-xs text-neutral-500">Groups that play one after another: give the second group the other set.</p>
+            {set === 'R' ? (
+              <>
+                <p className="mt-1 text-xs text-neutral-500">
+                  5 riddles, about 5 minutes. Made for one track at a time: every track gets riddles the tracks before it have not seen. Each track&apos;s winner gets the full 50.
+                </p>
+                {group === 'all' && <p className="mt-1 text-xs text-amber-300">Pick a track above, or use “One per track”.</p>}
+              </>
+            ) : (
+              <p className="mt-1 text-xs text-neutral-500">8 cards, 4 rounds, ~20 min. Groups that play one after another: give the second group the other set.</p>
+            )}
           </div>
         ) : (
           <div>
@@ -204,6 +233,11 @@ function CreateGame({ onCreated }: { onCreated: (id: string) => void }) {
         <Button variant="primary" onClick={create} loading={busy} className="w-full">
           Create game
         </Button>
+        {kind === 'detective' && set === 'R' && (
+          <Button variant="paper" onClick={createPerTrack} loading={busy} className="w-full">
+            ♦ One Riddle Deck per track (4 games)
+          </Button>
+        )}
       </div>
     </Panel>
   );
