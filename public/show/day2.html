@@ -1,0 +1,307 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>HACKBACK · Day 2</title>
+<link rel="stylesheet" href="assets/deck.css">
+<script>
+/* ── EDIT THESE ON THE DAY ───────────────────────────────────── */
+window.CONFIG = {
+  twist: 'Revealed at 12:30',                 // the Twist Card wording
+  first: 'Team ________', second: 'Team ________', third: 'Team ________',
+  bestSpec: 'Team ________', sharpestEye: 'Team ________', unbreakable: 'Team ________',
+};
+</script>
+<script src="assets/cards.js"></script>
+<style>
+  .podium { display: flex; align-items: flex-end; justify-content: center; gap: 40px; height: 640px; }
+  .podium .p { width: 440px; border-radius: 26px 26px 0 0; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; padding-top: 40px; text-align: center; }
+  .podium .p .pl { font-family: Anton; font-size: 120px; line-height: 1; }
+  .podium .p .nm { font-family: Anton; font-size: 52px; margin-top: 18px; text-transform: uppercase; padding: 0 20px; }
+  .podium .p1 { height: 600px; background: linear-gradient(180deg, var(--red), var(--red2)); box-shadow: 0 0 120px rgba(224,53,47,.55); }
+  .podium .p2 { height: 470px; background: linear-gradient(180deg, #3a332d, #1d1916); border: 1px solid #4a423b; }
+  .podium .p3 { height: 360px; background: linear-gradient(180deg, #2a2420, #151210); border: 1px solid #3a332d; }
+  .podium .f { transform: translateY(160px); }
+  .podium .f.shown { transform: none; }
+  .twist { width: 560px; height: 780px; margin: 0 auto; perspective: 1400px; }
+  .twist .in { position: relative; width: 100%; height: 100%; transform-style: preserve-3d; transition: transform 1.4s cubic-bezier(.3,1.3,.4,1); }
+  .twist .in.flip { transform: rotateY(180deg); }
+  .twist .side { position: absolute; inset: 0; backface-visibility: hidden; border-radius: 34px; display: grid; place-items: center; text-align: center; }
+  .twist .bk { background: repeating-linear-gradient(45deg, #7a1118 0 18px, #8e1820 18px 36px); border: 10px solid var(--paper); box-shadow: 0 40px 90px rgba(0,0,0,.7), 0 0 80px rgba(224,53,47,.35); }
+  .twist .bk span { font-family: Anton; font-size: 360px; color: var(--paper); text-shadow: 0 0 40px rgba(0,0,0,.5); animation: pulse 2s ease-in-out infinite; }
+  .twist .fr { transform: rotateY(180deg); background: linear-gradient(160deg, #fbf6ea, #e8dcc2); color: var(--ink); padding: 60px; }
+  .twist .fr .h2 { font-size: 64px; }
+</style>
+</head>
+<body>
+<div id="viewport"><div id="stage">
+  <div class="amb city"></div><div class="amb grid"></div><div class="amb suits-float"></div>
+  <div class="laser l"></div><div class="laser r"></div>
+
+  <section class="slide" data-notes="9:30 holding slide while teams check in with the Entry Visa QR.">
+    <div style="text-align:center">
+      <img class="pop" src="assets/img/hackback-wordmark.png" style="width:1150px;--d:.2s" alt="HACKBACK">
+      <div class="kicker" style="margin-top:50px">Day 2 · Tuesday 6 October · TP2 712</div>
+      <h1 class="split">Welcome back, survivors</h1>
+      <p class="lead pop" style="--d:1.6s;margin:30px auto 0">Docs are frozen. Code freezes at 12:30. Then your rebuild faces the Killer Tests.</p>
+    </div>
+    <div class="ticker"><span>CHECK IN WITH YOUR ENTRY VISA QR · SIT AT YOUR TABLE FROM YESTERDAY · CODE DETECTIVE AT 9:45 · OPEN YOUR TEAM LINK → PLAY LIVE · ♠ ♥ ♦ ♣ · CODE FREEZE AT 12:30 ·</span></div>
+  </section>
+
+  <section class="slide" data-notes="Today's plan.">
+    <div class="kicker">Today</div><h2 class="split" style="margin-bottom:30px">Day 2 at a glance</h2>
+    <div class="tl st" style="grid-template-columns:190px 1fr;font-size:31px">
+      <div class="t">9:30</div><div><b>Check-in</b> · Entry Visa QR · 3 Visas each</div>
+      <div class="t hl">9:45</div><div class="hl"><b>♠ Code Detective</b> · a live quiz show on your phones</div>
+      <div class="t">10:25</div><div><b>Build window</b> · checkpoints at 10:45 and 12:00</div>
+      <div class="t">11:20</div><div><b>♣ Trading Floor</b> · a live stock market of the cards</div>
+      <div class="t hl">12:30</div><div class="hl"><b>Code freeze + Twist Card</b></div>
+      <div class="t hl">1:15</div><div class="hl"><b>♥ Final judging</b> · 4 panels, one per track</div>
+      <div class="t hl">2:30</div><div class="hl"><b>The Final Duel</b> · results</div>
+      <div class="t">2:50</div><div><b>Closing</b> · awards, partners, group photo</div>
+    </div>
+  </section>
+
+  <section class="slide" data-notes="Where teams stand coming in.">
+    <div class="kicker">Before we start</div><h2 class="split">Where you stand</h2>
+    <div class="grid2" style="margin-top:60px">
+      <div class="box hot f"><div class="badge">♦</div><h3>Your docs are frozen</h3><p>docs/ is scored as of your last push before 8:30 AM.</p></div>
+      <div class="box f"><div class="badge">♠</div><h3>Your code is not</h3><p>Keep improving until 12:30. We judge the last push before 12:30.</p></div>
+      <div class="box f"><div class="badge">♥</div><h3>Visas</h3><p>3, minus any lost overnight (missed the 11:30 PM checkpoint, late submission).</p></div>
+      <div class="box f"><div class="badge">♣</div><h3>Stay at your table</h3><p>Missing at a checkpoint costs a Visa.</p></div>
+    </div>
+  </section>
+
+  <section class="slide" data-notes="9:45 CODE DETECTIVE. Before this: Admin → Live games → create Code Detective (all teams), open its Screen in a second window.">
+    <div class="kicker">9:45 · Game ♠</div>
+    <h1 class="split" style="font-size:200px">Code Detective</h1>
+    <p class="lead pop" style="--d:1.2s;margin-top:30px">A live quiz show. Every team, one screen, every phone.</p>
+    <div class="pop" style="position:absolute;right:160px;bottom:150px;font-size:320px;opacity:.9;--d:.5s;font-family:Cinzel;color:var(--paper)">♠</div>
+  </section>
+
+  <section class="slide" data-notes="Give teams a minute to join, then switch to the game screen (Admin → Live games → Screen). Space moves the game on. Come back to this deck at slide 6 when the podium is done.">
+    <div class="row" style="align-items:center;gap:80px">
+      <div style="flex:1.15">
+        <div class="kicker">How to play · 25 min</div><h2 class="split">Fast, right, or both</h2>
+        <ul class="b st" style="margin-top:40px">
+          <li>Four rounds: <b>♠ Spot the Bug</b> · <b>♥ Your Card</b> · <b>♦ Whose Code?</b> · <b>♣ All In</b></li>
+          <li>Right and fast: <b>up to 1,000 points</b>. Wrong: <b class="red">−200</b>. Not sure? Don’t tap</li>
+          <li>Three right in a row: 🔥 <b>+100</b> on every answer after</li>
+          <li>Last question: bet 0, 25, 50 or <b class="red">ALL</b> of your points</li>
+          <li>The top team gets all <b class="red">50 points</b>. You get your share of the top score</li>
+        </ul>
+      </div>
+      <div class="box hot" style="flex:.85;text-align:center;padding:56px 30px">
+        <div class="kicker" style="margin-bottom:18px">Join now</div>
+        <div style="font-family:Anton;font-size:84px;line-height:1.05;text-transform:uppercase">Team link<br><span class="red">→ Play live</span></div>
+        <p style="margin-top:26px">The status link in your leader’s email. Phone or laptop. Any member can answer: the first tap counts.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="slide" data-notes="10:25 Build window.">
+    <div class="kicker">10:25 – 12:30</div><h2 class="split" style="margin-bottom:30px">Two hours to make it great</h2>
+    <div class="tl st" style="grid-template-columns:190px 1fr">
+      <div class="t">10:25</div><div><b>Build</b> · push often</div>
+      <div class="t hl">10:45</div><div class="hl"><b>Checkpoint 1</b> · your mentor visits: progress, blockers, Killer Test 1 tried</div>
+      <div class="t">11:20</div><div><b>♣ Trading Floor</b> · 20 minutes, one player on a phone</div>
+      <div class="t hl">12:00</div><div class="hl"><b>Checkpoint 2</b> · all 3 Killer Tests tried, demo ready</div>
+      <div class="t hl">12:30</div><div class="hl"><b>Code freeze</b> · the last push before 12:30 is judged</div>
+    </div>
+    <div class="box hot f" style="margin-top:30px;padding:26px 40px"><p style="color:var(--paper)"><b>Checkpoints give feedback, not points.</b> Missing from your table when the mentor arrives: −1 Visa.</p></div>
+  </section>
+
+  <section class="slide" data-notes="11:20 TRADING FLOOR. Before this: Admin → Live games → create Trading Floor (15 min), open its Screen. Use real checkpoint news for Breaking News.">
+    <div class="kicker">11:20 · Game ♣</div>
+    <h1 class="split" style="font-size:200px">The Trading Floor</h1>
+    <p class="lead pop" style="--d:1.2s;margin-top:30px">A live stock market. Every card in play is a stock, and the news is real.</p>
+    <div class="pop" style="position:absolute;right:160px;bottom:150px;font-size:320px;opacity:.9;--d:.5s;font-family:Cinzel;color:var(--paper)">♣</div>
+  </section>
+
+  <section class="slide" data-notes="Trading rules. Then switch to the game screen and press Space to open the market.">
+    <div class="kicker">11:20 – 11:40 · on your phone</div><h2 class="split">Buy low, sell high</h2>
+    <div class="grid2" style="margin-top:36px">
+      <div class="box f"><div class="badge">♦</div><h3>The market</h3><p>Every card in play is a stock at ₹100. Your team gets 10,000 chips. Team link → Play live.</p></div>
+      <div class="box f"><div class="badge">♠</div><h3>What moves prices</h3><p>Teams buying and selling, rumours, and breaking news from the real checkpoints.</p></div>
+      <div class="box hot f"><div class="badge">♥</div><h3>No insider trading</h3><p>You cannot trade your own card. You know too much.</p></div>
+      <div class="box f"><div class="badge">♣</div><h3 class="gold">The bonus</h3><p>Best trader: +30. Every team that trades gets a bonus by rank. One player trades; the rest build.</p></div>
+    </div>
+  </section>
+
+  <section class="slide" data-notes="12:30 CODE FREEZE. Say it loud: hands off the keyboard.">
+    <div style="text-align:center">
+      <div class="kicker">Code freeze</div>
+      <div class="h1 glitch" data-text="12:30" style="font-size:380px;color:var(--red);text-shadow:0 0 90px rgba(224,53,47,.6)">12:30</div>
+      <h2 class="split">Hands off the keyboard</h2>
+      <p class="lead pop" style="--d:1.4s;margin:30px auto 0">The last push before 12:30 is what gets judged. Pushes after it are a Clean-Room violation.</p>
+    </div>
+  </section>
+
+  <section class="slide" data-notes="THE TWIST CARD. Set CONFIG.twist at the top of this file. Click to flip.">
+    <div class="row" style="align-items:center;gap:80px">
+      <div style="flex:1">
+        <div class="kicker">The Twist Card</div><h2 class="split">One new condition for every team</h2>
+        <ul class="b st" style="margin-top:40px">
+          <li>The kind real products face: a new user, a new rule, a new scale</li>
+          <li><b>You don’t code it.</b> You answer it in your pitch: how would your design handle it?</li>
+          <li>Worth 10 points in final judging</li>
+        </ul>
+        <p class="lead f" data-flip="1" style="margin-top:30px">Flip it. ♦</p>
+      </div>
+      <div style="flex:.9"><div class="twist"><div class="in" id="twistCard"><div class="side bk"><span>?</span></div><div class="side fr"><div><div class="kicker" style="color:var(--red2)">The Twist</div><div class="h2" data-cfg="twist">Revealed at 12:30</div></div></div></div></div></div>
+    </div>
+  </section>
+
+  <section class="slide" data-notes="12:30–1:15 LUNCH. 1:00 judge briefing in a side room.">
+    <div style="text-align:center">
+      <div class="kicker">12:30 – 1:15</div><h1 class="split" style="font-size:240px">Lunch</h1>
+      <p class="lead pop" style="--d:1s;margin:30px auto 0">Think through the Twist Card. Have your rebuild <b class="red">running before 1:15</b>: the Killer Tests run live in your slot.</p>
+    </div>
+  </section>
+
+  <section class="slide" data-notes="1:15 FINAL JUDGING.">
+    <div class="kicker">1:15 · Game ♥</div>
+    <h1 class="split" style="font-size:200px">Final judging</h1>
+    <p class="lead pop" style="--d:1.2s;margin-top:30px">Four panels, one per track. Your rebuild, live, in front of the judges.</p>
+    <div class="pop" style="position:absolute;right:160px;bottom:150px;font-size:320px;opacity:.95;--d:.5s;font-family:Cinzel;color:var(--red)">♥</div>
+  </section>
+
+  <section class="slide" data-notes="Killer Tests.">
+    <div class="kicker">Killer Tests</div><h2 class="split">Three tests your rebuild must survive</h2>
+    <div class="row" style="margin-top:50px;gap:50px">
+      <ul class="b st" style="flex:1.2">
+        <li>Written in your card’s brief since yesterday</li>
+        <li>A Game Master runs them on your laptop, on your frozen code</li>
+        <li><b class="red">PASS 15 · PARTIAL 7 · FAIL 0</b>, up to 45 points</li>
+        <li>Time windows come from .env, so a “24-hour expiry” is tested in a minute</li>
+      </ul>
+      <div id="killer-tracks" style="flex:.8;display:flex;flex-direction:column;gap:18px"></div>
+    </div>
+  </section>
+
+  <section class="slide" data-notes="The 8-minute slot.">
+    <div class="kicker">Your 8 minutes</div><h2 class="split">How each team is judged</h2>
+    <div class="grid3" style="margin-top:60px">
+      <div class="box f"><div class="num">3<span style="font-size:50px"> min</span></div><h3>Killer Tests</h3><p>The panel’s Game Master runs your 3 tests live.</p></div>
+      <div class="box hot f"><div class="num" style="color:#fff">3<span style="font-size:50px"> min</span></div><h3>Pitch</h3><p>Problem, user, your 2 improvements, a demo, and your Twist answer.</p></div>
+      <div class="box f"><div class="num">2<span style="font-size:50px"> min</span></div><h3>Defence</h3><p>Judges question any member. Everyone must understand the build.</p></div>
+    </div>
+    <p class="lead f" style="margin-top:40px">Each panel: 2 judges + 1 Game Master. Wait at your table until called.</p>
+  </section>
+
+  <section class="slide" data-notes="The judges' rubric.">
+    <div class="kicker">Final judging · 150 points</div><h2 class="split">What the judges score</h2>
+    <div style="display:grid;grid-template-columns:440px 120px 1fr;gap:18px 30px;align-items:center;margin-top:46px;font-size:36px">
+      <div>Killer Tests</div><div class="red" style="font-family:Anton;font-size:52px">45</div><div class="bar" data-i="0" style="width:100%"></div>
+      <div>Two improvements</div><div class="red" style="font-family:Anton;font-size:52px">40</div><div class="bar" data-i="1" style="width:89%"></div>
+      <div>Fits the brief</div><div class="red" style="font-family:Anton;font-size:52px">25</div><div class="bar" data-i="2" style="width:56%"></div>
+      <div>Defence</div><div class="red" style="font-family:Anton;font-size:52px">25</div><div class="bar" data-i="3" style="width:56%"></div>
+      <div>Twist answer</div><div class="red" style="font-family:Anton;font-size:52px">10</div><div class="bar" data-i="4" style="width:22%"></div>
+      <div>Demo</div><div class="red" style="font-family:Anton;font-size:52px">5</div><div class="bar" data-i="5" style="width:11%"></div>
+    </div>
+  </section>
+
+  <section class="slide" data-notes="Full scoring.">
+    <div class="kicker">The full score</div><h2 class="split">How it all adds up</h2>
+    <div style="display:grid;grid-template-columns:440px 140px 1fr;gap:16px 30px;align-items:center;margin-top:40px;font-size:36px">
+      <div>♠ Code Detective</div><div class="red" style="font-family:Anton;font-size:52px">50</div><div class="bar" data-i="0" style="width:33%"></div>
+      <div>♦ Deduction</div><div class="red" style="font-family:Anton;font-size:52px">150</div><div class="bar" data-i="1" style="width:100%"></div>
+      <div>Doc Test</div><div class="red" style="font-family:Anton;font-size:52px">50</div><div class="bar" data-i="2" style="width:33%"></div>
+      <div>♥ Final judging</div><div class="red" style="font-family:Anton;font-size:52px">150</div><div class="bar" data-i="3" style="width:100%"></div>
+      <div>♣ Trading bonus</div><div class="red" style="font-family:Anton;font-size:52px">+30</div><div class="bar" data-i="4" style="width:20%"></div>
+    </div>
+    <div class="box hot f" style="margin-top:34px;padding:26px 40px"><p style="font-size:34px;color:var(--paper)">× card (×1.0 · ×1.1 · ×1.2) <b>+ 10 × Visas left</b> · High Risk: Doc Test ×1.5 if 30+</p></div>
+  </section>
+
+  <section class="slide" data-notes="While the panels run (1:15–2:15).">
+    <div class="kicker">While panels run · 1:15 – 2:15</div><h2 class="split">Waiting for your turn</h2>
+    <ul class="b st" style="margin-top:50px">
+      <li>Stay at your table: your panel calls you in order</li>
+      <li>Rebuild running and deck.pdf open before you are called</li>
+      <li>Live demo failed? Show the demo video from your submission page</li>
+      <li>No coding after 12:30. A Game Master can check your commit any time</li>
+      <li><b class="red">Scores lock at 2:15. The leaderboard is revealed at 2:30.</b></li>
+    </ul>
+  </section>
+
+  <section class="slide" data-notes="2:30 THE FINAL DUEL.">
+    <div class="kicker">2:30</div>
+    <h1 class="split glitch" data-text="THE FINAL DUEL" style="font-size:220px">The Final Duel</h1>
+    <p class="lead pop" style="--d:1.2s;margin-top:30px">The leaderboard is revealed. The top teams face rapid-fire questions on stage.</p>
+  </section>
+
+  <section class="slide" data-notes="Podium. Click: 3rd, then 2nd, then 1st. Set names in CONFIG at the top of this file.">
+    <div class="kicker" style="text-align:center">The podium</div>
+    <div class="podium" style="margin-top:40px">
+      <div class="p p3 f" style="order:3"><div class="pl">3rd</div><div class="nm" data-cfg="third">Team ________</div></div>
+      <div class="p p2 f" style="order:1"><div class="pl">2nd</div><div class="nm" data-cfg="second">Team ________</div></div>
+      <div class="p p1 f" style="order:2"><div class="pl">1st</div><div class="nm" data-cfg="first">Team ________</div></div>
+    </div>
+  </section>
+
+  <section class="slide" data-notes="Skill awards. Click to reveal each.">
+    <div class="kicker">Skill awards</div><h2 class="split">The best at each part of the job</h2>
+    <div class="grid3" style="margin-top:60px">
+      <div class="box f shine"><div class="badge">♦</div><h3>Best Spec</h3><p>Highest Deduction + Doc Test</p><h3 class="red" style="margin-top:24px;font-size:44px" data-cfg="bestSpec">Team ________</h3></div>
+      <div class="box f shine"><div class="badge">♠</div><h3>Sharpest Eye</h3><p>Code Detective winner</p><h3 class="red" style="margin-top:24px;font-size:44px" data-cfg="sharpestEye">Team ________</h3></div>
+      <div class="box hot f shine"><div class="badge">♥</div><h3>Unbreakable</h3><p>Most Killer Tests passed</p><h3 style="margin-top:24px;font-size:44px" data-cfg="unbreakable">Team ________</h3></div>
+    </div>
+    <p class="lead f" style="margin-top:40px">Prizes and partner opportunities are announced now.</p>
+  </section>
+
+  <section class="slide" data-notes="Thank the partners.">
+    <div style="text-align:center">
+      <div class="kicker" style="margin-bottom:40px">Thank you</div>
+      <h1 class="split">Our partners</h1>
+      <div class="logo-row" style="margin-top:110px">
+        <div class="pop" style="--d:.9s;display:flex;align-items:center;gap:36px"><img src="assets/img/cyberthulir.png" style="height:220px" alt=""><span class="h2" style="font-size:90px">CyberThulir</span></div>
+        <img class="pop" src="assets/img/hebesec-logo-white.png" style="width:760px;--d:1.3s" alt="HebeSec Technologies">
+      </div>
+    </div>
+  </section>
+
+  <section class="slide" data-notes="What they did.">
+    <div class="kicker">What you did in 30 hours</div><h2 class="split">You reverse-engineered a real product</h2>
+    <div class="grid4" style="margin-top:60px">
+      <div class="box pop" style="--d:.5s;text-align:center"><div class="num count" data-to="12">12</div><p>real products</p></div>
+      <div class="box pop" style="--d:.65s;text-align:center"><div class="num count" data-to="4">4</div><p>tracks</p></div>
+      <div class="box pop" style="--d:.8s;text-align:center"><div class="num count" data-to="30">30</div><p>hours</p></div>
+      <div class="box hot pop" style="--d:.95s;text-align:center"><div class="num" style="color:#fff">1</div><p>skill: read · spec · rebuild</p></div>
+    </div>
+    <p class="lead f" style="margin-top:50px">Keep your repo. A teardown, a spec and a rebuild of a production system. Put it on your profile.</p>
+  </section>
+
+  <section class="slide" data-notes="Close. Group photo. Venue back by 4 PM.">
+    <div style="text-align:center">
+      <img class="pop" src="assets/img/hackback-wordmark.png" style="width:1100px;--d:.2s" alt="HACKBACK">
+      <div class="kicker" style="margin-top:50px">Game clear</div>
+      <h1 class="split">Thank you, Players</h1>
+      <p class="lead pop" style="--d:1.6s;margin:30px auto 0">Group photo now. Please leave TP2 712 as you found it. · dBug Labs · @dbuglabs</p>
+    </div>
+  </section>
+
+  <div id="foot"><span>HACKBACK · Day 2 · TP2 712</span><span id="footR"></span></div>
+  <div id="progress"></div>
+</div></div>
+<div id="notes"></div>
+<div id="help">→ / Space / click: next · ← / right-click: back<br>F fullscreen · N cues · T timer · R reset<br>Number + Enter: jump · H: help</div>
+<script>
+(function () {
+  const D = window.HB_CARDS;
+  const kt = document.getElementById('killer-tracks');
+  if (kt) kt.innerHTML = D.tracks.map((t, i) => {
+    const ex = D.cards.find((c) => c.track === t.id && (c.rank === '7' || c.rank === '8'));
+    return `<div class="box f" style="padding:20px 28px"><h3 style="font-size:40px;margin:0;color:${t.red ? 'var(--red)' : 'var(--paper)'}">${t.suit} ${t.label}</h3><p style="font-size:24px">e.g. ${ex ? ex.title : ''}</p></div>`;
+  }).join('');
+  // flip the twist card when its line is revealed
+  const obs = new MutationObserver(() => {
+    const trig = document.querySelector('[data-flip]');
+    document.getElementById('twistCard').classList.toggle('flip', trig.classList.contains('shown'));
+  });
+  obs.observe(document.querySelector('[data-flip]'), { attributes: true, attributeFilter: ['class'] });
+})();
+</script>
+<script src="assets/deck.js"></script>
+</body>
+</html>
