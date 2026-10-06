@@ -370,7 +370,7 @@ export function SubmissionPage({ teamId, token }: { teamId: string; token: strin
       {s && (
         <p className="text-sm text-neutral-500">
           What gets scored: <span className="text-neutral-300">docs/</span> as of the last push before 8:30 AM, and the code as of the last push before
-          1:15 PM on Tuesday. We use GitHub’s own push times.
+          1:30 PM on Tuesday. We use GitHub’s own push times.
         </p>
       )}
     </div>

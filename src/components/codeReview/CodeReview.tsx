@@ -331,7 +331,7 @@ function TeamRow({
             ) : (
               <span className="text-amber-300">No repo submitted</span>
             )}
-            <span>{t.sha ? `commit ${t.sha.slice(0, 7)}` : 'no freeze snapshot: commands pick the last commit before 1:15'}</span>
+            <span>{t.sha ? `commit ${t.sha.slice(0, 7)}` : 'no freeze snapshot: commands pick the last commit before 1:30'}</span>
             {t.pushedAfterFreeze && (
               <span className="inline-flex items-center gap-1 text-amber-300">
                 <TriangleAlert className="h-3 w-3" /> pushed after the freeze

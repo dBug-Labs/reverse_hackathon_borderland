@@ -11,7 +11,7 @@ import type { Registration, SubmissionDoc } from '@/lib/types';
  * links. Teams save through their status link; admins can override.
  *
  * - The repo link can change until the docs freeze (8:30 Tue).
- * - The optional links can change until the code freeze (1:15 Tue).
+ * - The optional links can change until the code freeze (1:30 Tue).
  * - Admins take freeze snapshots (head commit, last push) for scoring.
  */
 
