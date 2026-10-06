@@ -164,7 +164,7 @@ export async function leaderboardAction(eventId: ObjectId, input: LeaderInput, a
     if (input.visas !== undefined) set.visas = Math.max(0, Math.min(3, Math.round(Number(input.visas) || 0)));
     if (input.docTest === null) unset.docTest = '';
     else if (input.docTest !== undefined) set.docTest = Math.max(0, Math.min(50, Math.round(Number(input.docTest) * 2) / 2 || 0));
-    if (input.adjust !== undefined) set.adjust = Math.max(-200, Math.min(200, Math.round(Number(input.adjust) * 2) / 2 || 0));
+    if (input.adjust !== undefined) set.adjust = Math.max(-200, Math.min(200, Math.round(Number(input.adjust) * 10) / 10 || 0));
     if (input.adjustNote !== undefined) set.adjustNote = String(input.adjustNote).slice(0, 200);
     await c.teams.updateOne({ eventId, teamId }, { $set: set, ...(Object.keys(unset).length ? { $unset: unset } : {}) }, { upsert: true });
   } else return { ok: false as const, code: 'VALIDATION', message: 'Unknown action.' };
