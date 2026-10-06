@@ -64,6 +64,9 @@ interface LiveGameDoc {
   kind: GameKind;
   name: string;
   group: string;
+  /** 'all', 'track:<id>' or 'custom' (with teamIds): lets the roster be rebuilt from check-ins before the start. */
+  groupKey?: string;
+  teamIds?: string[];
   status: GameStatus;
   v: number;
   createdAt: Date;
@@ -203,33 +206,31 @@ export interface CreateInput {
   /** 'all', 'track:<id>' or 'custom'. */
   group?: string;
   teamIds?: string[];
-  presentOnly?: boolean;
   set?: 'A' | 'B' | 'R';
   durationMin?: number;
 }
 
-export async function createGame(eventId: ObjectId, input: CreateInput, actor: string) {
-  if (input.kind !== 'detective' && input.kind !== 'exchange') return fail('VALIDATION', 'Pick a game.');
+/** Day 2 games are for teams at the venue: only teams checked in on Day 2 (morning) play. */
+async function rosterFor(eventId: ObjectId, group: string, teamIds: string[] = []): Promise<{ roster: RosterTeam[]; groupLabel: string } | Fail> {
   const db = await getDb();
   const [regs, drop] = await Promise.all([
     db
       .collection('registrations')
-      .find({ eventId, status: 'CONFIRMED', deletedAt: { $exists: false } }, { projection: { teamId: 1, teamName: 1, attendance: 1 } })
+      .find(
+        { eventId, status: 'CONFIRMED', deletedAt: { $exists: false }, attendance: { $elemMatch: { day: 2, 'playersPresent.0': { $exists: true } } } },
+        { projection: { teamId: 1, teamName: 1 } }
+      )
       .sort({ teamId: 1 })
       .toArray(),
     getCardDrop(eventId),
   ]);
+  if (!regs.length) return fail('NO_TEAMS', 'Nobody is checked in for Day 2 yet. Mark attendance on the Day 2 tab first: only teams at the venue play.');
   const cardOf = new Map((drop?.assignments ?? []).map((a) => [a.teamId, a.card]));
   let roster: RosterTeam[] = regs.map((r) => {
     const card = cardOf.get(r.teamId as string);
     return { teamId: r.teamId as string, teamName: r.teamName as string, card, track: card ? CARD_BY_CODE[card]?.track : undefined };
   });
-  if (input.presentOnly) {
-    const present = new Set(regs.filter((r) => (r.attendance || []).some((a: { day: number }) => a.day === 2)).map((r) => r.teamId as string));
-    if (present.size) roster = roster.filter((t) => present.has(t.teamId));
-  }
 
-  const group = input.group || 'all';
   let groupLabel = 'All teams';
   if (group.startsWith('track:')) {
     const tr = group.slice(6) as TrackId;
@@ -237,17 +238,39 @@ export async function createGame(eventId: ObjectId, input: CreateInput, actor: s
     roster = roster.filter((t) => t.track === tr);
     groupLabel = `${TRACKS[tr].suit} ${TRACKS[tr].label}`;
   } else if (group === 'custom') {
-    const want = new Set((input.teamIds || []).map((s) => s.trim().toUpperCase()).filter(Boolean));
+    const want = new Set(teamIds.map((s) => s.trim().toUpperCase()).filter(Boolean));
     roster = roster.filter((t) => want.has(t.teamId.toUpperCase()));
     groupLabel = `Group of ${roster.length}`;
   }
-  if (!roster.length) return fail('VALIDATION', 'No teams match that group.');
+  if (!roster.length) return fail('VALIDATION', 'No team in that group is checked in for Day 2.');
+  return { roster, groupLabel };
+}
+
+function exchangeBoard(roster: RosterTeam[]): ExBoardRow[] {
+  return roster.map((t, i) => ({ teamId: t.teamId, teamName: t.teamName, track: t.track, card: t.card, cash: START_CASH, worth: START_CASH, rank: i + 1, prevRank: i + 1, bonus: 0 }));
+}
+
+function exchangeMarket(roster: RosterTeam[], mins: number) {
+  const inPlay = [...new Set(roster.map((t) => t.card).filter(Boolean))] as string[];
+  const cards = inPlay.length ? CARDS.filter((c) => inPlay.includes(c.code)).map((c) => c.code) : CARDS.map((c) => c.code);
+  return { ...newMarket(cards, mins), volTotal: {} };
+}
+
+export async function createGame(eventId: ObjectId, input: CreateInput, actor: string) {
+  if (input.kind !== 'detective' && input.kind !== 'exchange') return fail('VALIDATION', 'Pick a game.');
+  const group = input.group || 'all';
+  const teamIds = group === 'custom' ? (input.teamIds || []).map((s) => s.trim().toUpperCase()).filter(Boolean) : undefined;
+  const picked = await rosterFor(eventId, group, teamIds);
+  if ('ok' in picked) return picked;
+  const { roster, groupLabel } = picked;
 
   const now = new Date();
   const base = {
     eventId,
     kind: input.kind,
     group: groupLabel,
+    groupKey: group,
+    teamIds,
     status: 'LOBBY' as GameStatus,
     v: 1,
     createdAt: now,
@@ -277,14 +300,12 @@ export async function createGame(eventId: ObjectId, input: CreateInput, actor: s
       detBoard: rankDet(roster.map((t) => blankRow(t)), []),
     };
   } else {
-    const inPlay = [...new Set(roster.map((t) => t.card).filter(Boolean))] as string[];
-    const cards = inPlay.length ? CARDS.filter((c) => inPlay.includes(c.code)).map((c) => c.code) : CARDS.map((c) => c.code);
     const mins = Math.max(3, Math.min(60, Math.round(input.durationMin || 15)));
     doc = {
       ...base,
       name: input.name?.trim() || `Trading Floor · ${groupLabel}`,
-      market: { ...newMarket(cards, mins), volTotal: {} },
-      exBoard: roster.map((t, i) => ({ teamId: t.teamId, teamName: t.teamName, track: t.track, card: t.card, cash: START_CASH, worth: START_CASH, rank: i + 1, prevRank: i + 1, bonus: 0 })),
+      market: exchangeMarket(roster, mins),
+      exBoard: exchangeBoard(roster),
     };
   }
   const { games } = await cols();
@@ -601,8 +622,27 @@ export interface ActionInput {
 }
 
 export async function adminAction(id: string, input: ActionInput): Promise<{ ok: true; state: GameState } | Fail> {
-  const g = await loadGame(id, true);
+  let g = await loadGame(id, true);
   if (!g) return fail('NOT_FOUND', 'Game not found.');
+  // Teams checked in after the game was made still get in: the roster is rebuilt on 'sync' and at the start.
+  const starting = g.status === 'LOBBY' && (input.action === 'sync' || input.action === 'start' || (g.kind === 'detective' && input.action === 'next' && g.phase === 'lobby'));
+  if (starting && g.groupKey) {
+    const picked = await rosterFor(g.eventId, g.groupKey, g.teamIds);
+    if ('ok' in picked) return picked;
+    const set: Record<string, unknown> = { roster: picked.roster };
+    if (g.kind === 'detective') set.detBoard = rankDet(picked.roster.map((t) => blankRow(t)), []);
+    else {
+      set.exBoard = exchangeBoard(picked.roster);
+      set.market = exchangeMarket(picked.roster, g.market!.durationMin);
+    }
+    g = (await commit(g, set, false)) ?? g;
+    if (input.v !== undefined) input = { ...input, v: g.v };
+  }
+  if (input.action === 'sync') {
+    if (g.status !== 'LOBBY') return fail('PHASE', 'The roster is fixed once the game starts.');
+    cache.delete(id);
+    return { ok: true, state: (await getAdminState(id))! };
+  }
   const stale = g.kind === 'detective' && input.v !== undefined && input.v !== g.v;
   if (!stale) {
     if (g.kind === 'detective') {

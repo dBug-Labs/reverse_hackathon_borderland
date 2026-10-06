@@ -113,7 +113,6 @@ function CreateGame({ onCreated }: { onCreated: (id: string) => void }) {
   const [kind, setKind] = useState<'detective' | 'exchange'>('detective');
   const [group, setGroup] = useState('all');
   const [teamIds, setTeamIds] = useState('');
-  const [presentOnly, setPresentOnly] = useState(true);
   const [set, setSet] = useState<'A' | 'B' | 'R'>('R');
   const [mins, setMins] = useState(15);
   const [name, setName] = useState('');
@@ -125,7 +124,7 @@ function CreateGame({ onCreated }: { onCreated: (id: string) => void }) {
     setMsg('');
     const r = await post<{ id: string }>(
       '/api/admin/live',
-      { action: 'create', kind, group, teamIds: teamIds.split(/[\s,]+/).filter(Boolean), presentOnly, set, durationMin: mins, name },
+      { action: 'create', kind, group, teamIds: teamIds.split(/[\s,]+/).filter(Boolean), set, durationMin: mins, name },
       'admin'
     );
     setBusy(false);
@@ -143,7 +142,7 @@ function CreateGame({ onCreated }: { onCreated: (id: string) => void }) {
     let first = '';
     const failed: string[] = [];
     for (const t of TRACK_ORDER) {
-      const r = await post<{ id: string }>('/api/admin/live', { action: 'create', kind: 'detective', group: `track:${t}`, presentOnly, set: 'R' }, 'admin');
+      const r = await post<{ id: string }>('/api/admin/live', { action: 'create', kind: 'detective', group: `track:${t}`, set: 'R' }, 'admin');
       if (r.ok) first ||= r.data.id;
       else failed.push(`${TRACKS[t].label}: ${r.message}`);
     }
@@ -186,10 +185,9 @@ function CreateGame({ onCreated }: { onCreated: (id: string) => void }) {
           {group === 'custom' && (
             <textarea className={`${inputCls()} mt-2 h-20 text-sm`} placeholder="DBG-101, DBG-136, …" value={teamIds} onChange={(e) => setTeamIds(e.target.value)} />
           )}
-          <label className="mt-2 flex items-center gap-2 text-neutral-400">
-            <input type="checkbox" checked={presentOnly} onChange={(e) => setPresentOnly(e.target.checked)} className="accent-[#b3202a]" />
-            Only teams checked in today (Day 2), if anyone is checked in yet
-          </label>
+          <p className="mt-2 text-xs text-neutral-500">
+            Only teams at the venue play: those checked in on the Day 2 attendance tab. Late check-ins are pulled in when the game starts.
+          </p>
         </div>
         {kind === 'detective' ? (
           <div>
@@ -275,7 +273,7 @@ function Control({ id, onChange }: { id: string; onChange: () => void }) {
       if (r.ok && r.data) {
         setS(r.data);
         setMsg('');
-        if (action === 'start' || action === 'end' || action === 'next') onChange();
+        if (action === 'start' || action === 'end' || action === 'next' || action === 'sync') onChange();
       } else setMsg(r.message || 'Action failed.');
     },
     [id, s?.v, onChange]
@@ -292,11 +290,18 @@ function Control({ id, onChange }: { id: string; onChange: () => void }) {
             {s.roster.length} teams · {s.joined.length} joined on a phone · <StatusPill status={s.status} />
           </div>
         </div>
-        <a href={`/admin/arena/${s.id}`} target="_blank" rel="noreferrer">
-          <Button variant="paper">
-            <ExternalLink className="h-3.5 w-3.5" /> Open screen
-          </Button>
-        </a>
+        <div className="flex gap-2">
+          {s.status === 'LOBBY' && (
+            <Button onClick={() => act('sync')} loading={busy}>
+              Pull in late check-ins
+            </Button>
+          )}
+          <a href={`/admin/arena/${s.id}`} target="_blank" rel="noreferrer">
+            <Button variant="paper">
+              <ExternalLink className="h-3.5 w-3.5" /> Open screen
+            </Button>
+          </a>
+        </div>
       </div>
       {msg && <Banner>{msg}</Banner>}
       {s.kind === 'detective' ? <DetControl s={s} now={now} act={act} busy={busy} /> : <ExControl s={s} now={now} act={act} busy={busy} />}

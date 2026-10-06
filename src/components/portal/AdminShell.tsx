@@ -6,6 +6,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import {
   BadgeCheck,
   ClipboardCheck,
+  ClipboardList,
   GitBranch,
   LogOut,
   Mail,
@@ -29,6 +30,7 @@ const NAV = [
   { href: '/admin/card-drop', label: 'Card Drop', icon: Shuffle, suit: '♠' },
   { href: '/admin/live', label: 'Live games', icon: Swords, suit: '♣' },
   { href: '/admin/judging', label: 'Judging panels', icon: Gavel, suit: '♥' },
+  { href: '/admin/scoring', label: 'Judge scoring', icon: ClipboardList, suit: '♦' },
   { href: '/admin/submissions', label: 'Submissions', icon: GitBranch, suit: '♦' },
   { href: '/admin/workshop', label: 'Workshop', icon: GitBranch, suit: '♣' },
   { href: '/admin/emails', label: 'Email outbox', icon: Mail, suit: '♥' },
