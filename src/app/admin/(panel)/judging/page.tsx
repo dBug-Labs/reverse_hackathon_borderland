@@ -9,7 +9,7 @@ import { getJSON, postJSON, usePoll, useServerNow } from '@/components/live/cloc
 
 /**
  * /admin/judging — final judging panels.
- * Draw the teams present after lunch into the four panels, show the draw on the projector,
+ * Draw the teams present after lunch into the two panels, show the draw on the projector,
  * then call teams in from here (any Game Master with an admin login can drive a panel).
  */
 
@@ -77,7 +77,7 @@ export default function JudgingAdminPage() {
       <PageTitle
         kicker="Day 2 · 1:15"
         title="Judging panels"
-        subtitle="Teams marked present after lunch (attendance tab D2 PM) are drawn into the four panels. Show the draw on the projector, then call teams in from here."
+        subtitle="Teams marked present after lunch (attendance tab D2 PM) are drawn into the two panels. Show the draw on the projector, then call teams in from here."
         actions={
           <a href="/admin/judging-screen" target="_blank" rel="noreferrer">
             <Button variant="paper">

@@ -1,8 +1,8 @@
 import { ObjectId } from 'mongodb';
 import { getDb } from '@/lib/db';
-import { CARD_BY_CODE, TRACKS, TRACK_ORDER } from '@/lib/cardDrop/cards';
+import { CARD_BY_CODE, TRACKS, type TrackId } from '@/lib/cardDrop/cards';
 import { getCardDrop } from '@/lib/services/cardDrop';
-import { etaFor, queueOf, type JudgingState, type PanelInfo, type Slot, type TeamJudging } from '@/lib/judging/types';
+import { etaFor, panelTracks, queueOf, type JudgingState, type PanelInfo, type Slot, type TeamJudging } from '@/lib/judging/types';
 
 /**
  * Final judging panels.
@@ -23,6 +23,8 @@ interface JudgingDoc extends Omit<JudgingState, 'now'> {
   eventId: ObjectId;
   /** The one-time move of the start from 1:15 to 2:00 PM has been applied. */
   startMoved?: boolean;
+  /** The one-time move from four panels to two has been applied. */
+  twoPanels?: boolean;
   updatedAt: Date;
 }
 
@@ -37,8 +39,15 @@ async function defaultStart(eventId: ObjectId): Promise<number> {
   return new Date(`${ymd}T14:00:00+05:30`).getTime();
 }
 
+/** Two panels, two tracks each (balanced by team count). */
+const PANEL_GROUPS: { tracks: TrackId[]; suit: PanelInfo['suit']; judges: string }[] = [
+  { tracks: ['vault', 'cyber'], suit: '♦', judges: 'N Prasath' },
+  { tracks: ['institution', 'grid'], suit: '♠', judges: 'Dr Joseph Raymond' },
+];
+
 const defaultPanels = (): PanelInfo[] =>
-  TRACK_ORDER.map((t, i) => ({ suit: TRACKS[t].suit as PanelInfo['suit'], track: t, name: `Panel ${i + 1} · ${TRACKS[t].label}`, place: '', judges: '' }));
+  PANEL_GROUPS.map((g, i) => ({ suit: g.suit, track: g.tracks[0], tracks: g.tracks, name: `Panel ${i + 1} · ${g.tracks.map((t) => TRACKS[t].label).join(' + ')}`, place: '', judges: g.judges }));
+
 
 async function col() {
   return (await getDb()).collection<JudgingDoc>('judging');
@@ -62,13 +71,36 @@ async function load(eventId: ObjectId, fresh = false): Promise<JudgingDoc> {
     await c.updateOne({ _id: doc._id }, { $set: set });
     doc = { ...doc, ...set };
   }
+  if (doc._id && !doc.twoPanels) {
+    // One time: four panels became two. Each old panel's teams join the new panel that covers
+    // its track, keeping who is done or called; waiting teams interleave so neither track waits.
+    const panels = defaultPanels();
+    const to = (i: number) => {
+      const tr = doc!.panels[i]?.track;
+      const p = panels.findIndex((x) => tr && panelTracks(x).includes(tr));
+      return p >= 0 ? p : i % panels.length;
+    };
+    const slots = doc.slots.map((s) => ({ ...s, panel: to(s.panel), order: s.order * 10 + (s.panel % 10) }));
+    panels.forEach((_, p) => {
+      const rank = (s: Slot) => (s.state === 'done' ? 0 : s.state === 'called' ? 1 : 2);
+      slots
+        .filter((s) => s.panel === p)
+        .sort((a, b) => rank(a) - rank(b) || a.order - b.order)
+        .forEach((s, i) => (s.order = i));
+    });
+    slots.forEach((s) => (s.moved = (!!s.track && !panelTracks(panels[s.panel]).includes(s.track)) || undefined));
+    const set: Partial<JudgingDoc> = { twoPanels: true, panels: doc.panels.length === panels.length ? doc.panels : panels, slots };
+    await c.updateOne({ _id: doc._id }, { $set: set, $inc: { v: 1 } });
+    doc = { ...doc, ...set, v: doc.v + 1 };
+  }
   cache = { id: key, at: Date.now(), doc };
   return doc;
 }
 
 const toState = (d: JudgingDoc): JudgingState => {
-  const { _id, eventId, updatedAt, startMoved, ...rest } = d;
+  const { _id, eventId, updatedAt, startMoved, twoPanels, ...rest } = d;
   void startMoved;
+  void twoPanels;
   void _id;
   void eventId;
   void updatedAt;
@@ -136,7 +168,7 @@ export function drawPanels(teams: Team[], panels: PanelInfo[], mode: 'track' | '
     shuffle(teams).forEach((t, i) => groups[(start + i) % P].push(t));
   } else {
     for (const t of shuffle(teams)) {
-      const p = panels.findIndex((x) => x.track && x.track === t.track);
+      const p = panels.findIndex((x) => !!t.track && panelTracks(x).includes(t.track));
       if (p >= 0) groups[p].push(t);
       else pool.push(t);
     }
@@ -153,7 +185,7 @@ export function drawPanels(teams: Team[], panels: PanelInfo[], mode: 'track' | '
     }
   }
   return groups.flatMap((g, p) =>
-    shuffle(g).map((t, order) => ({ teamId: t.teamId, teamName: t.teamName, track: t.track, card: t.card, panel: p, order, state: 'waiting' as const, moved: (!!t.track && panels[p].track !== t.track) || undefined }))
+    shuffle(g).map((t, order) => ({ teamId: t.teamId, teamName: t.teamName, track: t.track, card: t.card, panel: p, order, state: 'waiting' as const, moved: (!!t.track && !panelTracks(panels[p]).includes(t.track)) || undefined }))
   );
 }
 
@@ -231,7 +263,7 @@ export async function judgingAction(eventId: ObjectId, input: JudgingInput): Pro
       const from = s.panel;
       s.panel = p;
       s.order = 1e6;
-      s.moved = d.panels[p].track !== s.track || undefined;
+      s.moved = (!!s.track && !panelTracks(d.panels[p]).includes(s.track)) || undefined;
       renumber(slots, from);
       renumber(slots, p);
       break;
@@ -255,12 +287,12 @@ export async function judgingAction(eventId: ObjectId, input: JudgingInput): Pro
       const drop = await getCardDrop(eventId);
       const card = drop?.assignments.find((a) => a.teamId === id)?.card;
       const track = card ? CARD_BY_CODE[card]?.track : undefined;
-      let p = Number.isInteger(input.panel) ? Number(input.panel) : d.panels.findIndex((x) => x.track === track);
+      let p = Number.isInteger(input.panel) ? Number(input.panel) : d.panels.findIndex((x) => !!track && panelTracks(x).includes(track));
       if (p < 0 || p >= d.panels.length) {
         const sizes = d.panels.map((_, i) => slots.filter((s) => s.panel === i).length);
         p = sizes.indexOf(Math.min(...sizes));
       }
-      slots.push({ teamId: id, teamName: reg.teamName as string, card, track, panel: p, order: 1e6, state: 'waiting', late: true, moved: d.panels[p].track !== track || undefined });
+      slots.push({ teamId: id, teamName: reg.teamName as string, card, track, panel: p, order: 1e6, state: 'waiting', late: true, moved: (!!track && !panelTracks(d.panels[p]).includes(track)) || undefined });
       renumber(slots, p);
       if (d.status === 'SETUP') d.status = 'DRAWN';
       log = { teamId: id, panel: p };

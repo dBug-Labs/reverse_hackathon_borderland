@@ -53,7 +53,7 @@ export interface ScoreTeam {
 
 export interface ScoresView {
   locked: boolean;
-  panels: { suit: string; name: string; judges: string }[];
+  panels: { suit: string; name: string; judges: string; track?: TrackId; tracks?: TrackId[] }[];
   teams: ScoreTeam[];
   scores: JudgeScore[];
 }

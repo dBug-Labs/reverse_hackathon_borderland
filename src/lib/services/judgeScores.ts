@@ -44,7 +44,7 @@ export async function getScores(eventId: ObjectId): Promise<ScoresView> {
   const [j, docs, locked] = await Promise.all([getJudging(eventId), scores.find({ eventId }).toArray(), isLocked(eventId)]);
   return {
     locked,
-    panels: j.panels.map((p) => ({ suit: p.suit, name: p.name, judges: p.judges })),
+    panels: j.panels.map((p) => ({ suit: p.suit, name: p.name, judges: p.judges, track: p.track, tracks: p.tracks })),
     teams: j.slots.map((s) => ({ teamId: s.teamId, teamName: s.teamName, track: s.track, card: s.card, panel: s.panel, order: s.order, state: s.state })),
     scores: docs.map(
       (d): JudgeScore => ({

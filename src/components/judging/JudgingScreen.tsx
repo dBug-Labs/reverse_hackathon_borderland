@@ -11,7 +11,7 @@ import { Confetti, Rolling, Shockwave, SlamTitle } from '@/components/live/fx';
 /**
  * Final judging on the projector.
  *
- *   lobby  – the four panels, how many teams made it back after lunch
+ *   lobby  – the panels, how many teams made it back after lunch
  *   draw   – the deck shuffles, every team is dealt into its panel, card by card
  *   board  – live: who is presenting at each panel, who is next, the queue with times
  *   call   – a full-screen call-up whenever a panel calls a team
@@ -189,7 +189,7 @@ function Draw({ s, onDone }: { s: JudgingState; onDone: () => void }) {
         </AnimatePresence>
       </div>
 
-      <div className="grid flex-1 grid-cols-4 gap-[1.6vw]">
+      <div className="grid flex-1 gap-[1.6vw]" style={{ gridTemplateColumns: `repeat(${s.panels.length}, minmax(0, 1fr))` }}>
         {s.panels.map((p, i) => {
           const q = queueOf(s.slots, i);
           const got = q.filter((x) => shown.has(x.teamId)).length;
@@ -301,7 +301,7 @@ function Board({ s, now }: { s: JudgingState; now: number }) {
           </span>
         </div>
       </div>
-      <div className="grid flex-1 grid-cols-4 gap-[1.4vw]">
+      <div className="grid flex-1 gap-[1.4vw]" style={{ gridTemplateColumns: `repeat(${s.panels.length}, minmax(0, 1fr))` }}>
         {s.panels.map((p, i) => {
           const q = queueOf(s.slots, i);
           const cur = q.find((x) => x.state === 'called');

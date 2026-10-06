@@ -1,5 +1,5 @@
 /**
- * Final judging: four panels, teams drawn into them from the post-lunch attendance.
+ * Final judging: two panels (two tracks each), teams drawn into them from the post-lunch attendance.
  * Shared by the server and the client, so no server-only imports here.
  */
 
@@ -17,6 +17,8 @@ export interface PanelInfo {
   suit: Suit;
   /** The track this panel judges first (its judges know these cards). */
   track?: TrackId;
+  /** When a panel covers more than one track (2 panels for 4 tracks). */
+  tracks?: TrackId[];
   name: string;
   place: string;
   judges: string;
@@ -69,6 +71,9 @@ export interface TeamJudging {
   eta: number;
   slotMin: number;
 }
+
+/** The tracks a panel judges first. */
+export const panelTracks = (p: Pick<PanelInfo, 'track' | 'tracks'>): TrackId[] => p.tracks ?? (p.track ? [p.track] : []);
 
 /** Teams of one panel, in calling order. */
 export function queueOf(slots: Slot[], panel: number): Slot[] {
