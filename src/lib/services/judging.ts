@@ -21,18 +21,20 @@ const fail = (code: string, message: string): Fail => ({ ok: false, code, messag
 interface JudgingDoc extends Omit<JudgingState, 'now'> {
   _id?: ObjectId;
   eventId: ObjectId;
+  /** The one-time move of the start from 1:15 to 2:00 PM has been applied. */
+  startMoved?: boolean;
   updatedAt: Date;
 }
 
 const DEFAULT_SLOT_MIN = 8;
 
-/** 1:15 PM IST on Day 2 (falls back to today). */
+/** 2:00 PM IST on Day 2 (falls back to today). Moved from 1:15 when the code freeze moved to 1:30. */
 async function defaultStart(eventId: ObjectId): Promise<number> {
   const db = await getDb();
   const ev = await db.collection('events').findOne({ _id: eventId }, { projection: { day2Date: 1 } });
   const day = ev?.day2Date ? new Date(ev.day2Date as string | Date) : new Date();
   const ymd = new Date(day.getTime() + 5.5 * 3600_000).toISOString().slice(0, 10);
-  return new Date(`${ymd}T13:15:00+05:30`).getTime();
+  return new Date(`${ymd}T14:00:00+05:30`).getTime();
 }
 
 const defaultPanels = (): PanelInfo[] =>
@@ -51,13 +53,22 @@ async function load(eventId: ObjectId, fresh = false): Promise<JudgingDoc> {
   let doc: JudgingDoc | null = await c.findOne({ eventId });
   if (!doc) {
     doc = { eventId, status: 'SETUP', v: 1, startAt: await defaultStart(eventId), slotMin: DEFAULT_SLOT_MIN, mode: 'track', panels: defaultPanels(), slots: [], updatedAt: new Date() };
+  } else if (!doc.startMoved) {
+    // One time: judging moved from 1:15 to 2:00 PM. A start still on the old 1:15 moves with it;
+    // anything set by hand stays. After this, the admin's setting always wins.
+    const ymd = new Date(doc.startAt + 5.5 * 3600_000).toISOString().slice(0, 10);
+    const set: Partial<JudgingDoc> = { startMoved: true };
+    if (doc.startAt === new Date(`${ymd}T13:15:00+05:30`).getTime()) set.startAt = new Date(`${ymd}T14:00:00+05:30`).getTime();
+    await c.updateOne({ _id: doc._id }, { $set: set });
+    doc = { ...doc, ...set };
   }
   cache = { id: key, at: Date.now(), doc };
   return doc;
 }
 
 const toState = (d: JudgingDoc): JudgingState => {
-  const { _id, eventId, updatedAt, ...rest } = d;
+  const { _id, eventId, updatedAt, startMoved, ...rest } = d;
+  void startMoved;
   void _id;
   void eventId;
   void updatedAt;

@@ -342,8 +342,8 @@ export function buildPrompt(card: PsCard, t?: PromptTeam): string {
   const repo = t?.repoUrl || '<repo URL>';
   const commit = t?.sha ? `commit ${t.sha}` : `the last commit before the code freeze (${IST(SUBMISSION_WINDOW.codeFreezeAt)} IST)`;
 
-  return `You are a senior software engineer judging a hackathon rebuild. This is a read-only review.
-- Do not create, change or delete any file in this repo. Do not commit or push.
+  return `You are a senior software engineer judging a hackathon rebuild. The review itself is read-only.
+- While reviewing, do not create, change or delete any file in this repo. The ONLY write allowed is Step 4 at the very end: one new file, CODE_REVIEW.md, committed and pushed. Never force-push, never touch any other file.
 - You may run git commands that only read, and you may install and run the project's own tests if that takes under 3 minutes. Do not call external services.
 - Every point you give or take away needs evidence as path:line. If you cannot find something, write "not found". Never guess.
 - Judge only the code in this commit, not what the README or slides promise.
@@ -394,6 +394,7 @@ E. Engineering (10). Input validation, permission checks on every route, error h
 - Clean-room: commits before ${IST(SUBMISSION_WINDOW.opensAt)} IST, source code committed before any docs/, pushes after ${IST(SUBMISSION_WINDOW.codeFreezeAt)} IST, or code that looks copied from ${card.source.name} (its licence headers, comments, distinctive identifiers or file layout).
 - Committed secrets: API keys, passwords, a real .env.
 - Fake: features that return hard-coded or mock data while the UI or docs claim they work.
+- Ignore commits whose message starts with "judge:". Those are review files added by the judges after the freeze.
 
 ## Output, exactly in this format
 ### ${t ? t.teamId : '<team ID>'} · ${card.title}
@@ -422,5 +423,25 @@ Flags: none, or one line each with evidence.
 3 questions for the judges to ask this team in their Defence, aimed at the weakest spots you found.
 
 The very last line, exactly:
-SCORE core=<0-30> kt=<0-30> imp=<0-20> docs=<0-10> eng=<0-10> total=<0-100>`;
+SCORE core=<0-30> kt=<0-30> imp=<0-20> docs=<0-10> eng=<0-10> total=<0-100>
+
+## Step 4: Save the review in the team's repo and push it
+Do this only after the scorecard above is complete.
+1. Note the judged commit: git rev-parse HEAD
+2. Get the time now: date -u +"%Y-%m-%dT%H:%M:%SZ" (UTC). Also write it in IST (UTC + 5:30).
+3. Go back to the team's default branch and update it:
+     git switch $(git symbolic-ref --short refs/remotes/origin/HEAD | sed 's@^origin/@@')
+     git pull --ff-only
+4. Create CODE_REVIEW.md in the repo root (if it exists, overwrite only that file) with:
+     # HACKBACK code review · ${t ? t.teamId : '<team ID>'} · ${card.title}
+     - Reviewed at: <UTC time> (<IST time> IST)
+     - Judged commit: <sha> (<its commit date>) · the last commit before the code freeze
+     - Reviewer: AI agent run by a HACKBACK judge
+     then the complete scorecard exactly as you produced it above, ending with the SCORE line.
+5. Commit and push only that file:
+     git add CODE_REVIEW.md
+     git commit -m "judge: HACKBACK code review of <short sha>"
+     git push
+6. If the push is refused (no access, protected branch), do not retry with force and do not change remotes. Say "Push failed: <reason>" and print the file so the judge can save it by hand.
+Finish by printing: the pushed commit's sha, its timestamp, and the SCORE line.`;
 }

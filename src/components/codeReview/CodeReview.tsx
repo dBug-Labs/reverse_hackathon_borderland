@@ -162,7 +162,7 @@ function Kit({ v, setV }: { v: CodeReviewView; setV: (v: CodeReviewView) => void
               When the agent finishes, press <b>Score</b> and paste its whole report: the numbers fill in from its last line. Check them, then save.
             </li>
           </ol>
-          <p className="mt-3 font-label text-xs text-neutral-500">The agent reviews read-only and must give path:line evidence for every point. Open at least one cited line yourself before saving.</p>
+          <p className="mt-3 font-label text-xs text-neutral-500">The agent reviews read-only and must give path:line evidence for every point. At the end it writes CODE_REVIEW.md (with the review time and judged commit) into the team’s repo and pushes it, so run it where the team’s GitHub login works (their laptop), or the push fails and it prints the file instead. Take the 1:30 code snapshot (Admin → Submissions) before starting. Open at least one cited line yourself before saving.</p>
         </Panel>
         <Panel>
           <SectionLabel>The score · out of {CODE_MAX}</SectionLabel>
