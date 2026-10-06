@@ -153,16 +153,19 @@ function Kit({ v, setV }: { v: CodeReviewView; setV: (v: CodeReviewView) => void
           <h1 className="mt-1 font-poster text-4xl uppercase leading-none text-[#f5eee1] sm:text-5xl">Judge the codebase</h1>
           <ol className="mt-4 list-decimal space-y-1.5 pl-5 font-label text-sm text-neutral-300">
             <li>
-              Find the team below and press <b>Copy commands</b>. Run them: it clones the repo at the last commit before the freeze.
+              Keep this kit on <b>your own phone or laptop</b>. Never log in to it on a participant&apos;s laptop: the login would stay in their browser.
             </li>
             <li>
-              Open that folder in your agent (Claude Code, Codex or Antigravity), press <b>Copy prompt</b> and paste it. It is already filled in for the team and their card.
+              At the team&apos;s table, press <b>Laptop link</b> and type the short link it shows into their browser. That page has only their commands and prompt, and expires in 30 minutes.
             </li>
             <li>
-              When the agent finishes, press <b>Score</b> and paste its whole report: the numbers fill in from its last line. Check them, then save.
+              On their laptop: run the commands in an empty folder (it clones the repo at the last commit before the freeze), open it in their agent and paste the prompt.
+            </li>
+            <li>
+              The agent pushes CODE_REVIEW.md to their repo. Here, press <b>Score → Load from repo</b>: the numbers fill in from its SCORE line. Check them, then save.
             </li>
           </ol>
-          <p className="mt-3 font-label text-xs text-neutral-500">The agent reviews read-only and must give path:line evidence for every point. At the end it writes CODE_REVIEW.md (with the review time and judged commit) into the team’s repo and pushes it, so run it where the team’s GitHub login works (their laptop), or the push fails and it prints the file instead. Take the 1:30 code snapshot (Admin → Submissions) before starting. Open at least one cited line yourself before saving.</p>
+          <p className="mt-3 font-label text-xs text-neutral-500">The agent reviews read-only and must give path:line evidence for every point. At the end it writes CODE_REVIEW.md (with the review time and judged commit) into the team’s repo and pushes it with the team’s own GitHub login; if the push fails it prints the file, so paste that instead. Take the 1:30 code snapshot (Admin → Submissions) before starting. Open at least one cited line yourself before saving.</p>
         </Panel>
         <Panel>
           <SectionLabel>The score · out of {CODE_MAX}</SectionLabel>
@@ -316,6 +319,14 @@ function TeamRow({
   scoring: boolean;
   children?: React.ReactNode;
 }) {
+  const [link, setLink] = useState<{ url: string; code: string; until: number } | null>(null);
+  const [linkErr, setLinkErr] = useState('');
+  async function makeLink() {
+    setLinkErr('');
+    const r = await postJSON<{ code: string; minutes: number }>('/api/code-review', { action: 'link', teamId: t.teamId });
+    if (r.ok && r.data) setLink({ code: r.data.code, url: `${window.location.origin}/cr/${r.data.code}`, until: Date.now() + r.data.minutes * 60_000 });
+    else setLinkErr(r.message || 'Could not make a link.');
+  }
   return (
     <div className="px-4 py-3">
       <div className="flex flex-wrap items-center gap-3 font-label text-sm">
@@ -341,6 +352,9 @@ function TeamRow({
         </div>
         {score !== undefined && <span className="font-poster text-2xl text-emerald-300">{score}</span>}
         <div className="flex flex-wrap gap-1.5">
+          <Button size="sm" variant="success" disabled={!t.prompt} onClick={makeLink}>
+            Laptop link
+          </Button>
           <Button size="sm" disabled={!t.repoUrl} onClick={() => copy(`cmd:${t.teamId}`, t.setup)}>
             {copied === `cmd:${t.teamId}` ? <Check className="h-3 w-3" /> : <Copy className="h-3 w-3" />} Copy commands
           </Button>
@@ -352,6 +366,20 @@ function TeamRow({
           </Button>
         </div>
       </div>
+      {linkErr && <p className="mt-2 text-xs text-[#ff8a8a]">{linkErr}</p>}
+      {link && (
+        <div className="mt-3 flex flex-wrap items-center gap-4 rounded-lg border border-emerald-800 bg-emerald-950/30 px-4 py-3 font-label">
+          <div>
+            <div className="text-xs uppercase tracking-wider text-emerald-300">Type this into their browser</div>
+            <div className="font-mono text-lg text-white">{link.url.replace(/^https?:\/\//, '')}</div>
+          </div>
+          <div className="font-poster text-4xl tracking-[0.2em] text-emerald-200">{link.code}</div>
+          <span className="text-xs text-neutral-400">works until {new Date(link.until).toLocaleTimeString('en-IN', { hour: 'numeric', minute: '2-digit' })}</span>
+          <Button size="sm" variant="subtle" onClick={() => copy(`l:${t.teamId}`, link.url)}>
+            {copied === `l:${t.teamId}` ? <Check className="h-3 w-3" /> : <Copy className="h-3 w-3" />} Copy link
+          </Button>
+        </div>
+      )}
       {children}
     </div>
   );
@@ -388,6 +416,16 @@ function ScoreForm({
     setParsed('ok');
   }
 
+  const [loading, setLoading] = useState(false);
+  async function loadFromRepo() {
+    setLoading(true);
+    setMsg('');
+    const r = await postJSON<{ report: string }>('/api/code-review', { action: 'fetch', teamId: t.teamId });
+    setLoading(false);
+    if (r.ok && r.data) onReport(r.data.report);
+    else setMsg(r.message || 'Could not load CODE_REVIEW.md.');
+  }
+
   async function send(remove = false) {
     if (remove && !confirm(`Delete the code score for ${t.teamName}?`)) return;
     setBusy(true);
@@ -402,7 +440,12 @@ function ScoreForm({
   return (
     <div className="mt-3 grid gap-4 rounded-lg border border-neutral-800 bg-[#0d0d10] p-4 font-label text-sm lg:grid-cols-[1.3fr_1fr]">
       <div>
-        <div className="mb-1 font-semibold text-neutral-200">The agent&apos;s report</div>
+        <div className="mb-1 flex items-center justify-between gap-2">
+          <span className="font-semibold text-neutral-200">The agent&apos;s report</span>
+          <Button size="sm" variant="paper" loading={loading} onClick={loadFromRepo}>
+            Load from repo
+          </Button>
+        </div>
         <textarea
           className={`${inputCls()} h-56 font-mono text-xs`}
           placeholder="Paste the whole report. Its last line (SCORE core=… total=…) fills the numbers."
