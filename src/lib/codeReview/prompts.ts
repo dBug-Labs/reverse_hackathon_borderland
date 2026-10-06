@@ -1,5 +1,5 @@
 /**
- * Code review after the 12:30 code freeze: one judging prompt per card.
+ * Code review after the code freeze: one judging prompt per card.
  * A judge clones the team's repo at the frozen commit, opens it in an AI coding agent
  * and pastes the prompt. The agent reads the code and returns a scorecard out of 100.
  */

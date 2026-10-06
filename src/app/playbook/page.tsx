@@ -357,7 +357,7 @@ export default function PlaybookPage() {
                   ['Mon 4:00 PM', 'Clock starts. First commit allowed.'],
                   ['Mon 11:30 PM', 'Checkpoint: repo link saved + first docs pushed (else −1 Visa).'],
                   ['Tue 8:30 AM', 'Docs freeze. docs/ is scored as of the last push before 8:30. Repo link locks.'],
-                  ['Tue 12:30 PM', 'Code freeze. Code is judged as of the last push before 12:30.'],
+                  ['Tue 1:15 PM', 'Code freeze. Code is judged as of the last push before 1:15.'],
                 ].map(([t, d]) => (
                   <tr key={t} className="border-b border-neutral-900 align-top">
                     <td className="whitespace-nowrap py-2 pr-4 font-semibold text-white">{t}</td>

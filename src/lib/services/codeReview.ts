@@ -7,7 +7,7 @@ import { RUBRIC, type CodeReviewView, type RubricKey } from '@/lib/codeReview/ru
 import { SUBMISSION_WINDOW } from '@/lib/submission/config';
 
 /**
- * Code review scores (after the 12:30 code freeze). One score per team: the latest save wins,
+ * Code review scores (after the code freeze). One score per team: the latest save wins,
  * and the reviewer's name and the agent's report are kept with it.
  */
 

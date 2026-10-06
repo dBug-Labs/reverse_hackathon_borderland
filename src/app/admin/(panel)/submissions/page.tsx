@@ -149,7 +149,7 @@ export default function SubmissionsConsole() {
               <Camera className="h-4 w-4" /> Snapshot 8:30
             </Button>
             <Button onClick={() => act({ action: 'snapshot', which: 'code' }, 'code', 'Code-freeze snapshot taken.')} loading={busy === 'code'}>
-              <Camera className="h-4 w-4" /> Snapshot 12:30
+              <Camera className="h-4 w-4" /> Snapshot 1:15
             </Button>
             <Button variant="primary" onClick={download}>
               <Download className="h-4 w-4" /> JSON
@@ -177,7 +177,7 @@ export default function SubmissionsConsole() {
               <th className="px-4 py-3">Repo</th>
               <th className="px-4 py-3">Check</th>
               <th className="px-4 py-3">8:30 docs</th>
-              <th className="px-4 py-3">12:30 code</th>
+              <th className="px-4 py-3">1:15 code</th>
               <th className="px-4 py-3 text-right">Actions</th>
             </tr>
           </thead>
