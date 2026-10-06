@@ -1031,9 +1031,10 @@ export async function liveScores(eventId: ObjectId): Promise<{ rows: LiveScoreRo
         row.detective = res.final;
         row.detectiveGame = g.name;
       }
-      if (g.kind === 'exchange' && (row.trading === undefined || res.final > row.trading)) {
-        row.trading = res.final;
-        row.tradingGame = g.name;
+      // Trading Floor was played twice: a team's bonuses from every ended floor add up.
+      if (g.kind === 'exchange') {
+        row.trading = (row.trading ?? 0) + res.final;
+        row.tradingGame = row.tradingGame ? `${row.tradingGame} + ${g.name}` : g.name;
       }
     }
   }

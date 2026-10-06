@@ -15,7 +15,7 @@ export const PARTS: { key: PartKey; label: string; short: string; max: number; s
   { key: 'docTest', label: 'Doc Test', short: 'Doc Test', max: 50, suit: '♦', source: 'Entered here' },
   { key: 'judging', label: 'Final judging', short: 'Judging', max: 150, suit: '♥', source: 'Judge scoring (average of judges)' },
   { key: 'code', label: 'Code review', short: 'Code', max: 100, suit: '♥', source: 'Code review kit' },
-  { key: 'trading', label: 'Trading bonus', short: 'Trading', max: 30, suit: '♣', source: 'Live games (Trading Floor)' },
+  { key: 'trading', label: 'Trading bonus', short: 'Trading', max: 60, suit: '♣', source: 'Live games (both Trading Floors added)' },
 ];
 
 export interface LeaderConfig {

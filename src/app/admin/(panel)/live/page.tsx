@@ -500,7 +500,7 @@ function Scores({ rows }: { rows: LiveScoreRow[] }) {
   const [copied, setCopied] = useState(false);
   const played = rows.filter((r) => r.detective !== undefined || r.trading !== undefined);
   async function copy() {
-    const lines = ['Team ID\tTeam\tCard\tCode Detective (/50)\tTrading bonus (/30)', ...rows.map((r) => `${r.teamId}\t${r.teamName}\t${r.card ? CARD_BY_CODE[r.card]?.title ?? r.card : ''}\t${r.detective ?? ''}\t${r.trading ?? ''}`)];
+    const lines = ['Team ID\tTeam\tCard\tCode Detective (/50)\tTrading bonus (both floors)', ...rows.map((r) => `${r.teamId}\t${r.teamName}\t${r.card ? CARD_BY_CODE[r.card]?.title ?? r.card : ''}\t${r.detective ?? ''}\t${r.trading ?? ''}`)];
     try {
       await navigator.clipboard.writeText(lines.join('\n'));
       setCopied(true);
