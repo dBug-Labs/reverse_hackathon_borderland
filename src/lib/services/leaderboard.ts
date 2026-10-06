@@ -55,6 +55,7 @@ export async function getLeaderboard(eventId: ObjectId, fresh = false): Promise<
     : DEFAULT_CONFIG;
 
   const extraOf = new Map(extras.map((e) => [e.teamId, e]));
+  const whoOf = await yearsAndDepts(eventId);
   const docOf = new Map(docs.map((d) => [d.teamId, d.total]));
   const judgeOf = new Map(judgeResults(judge.teams, judge.scores).filter((r) => r.judges).map((r) => [r.teamId, r.avg]));
   const codeOf = new Map(code.scores.map((s) => [s.teamId, s.total]));
@@ -76,6 +77,8 @@ export async function getLeaderboard(eventId: ObjectId, fresh = false): Promise<
       cardTitle: card?.title,
       track: card?.track,
       suit: card ? TRACKS[card.track].suit : undefined,
+      year: whoOf.get(t.teamId)?.year,
+      dept: whoOf.get(t.teamId)?.dept,
       mult: card ? rankMultiplier(card.rank) : 1,
       parts,
       visas: x?.visas ?? 3,
@@ -91,6 +94,37 @@ export async function getLeaderboard(eventId: ObjectId, fresh = false): Promise<
   const view = { config, rows: rankRows(rows), now: Date.now() };
   cache = { id: key, at: Date.now(), view };
   return view;
+}
+
+const ordinal = (y: string) => (/^\d+$/.test(y) ? `${y}${y === '1' ? 'st' : y === '2' ? 'nd' : y === '3' ? 'rd' : 'th'}` : y);
+
+/** Each team's years and departments, summed up from its players. */
+async function yearsAndDepts(eventId: ObjectId): Promise<Map<string, { year?: string; dept?: string }>> {
+  const regs = await (await getDb())
+    .collection('registrations')
+    .find({ eventId, status: 'CONFIRMED', deletedAt: { $exists: false } }, { projection: { teamId: 1, 'players.year': 1, 'players.department': 1 } })
+    .toArray();
+  const uniq = (xs: (string | undefined)[]) => [...new Set(xs.map((x) => String(x ?? '').trim()).filter(Boolean))];
+  return new Map(
+    regs.map((r) => {
+      const players = (r.players ?? []) as { year?: string; department?: string }[];
+      const years = uniq(players.map((p) => p.year)).sort();
+      // Department names are typed by hand: group them case-insensitively, most common first.
+      const count = new Map<string, { name: string; n: number }>();
+      for (const d of players.map((p) => String(p.department ?? '').trim()).filter(Boolean)) {
+        const k = d.toUpperCase();
+        count.set(k, { name: count.get(k)?.name ?? d, n: (count.get(k)?.n ?? 0) + 1 });
+      }
+      const depts = [...count.values()].sort((a, b) => b.n - a.n).map((x) => x.name);
+      return [
+        r.teamId as string,
+        {
+          year: years.length ? `${years.map(ordinal).join('/')} yr` : undefined,
+          dept: depts.length ? depts.slice(0, 2).join('/') + (depts.length > 2 ? ` +${depts.length - 2}` : '') : undefined,
+        },
+      ];
+    })
+  );
 }
 
 export interface LeaderInput {

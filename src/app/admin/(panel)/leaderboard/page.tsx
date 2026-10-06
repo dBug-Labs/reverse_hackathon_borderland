@@ -132,6 +132,7 @@ function Row({ r, c, send }: { r: LeaderRow; c: LeaderConfig; send: (b: Record<s
         <div className="text-white">{r.teamName}</div>
         <div className="text-xs text-neutral-500">
           {r.teamId} · {r.suit} {r.cardTitle ?? 'no card'}
+          {(r.year || r.dept) && <span className="text-neutral-400"> · {[r.year, r.dept].filter(Boolean).join(' · ')}</span>}
         </div>
       </td>
       {PARTS.map((p) => (

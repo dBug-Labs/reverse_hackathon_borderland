@@ -182,7 +182,8 @@ function Row({ r, top, v, open, pop, moved, dense }: { r: LeaderRow; top: number
           <div className="min-w-0 flex-1">
             <div className="truncate font-poster text-[3.4vh] uppercase leading-none tracking-wide">{r.teamName}</div>
             <div className="mt-[0.4vh] truncate font-label text-[1.35vh] text-neutral-500">
-              {r.teamId} · {r.cardTitle ?? 'no card'}
+              {r.teamId}
+              {(r.year || r.dept) && <span className="text-neutral-300"> · {[r.year, r.dept].filter(Boolean).join(' · ')}</span>} · {r.cardTitle ?? 'no card'}
               {mult !== 1 && <span className="text-[#facc15]"> · ×{mult.toFixed(1)}</span>}
               {v.config.visas && <span className="text-[#e0352f]"> · {'♥'.repeat(r.visas)}<span className="text-neutral-700">{'♥'.repeat(3 - r.visas)}</span></span>}
             </div>
@@ -287,7 +288,9 @@ function Spotlight({ r }: { r: LeaderRow }) {
           {r.teamName}
         </motion.div>
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 1.5 }} className="mt-[1.5vh] font-label text-[2vh] text-neutral-400">
-          {r.teamId} · {r.cardTitle}
+          {r.teamId} · {[r.year, r.dept].filter(Boolean).join(' · ')}
+          {(r.year || r.dept) && ' · '}
+          {r.cardTitle}
         </motion.div>
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 1.8 }} className="mt-[1vh] font-poster text-[7vh]" style={{ color: medal }}>
           <Num to={r.total} />

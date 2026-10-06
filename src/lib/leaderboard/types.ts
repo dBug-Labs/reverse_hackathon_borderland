@@ -40,6 +40,10 @@ export interface LeaderRow {
   cardTitle?: string;
   track?: string;
   suit?: string;
+  /** From the players' registrations, e.g. "3rd yr" or "2nd/3rd yr". */
+  year?: string;
+  /** e.g. "CSE" or "CSE/ECE". */
+  dept?: string;
   mult: number;
   parts: Partial<Record<PartKey, number>>;
   visas: number;
