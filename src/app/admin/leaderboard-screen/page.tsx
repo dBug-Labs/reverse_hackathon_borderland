@@ -65,8 +65,10 @@ export default function LeaderboardScreenPage() {
   // Each top-3 flip opens a spotlight; the next press closes it before flipping on.
   useEffect(() => {
     const n = v?.rows.length ?? 0;
-    if (mode === 'reveal' && revealed > 0 && n - revealed < 3) setHold(true);
-  }, [revealed, mode, v?.rows.length]);
+    // Everyone on the podium gets a spotlight (ties share a place, so it can be more than three).
+    const podium = v?.rows.filter((r) => r.rank <= 3).length ?? 3;
+    if (mode === 'reveal' && revealed > 0 && n - revealed < podium) setHold(true);
+  }, [revealed, mode, v?.rows]);
 
   if (!v) return <div className="flex min-h-screen items-center justify-center bg-black font-label text-neutral-500">{error || 'Loading…'}</div>;
   return <LeaderboardScreen v={v} mode={mode} revealed={revealed} spotlightOn={hold} />;

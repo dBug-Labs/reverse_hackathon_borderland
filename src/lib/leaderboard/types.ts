@@ -80,10 +80,12 @@ export function totalFor(r: Pick<LeaderRow, 'parts' | 'mult' | 'visas' | 'adjust
 
 export function rankRows(rows: LeaderRow[]): LeaderRow[] {
   const sorted = [...rows].sort((a, b) => b.total - a.total || (b.parts.judging ?? 0) - (a.parts.judging ?? 0) || a.teamName.localeCompare(b.teamName));
+  // Dense ranking: a tie shares a place and the next team takes the next place (1, 2, 2, 3),
+  // the way the prizes are given.
   let rank = 0;
   let last: number | null = null;
-  return sorted.map((r, i) => {
-    if (last === null || r.total !== last) rank = i + 1;
+  return sorted.map((r) => {
+    if (last === null || r.total !== last) rank++;
     last = r.total;
     return { ...r, rank };
   });

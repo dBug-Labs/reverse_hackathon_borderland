@@ -82,7 +82,8 @@ export function LeaderboardScreen({ v, mode, revealed, spotlightOn }: { v: Leade
   const cols = rows.length > 10 ? [rows.slice(0, half), rows.slice(half)] : [rows];
   // In reveal mode cards open from the bottom: the last `revealed` ranks are face up.
   const shown = (r: LeaderRow) => mode === 'live' || rows.indexOf(r) >= rows.length - revealed;
-  const spotlight = spotlightOn && mode === 'reveal' && revealed > 0 && rows.length - revealed < 3 ? rows[rows.length - revealed] : null;
+  const podium = rows.filter((r) => r.rank <= 3).length;
+  const spotlight = spotlightOn && mode === 'reveal' && revealed > 0 && rows.length - revealed < podium ? rows[rows.length - revealed] : null;
 
   return (
     <div className="relative h-screen w-screen overflow-hidden bg-[#050506] text-[#f2e9d8]">

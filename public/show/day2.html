@@ -228,12 +228,12 @@ window.CONFIG = {
     </div>
   </section>
 
-  <section class="slide" data-notes="Podium. Click: 3rd, then 2nd, then 1st. Names come from the live leaderboard.">
+  <section class="slide" data-notes="Podium. Click: 3rd, then 2nd, then 1st. Prizes: 1st ₹7,000 · 2nd tied, ₹6,000 shared (₹3,000 each) · 3rd ₹2,000 · total ₹15,000. Names come from the live leaderboard.">
     <div class="kicker" style="text-align:center">The podium</div>
     <div class="podium" style="margin-top:40px">
-      <div class="p p3 f" style="order:3"><div class="pl">3rd</div><div class="nm" data-cfg="third">Team ________</div></div>
-      <div class="p p2 f" style="order:1"><div class="pl">2nd</div><div class="nm" data-cfg="second">Team ________</div></div>
-      <div class="p p1 f" style="order:2"><div class="pl">1st</div><div class="nm" data-cfg="first">Team ________</div></div>
+      <div class="p p3 f" style="order:3"><div class="pl">3rd</div><div class="nm" data-cfg="third">Team ________</div><div style="margin-top:14px;font-family:Anton;font-size:44px;color:var(--gold,#facc15)">₹2,000</div></div>
+      <div class="p p2 f" style="order:1"><div class="pl">2nd</div><div class="nm" data-cfg="second">Team ________</div><div style="margin-top:14px;font-family:Anton;font-size:44px;color:var(--gold,#facc15)">₹6,000 · shared</div></div>
+      <div class="p p1 f" style="order:2"><div class="pl">1st</div><div class="nm" data-cfg="first">Team ________</div><div style="margin-top:14px;font-family:Anton;font-size:44px;color:var(--gold,#facc15)">₹7,000</div></div>
     </div>
   </section>
 
@@ -314,7 +314,11 @@ window.CONFIG = {
       const res = await fetch('/api/admin/leaderboard', { credentials: 'same-origin', cache: 'no-store' });
       if (!res.ok) return console.warn('Leaderboard not available (log in to Admin in this browser).');
       const rows = (await res.json()).data.rows;
-      ['first', 'second', 'third', 'fourth', 'fifth'].forEach((k, i) => rows[i] && set(k, esc(rows[i].teamName)));
+      // Places follow the leaderboard rank, so a tie shares a place (2nd: A & B, then 3rd).
+      ['first', 'second', 'third', 'fourth', 'fifth'].forEach((k, i) => {
+        const at = rows.filter((r) => r.rank === i + 1).map((r) => esc(r.teamName));
+        if (at.length) set(k, at.join(' &amp; '));
+      });
       const docs = pick(rows, 'docs'), code = pick(rows, 'code'), trade = pick(rows, 'trading');
       if (docs) set('bestDocs', esc(docs));
       if (code) set('bestCode', esc(code));
