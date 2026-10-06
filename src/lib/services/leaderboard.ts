@@ -6,7 +6,7 @@ import { getDocScores } from '@/lib/services/docScores';
 import { getScores } from '@/lib/services/judgeScores';
 import { getCodeReview } from '@/lib/services/codeReview';
 import { results as judgeResults } from '@/lib/judging/scoring';
-import { DEFAULT_CONFIG, rankRows, totalFor, type LeaderConfig, type LeaderRow, type LeaderView, type PartKey } from '@/lib/leaderboard/types';
+import { DEFAULT_CONFIG, rankRows, totalFor, type LeaderConfig, type LeaderRow, type LeaderView, type PartKey, type TeamScorecard } from '@/lib/leaderboard/types';
 
 /**
  * The live leaderboard. Reads every score where it already lives (live games, docs scores,
@@ -51,7 +51,7 @@ export async function getLeaderboard(eventId: ObjectId, fresh = false): Promise<
     getCodeReview(eventId),
   ]);
   const config: LeaderConfig = cfgDoc
-    ? { include: { ...DEFAULT_CONFIG.include, ...cfgDoc.include }, multiplier: cfgDoc.multiplier, visas: cfgDoc.visas, scoredOnly: cfgDoc.scoredOnly }
+    ? { include: { ...DEFAULT_CONFIG.include, ...cfgDoc.include }, multiplier: cfgDoc.multiplier, visas: cfgDoc.visas, scoredOnly: cfgDoc.scoredOnly, published: !!cfgDoc.published }
     : DEFAULT_CONFIG;
 
   const extraOf = new Map(extras.map((e) => [e.teamId, e]));
@@ -127,6 +127,13 @@ async function yearsAndDepts(eventId: ObjectId): Promise<Map<string, { year?: st
   );
 }
 
+/** One team's own scorecard, only once the organisers publish them. */
+export async function teamScorecard(eventId: ObjectId, teamId: string): Promise<TeamScorecard> {
+  const v = await getLeaderboard(eventId);
+  if (!v.config.published) return { published: false };
+  return { published: true, row: v.rows.find((r) => r.teamId === teamId), of: v.rows.length, config: v.config };
+}
+
 export interface LeaderInput {
   action: 'config' | 'team';
   config?: Partial<LeaderConfig>;
@@ -146,6 +153,7 @@ export async function leaderboardAction(eventId: ObjectId, input: LeaderInput, a
       multiplier: input.config?.multiplier ?? cur.multiplier,
       visas: input.config?.visas ?? cur.visas,
       scoredOnly: input.config?.scoredOnly ?? cur.scoredOnly,
+      published: input.config?.published ?? !!cur.published,
     };
     await c.config.updateOne({ eventId }, { $set: { ...next, updatedAt: new Date() } }, { upsert: true });
   } else if (input.action === 'team') {

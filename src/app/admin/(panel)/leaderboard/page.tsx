@@ -83,6 +83,15 @@ export default function LeaderboardAdminPage() {
           <Toggle on={c.scoredOnly} onClick={() => setCfg({ scoredOnly: !c.scoredOnly })}>
             Only teams with a score
           </Toggle>
+          <button
+            onClick={() =>
+              confirm(c.published ? 'Hide the scorecards from teams again?' : 'Publish? Every team will see its own full scorecard and rank on its status link.') &&
+              setCfg({ published: !c.published })
+            }
+            className={`rounded-md border px-3 py-1.5 font-semibold ${c.published ? 'border-emerald-500 bg-emerald-900/40 text-emerald-200' : 'border-[var(--card-red)] text-[#ff8a8a]'}`}
+          >
+            {c.published ? '✓ Scorecards published to teams' : 'Publish scorecards to teams'}
+          </button>
         </div>
         <p className="mt-3 font-mono text-xs text-neutral-400">Total = {formula}</p>
         <p className="mt-1 font-label text-xs text-neutral-500">

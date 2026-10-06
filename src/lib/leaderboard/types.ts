@@ -24,6 +24,8 @@ export interface LeaderConfig {
   visas: boolean;
   /** Hide teams with no score at all. */
   scoredOnly: boolean;
+  /** Teams can see their own scorecard on their status link. */
+  published?: boolean;
 }
 
 export const DEFAULT_CONFIG: LeaderConfig = {
@@ -31,7 +33,16 @@ export const DEFAULT_CONFIG: LeaderConfig = {
   multiplier: true,
   visas: true,
   scoredOnly: true,
+  published: false,
 };
+
+/** What a team sees on its status link once scorecards are published. */
+export interface TeamScorecard {
+  published: boolean;
+  row?: LeaderRow;
+  of?: number;
+  config?: LeaderConfig;
+}
 
 export interface LeaderRow {
   teamId: string;

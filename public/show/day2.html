@@ -9,8 +9,10 @@
 /* ── EDIT THESE ON THE DAY ───────────────────────────────────── */
 window.CONFIG = {
   twist: 'Revealed at 12:30',                 // the Twist Card wording
-  first: 'Team ________', second: 'Team ________', third: 'Team ________',
-  bestSpec: 'Team ________', sharpestEye: 'Team ________', unbreakable: 'Team ________',
+  // Fallbacks only: the closing slides fill these from the live leaderboard when this deck is
+  // opened in a browser that is logged in to Admin (see the script at the end of the file).
+  first: 'Team ________', second: 'Team ________', third: 'Team ________', fourth: 'Team ________', fifth: 'Team ________',
+  bestDocs: 'Team ________', bestCode: 'Team ________', tradingWinner: 'Team ________', detective: 'Team ________',
 };
 </script>
 <script src="assets/cards.js"></script>
@@ -208,7 +210,25 @@ window.CONFIG = {
     <p class="lead pop" style="--d:1.2s;margin-top:30px">The leaderboard is revealed. The top teams face rapid-fire questions on stage.</p>
   </section>
 
-  <section class="slide" data-notes="Podium. Click: 3rd, then 2nd, then 1st. Set names in CONFIG at the top of this file.">
+  <section class="slide" data-notes="AWARDS. Names come from the live leaderboard (open this deck in the browser where you are logged in to Admin; if you see Team ____, log in at /admin/login and reload). Ties are broken by the overall total. Click to reveal each. No scores on screen.">
+    <div class="kicker">The awards</div><h2 class="split">The best at each part of the game</h2>
+    <div class="grid2" style="margin-top:44px;gap:28px">
+      <div class="box f shine"><div class="badge">♠</div><h3>Code Detective</h3><p>Won the Riddle Deck in their track</p><div class="red" style="margin-top:16px;font-size:34px;line-height:1.35;font-weight:800" data-cfg="detective">Team ________</div></div>
+      <div class="box f shine"><div class="badge">♣</div><h3>Trading Floor</h3><p>Best trader across both markets</p><h3 class="red" style="margin-top:20px;font-size:48px" data-cfg="tradingWinner">Team ________</h3></div>
+      <div class="box f shine"><div class="badge">♦</div><h3>Best Docs</h3><p>The spec a stranger's AI could rebuild from</p><h3 class="red" style="margin-top:20px;font-size:48px" data-cfg="bestDocs">Team ________</h3></div>
+      <div class="box hot f shine"><div class="badge">♥</div><h3>Best Code</h3><p>The strongest rebuild in the code review</p><h3 style="margin-top:20px;font-size:48px" data-cfg="bestCode">Team ________</h3></div>
+    </div>
+  </section>
+
+  <section class="slide" data-notes="SPECIAL MENTIONS: 5th, then 4th. Click to reveal.">
+    <div class="kicker" style="text-align:center">Special mentions</div><h2 class="split" style="text-align:center">So close to the podium</h2>
+    <div class="grid2" style="margin-top:70px;gap:40px">
+      <div class="box f shine" style="text-align:center;padding:50px 30px"><div class="num" style="font-size:120px">5th</div><h3 class="red" style="margin-top:20px;font-size:56px" data-cfg="fifth">Team ________</h3></div>
+      <div class="box f shine" style="text-align:center;padding:50px 30px"><div class="num" style="font-size:120px">4th</div><h3 class="red" style="margin-top:20px;font-size:56px" data-cfg="fourth">Team ________</h3></div>
+    </div>
+  </section>
+
+  <section class="slide" data-notes="Podium. Click: 3rd, then 2nd, then 1st. Names come from the live leaderboard.">
     <div class="kicker" style="text-align:center">The podium</div>
     <div class="podium" style="margin-top:40px">
       <div class="p p3 f" style="order:3"><div class="pl">3rd</div><div class="nm" data-cfg="third">Team ________</div></div>
@@ -217,14 +237,12 @@ window.CONFIG = {
     </div>
   </section>
 
-  <section class="slide" data-notes="Skill awards. Click to reveal each.">
-    <div class="kicker">Skill awards</div><h2 class="split">The best at each part of the job</h2>
-    <div class="grid3" style="margin-top:60px">
-      <div class="box f shine"><div class="badge">♦</div><h3>Best Spec</h3><p>Highest Deduction + Doc Test</p><h3 class="red" style="margin-top:24px;font-size:44px" data-cfg="bestSpec">Team ________</h3></div>
-      <div class="box f shine"><div class="badge">♠</div><h3>Sharpest Eye</h3><p>Code Detective winner</p><h3 class="red" style="margin-top:24px;font-size:44px" data-cfg="sharpestEye">Team ________</h3></div>
-      <div class="box hot f shine"><div class="badge">♥</div><h3>Unbreakable</h3><p>Most Killer Tests passed</p><h3 style="margin-top:24px;font-size:44px" data-cfg="unbreakable">Team ________</h3></div>
+  <section class="slide" data-notes="Before this: Admin → Leaderboard → Publish scorecards to teams. Then tell everyone to open their team link.">
+    <div style="text-align:center">
+      <div class="kicker">Your scorecard</div>
+      <h1 class="split" style="font-size:150px">Every score, on your team link</h1>
+      <p class="lead pop" style="--d:1.2s;margin:36px auto 0">Open the status link from your leader's email. Your rank and every part of your score are there now: games, docs, code review, final judging, card difficulty and Visas.</p>
     </div>
-    <p class="lead f" style="margin-top:40px">Prizes and partner opportunities are announced now.</p>
   </section>
 
   <section class="slide" data-notes="Thank the partners.">
@@ -280,5 +298,39 @@ window.CONFIG = {
 })();
 </script>
 <script src="assets/deck.js"></script>
+<script>
+/* Live awards: fill the closing slides from the admin leaderboard (needs an admin login in this browser). */
+(function () {
+  const pick = (rows, key) => {
+    const has = rows.filter((r) => (r.parts[key] ?? 0) > 0);
+    if (!has.length) return null;
+    // highest part wins; ties go to the higher overall total
+    return has.sort((a, b) => b.parts[key] - a.parts[key] || b.total - a.total)[0].teamName;
+  };
+  const set = (key, html) => document.querySelectorAll(`[data-cfg="${key}"]`).forEach((el) => (el.innerHTML = html));
+  const esc = (t) => String(t).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  async function load() {
+    try {
+      const res = await fetch('/api/admin/leaderboard', { credentials: 'same-origin', cache: 'no-store' });
+      if (!res.ok) return console.warn('Leaderboard not available (log in to Admin in this browser).');
+      const rows = (await res.json()).data.rows;
+      ['first', 'second', 'third', 'fourth', 'fifth'].forEach((k, i) => rows[i] && set(k, esc(rows[i].teamName)));
+      const docs = pick(rows, 'docs'), code = pick(rows, 'code'), trade = pick(rows, 'trading');
+      if (docs) set('bestDocs', esc(docs));
+      if (code) set('bestCode', esc(code));
+      if (trade) set('tradingWinner', esc(trade));
+      // Code Detective was played track by track: the winner of each track.
+      const SUIT = { vault: '♦ FinTech', institution: '♥ Workflow', grid: '♠ Real-time', cyber: '♣ Cyber' };
+      const lines = Object.keys(SUIT).map((t) => {
+        const w = rows.filter((r) => r.track === t && (r.parts.detective ?? 0) > 0).sort((a, b) => b.parts.detective - a.parts.detective || b.total - a.total)[0];
+        return w ? `<span style="color:var(--paper);font-weight:600">${SUIT[t]}</span> ${esc(w.teamName)}` : '';
+      }).filter(Boolean);
+      if (lines.length) set('detective', lines.join('<br>'));
+    } catch (e) { console.warn('Leaderboard fetch failed', e); }
+  }
+  load();
+  setInterval(load, 30000);
+})();
+</script>
 </body>
 </html>

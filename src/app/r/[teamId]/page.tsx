@@ -8,6 +8,7 @@ import { RegisterShell } from '@/components/RegisterShell';
 import { WhatsAppCommunityButton } from '@/components/WhatsAppButton';
 import { CardDropSummary } from '@/components/carddrop/TeamCardDrop';
 import { SubmissionSummary } from '@/components/submission/TeamSubmission';
+import { TeamScorecard } from '@/components/leaderboard/TeamScorecard';
 
 const WHATSAPP_COMMUNITY_URL = process.env.NEXT_PUBLIC_WHATSAPP_COMMUNITY_URL ?? '';
 
@@ -175,6 +176,7 @@ export default function RegistrationStatusPage() {
             <span className="font-poster text-4xl text-[#ff4a4a]">→</span>
           </Link>
         )}
+        {data?.status === 'CONFIRMED' && <TeamScorecard teamId={teamId} token={token} />}
         {data?.status === 'CONFIRMED' && <CardDropSummary teamId={teamId} token={token} />}
         {data?.status === 'CONFIRMED' && <SubmissionSummary teamId={teamId} token={token} />}
     </RegisterShell>
