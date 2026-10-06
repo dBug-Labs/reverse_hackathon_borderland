@@ -263,6 +263,12 @@ export async function createGame(eventId: ObjectId, input: CreateInput, actor: s
   const picked = await rosterFor(eventId, group, teamIds);
   if ('ok' in picked) return picked;
   const { roster, groupLabel } = picked;
+  // One open game per track: a second press (or the per-track button) must not spawn duplicates.
+  if (group !== 'custom') {
+    const { games } = await cols();
+    const open = await games.findOne({ eventId, kind: input.kind, groupKey: group, status: { $ne: 'ENDED' } }, { projection: { name: 1 } });
+    if (open) return fail('DUPLICATE', `“${open.name}” is still open for ${groupLabel}. End or delete it first.`);
+  }
 
   const now = new Date();
   const base = {

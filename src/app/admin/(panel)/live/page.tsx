@@ -136,7 +136,7 @@ function CreateGame({ onCreated }: { onCreated: (id: string) => void }) {
 
   // Riddle Deck: one game per track, made one after another so each track gets fresh riddles.
   async function createPerTrack() {
-    if (!confirm('Create four Riddle Deck games, one per track?')) return;
+    if (!confirm('This makes FOUR games, one for every track (FinTech, Workflow & Trust, Real-time & Infra, Cyber Security). Tracks that already have an open game are skipped. For one track only, pick it under “Who plays” and press Create game. Continue?')) return;
     setBusy(true);
     setMsg('');
     let first = '';
@@ -229,9 +229,9 @@ function CreateGame({ onCreated }: { onCreated: (id: string) => void }) {
         <input className={inputCls()} placeholder="Name (optional)" value={name} onChange={(e) => setName(e.target.value)} />
         {msg && <p className="text-[#ff8a8a]">{msg}</p>}
         <Button variant="primary" onClick={create} loading={busy} className="w-full">
-          Create game
+          {group.startsWith('track:') ? `Create game · ${TRACKS[group.slice(6) as keyof typeof TRACKS]?.label ?? ''} only` : 'Create game'}
         </Button>
-        {kind === 'detective' && set === 'R' && (
+        {kind === 'detective' && set === 'R' && group === 'all' && (
           <Button variant="paper" onClick={createPerTrack} loading={busy} className="w-full">
             ♦ One Riddle Deck per track (4 games)
           </Button>
